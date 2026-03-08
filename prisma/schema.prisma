@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
+enum EnrollmentStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  VERIFIED
+  WAIVED
+}
+
+model Course {
+  id          String         @id @default(cuid())
+  slug        String         @unique
+  title       String
+  summary     String
+  description String
+  modality    String
+  priceCents  Int
+  priceLabel  String
+  seats       Int?
+  startDate   DateTime
+  endDate     DateTime?
+  duration    String
+  location    String
+  instructor  String
+  status      CourseStatus   @default(PUBLISHED)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  modules     Module[]
+  enrollments Enrollment[]
+}
+
+model Module {
+  id              String     @id @default(cuid())
+  courseId        String
+  title           String
+  description     String
+  order           Int
+  durationMinutes Int?
+  required        Boolean    @default(true)
+  course          Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress        Progress[]
+
+  @@unique([courseId, order])
+}
+
+model Participant {
+  id            String       @id @default(cuid())
+  fullName      String
+  email         String       @unique
+  phone         String
+  city          String?
+  organization  String?
+  visualProfile String?
+  notes         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  enrollments   Enrollment[]
+  certificates  Certificate[]
+}
+
+model Enrollment {
+  id               String           @id @default(cuid())
+  referenceCode    String           @unique
+  courseId         String
+  participantId    String
+  status           EnrollmentStatus @default(PENDING_PAYMENT)
+  paymentStatus    PaymentStatus    @default(PENDING)
+  attendancePercent Int             @default(0)
+  progressPercent  Int              @default(0)
+  zoomConfirmed    Boolean          @default(false)
+  completedAt      DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  course           Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  participant      Participant      @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  progress         Progress[]
+  certificate      Certificate?
+
+  @@unique([courseId, participantId])
+}
+
+model Progress {
+  id           String      @id @default(cuid())
+  enrollmentId String
+  moduleId     String
+  completed    Boolean     @default(false)
+  completedAt  DateTime?
+  enrollment   Enrollment  @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  module       Module      @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, moduleId])
+}
+
+model Certificate {
+  id              String      @id @default(cuid())
+  certificateCode String      @unique
+  enrollmentId    String      @unique
+  participantId   String
+  issuedAt        DateTime    @default(now())
+  valid           Boolean     @default(true)
+  verificationUrl String
+  enrollment      Enrollment  @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  participant     Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+}

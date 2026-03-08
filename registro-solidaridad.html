@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Registro Tarjeta Solidaridad | INTEVOPEDI</title>
+
+    <!-- Security Meta Tags -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+
+    <!-- SEO -->
+    <meta name="description"
+        content="Formulario de registro para la Tarjeta Solidaridad de INTEVOPEDI. Complete sus datos para acceder a beneficios de formación técnica gratuita.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://intevopedi.org/registro-solidaridad.html">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="public/Logo.png">
+    <link rel="apple-touch-icon" href="public/Logo.png">
+
+    <style>
+        .form-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #001f3f 0%, #003366 100%);
+            padding: 40px 20px;
+        }
+
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 50px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .form-header img {
+            height: 80px;
+            margin-bottom: 20px;
+        }
+
+        .form-header h1 {
+            font-size: 1.8rem;
+            color: #003366;
+            margin-bottom: 10px;
+        }
+
+        .form-header p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #003366;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group label span {
+            color: #EB3349;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #C5A059;
+            box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.1);
+        }
+
+        .form-group input[type="file"],
+        .form-group select {
+            padding: 12px 20px;
+            background: #f8f9fa;
+            cursor: pointer;
+            width: 100%;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23003366%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px top 50%;
+            background-size: 12px auto;
+        }
+
+        .form-group select:focus {
+            outline: none;
+            border-color: #C5A059;
+            box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.1);
+        }
+
+        .file-note {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 8px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #003366, #004488);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 51, 102, 0.3);
+        }
+
+        .whatsapp-note {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f0fff0;
+            border-radius: 10px;
+            border: 1px solid #90EE90;
+        }
+
+        .whatsapp-note p {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .whatsapp-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 25px;
+            background: #25D366;
+            color: white;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .whatsapp-link:hover {
+            background: #128C7E;
+            transform: scale(1.05);
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 25px;
+            color: #003366;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #C5A059;
+        }
+
+        @media (max-width: 600px) {
+            .form-container {
+                padding: 30px 20px;
+            }
+
+            .form-header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="form-page">
+        <div class="form-container">
+            <div class="form-header">
+                <a href="index.html">
+                    <img src="public/Logo.png" alt="INTEVOPEDI Logo">
+                </a>
+                <h1>Registro para Tarjeta Solidaridad</h1>
+                <p>Complete el formulario con sus datos personales</p>
+            </div>
+
+            <form id="solidaridad-form" action="#" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="nombre">Nombre Completo <span>*</span></label>
+                    <input type="text" id="nombre" name="nombre" placeholder="Ingrese su nombre completo" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="direccion">Dirección <span>*</span></label>
+                    <textarea id="direccion" name="direccion" rows="3" placeholder="Ingrese su dirección completa"
+                        required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="discapacidad">Tipo de Discapacidad <span>*</span></label>
+                    <select id="discapacidad" name="discapacidad" required>
+                        <option value="" disabled selected>Seleccione una opción</option>
+                        <option value="Discapacidad Física / Motora">Discapacidad Física / Motora</option>
+                        <option value="Discapacidad Intelectual">Discapacidad Intelectual</option>
+                        <option value="Discapacidad Sensorial Visual">Discapacidad Sensorial Visual</option>
+                        <option value="Discapacidad Sensorial Auditiva">Discapacidad Sensorial Auditiva</option>
+                        <option value="Discapacidad Psicosocial / Mental">Discapacidad Psicosocial / Mental</option>
+                        <option value="Discapacidad Visceral / Orgánica">Discapacidad Visceral / Orgánica</option>
+                        <option value="Discapacidad Múltiple">Discapacidad Múltiple</option>
+                        <option value="ICOM">ICOM (Intelectual, Comunicacional, Organo-Funcional, Motora)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="telefono">Teléfono <span>*</span></label>
+                    <input type="tel" id="telefono" name="telefono" placeholder="809-000-0000" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cedula">Copia de Cédula <span>*</span></label>
+                    <input type="file" id="cedula" name="cedula" accept="image/*,.pdf" required>
+                    <p class="file-note">Suba una foto o PDF de su cédula (máximo 5MB)</p>
+                </div>
+
+                <button type="submit" class="submit-btn">Enviar Registro</button>
+            </form>
+
+            <div class="whatsapp-note">
+                <p>¿Necesita ayuda? Contáctenos por WhatsApp:</p>
+                <a href="https://wa.me/18299548873?text=Hola,%20necesito%20información%20sobre%20la%20Tarjeta%20Solidaridad"
+                    target="_blank" class="whatsapp-link">
+                    📱 829 954 8873
+                </a>
+            </div>
+
+            <a href="index.html" class="back-link">← Volver al inicio</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('solidaridad-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const nombre = document.getElementById('nombre').value;
+            const direccion = document.getElementById('direccion').value;
+            const telefono = document.getElementById('telefono').value;
+            const discapacidad = document.getElementById('discapacidad').value;
+
+            // Create WhatsApp message with form data
+            const mensaje = `*Registro Tarjeta Solidaridad*%0A%0A*Nombre:* ${encodeURIComponent(nombre)}%0A*Dirección:* ${encodeURIComponent(direccion)}%0A*Teléfono:* ${encodeURIComponent(telefono)}%0A*Discapacidad:* ${encodeURIComponent(discapacidad)}%0A%0A_Adjuntaré mi cédula en el siguiente mensaje._`;
+
+            // Open WhatsApp with the message
+            window.open(`https://wa.me/18299548873?text=${mensaje}`, '_blank');
+
+            alert('Sus datos han sido preparados. Se abrirá WhatsApp para enviar su registro. Por favor, envíe también la foto de su cédula.');
+        });
+    </script>
+
+</body>
+
+</html>

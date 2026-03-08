@@ -1,0 +1,26 @@
+{
+  "name": "intevopedi-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "5.19.1",
+    "next": "14.2.13",
+    "pdf-lib": "1.17.1",
+    "pg": "8.12.0",
+    "qrcode": "1.5.4",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "prisma": "5.19.1"
+  }
+}

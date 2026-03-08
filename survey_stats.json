@@ -1,0 +1,47 @@
+{
+    "totalSubmissions": 34,
+    "visualDisability": {
+        "Baja visión": 14,
+        "Ceguera total": 20
+    },
+    "knowsScreenReader": {
+        "Sí": 32,
+        "No": 2
+    },
+    "screenReaderUsed": {
+        "NVDA": 11,
+        "Otro": 5,
+        "JAWS": 18
+    },
+    "wouldUseLicensedJaws": {
+        "Sí": 32,
+        "No": 2
+    },
+    "cities": {
+        "Sto dgo": 1,
+        "Romana": 1,
+        "Santo domingo este": 2,
+        "Santo dommingo": 1,
+        "Calle 4ta. #2 sabana perdidas": 1,
+        "Santo domingo, éste": 2,
+        "Santo domingo": 6,
+        "Distrito nacional": 2,
+        "Santo domingo éste": 2,
+        "San francisco de macorís": 1,
+        "Moca": 1,
+        "Puerto plata": 1,
+        "Verón;punta cana": 1,
+        "Santo domingo, éste, república dominicana": 1,
+        "Sabana de la mar": 1,
+        "Municipio santo domingo norte san felipe villa mella": 1,
+        "Santodomingodistritonacional": 1,
+        "Santo domingo norte": 1,
+        "Santo domingo ste": 1,
+        "New york": 1,
+        "Santo domingo distrito nacional.": 1,
+        "Nagua": 1,
+        "Rio san juan": 1,
+        "María trinidad sanchez": 1,
+        "Maria trinidad sanchez rio san juan": 1
+    }
+}

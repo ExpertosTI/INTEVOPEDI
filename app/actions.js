@@ -1,0 +1,289 @@
+'use server';
+
+import { timingSafeEqual } from 'node:crypto';
+import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
+import { prisma } from '@/lib/db';
+import { bootstrapAppData } from '@/lib/bootstrap';
+import { createAdminSession, destroyAdminSession, requireAdmin } from '@/lib/admin-auth';
+import { createParticipantSession, destroyParticipantSession, getParticipantSession } from '@/lib/participant-auth';
+import { ensureCertificate, generateReferenceCode, syncEnrollmentProgress } from '@/lib/certificates';
+import { getParticipantAccessEnrollment } from '@/lib/data';
+import { isValidPhone, normalizeEmail, normalizePhone, sanitizeText } from '@/lib/validation';
+
+const enrollmentSchema = z.object({
+  courseSlug: z.string().min(1),
+  fullName: z.string().min(3),
+  email: z.string().email(),
+  phone: z.string().min(7),
+  city: z.string().optional(),
+  organization: z.string().optional(),
+  visualProfile: z.string().optional(),
+  notes: z.string().optional()
+});
+
+const adminUpdateSchema = z.object({
+  enrollmentId: z.string().min(1),
+  status: z.enum(['PENDING_PAYMENT', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED']),
+  paymentStatus: z.enum(['PENDING', 'VERIFIED', 'WAIVED']),
+  attendancePercent: z.coerce.number().min(0).max(100),
+  zoomConfirmed: z.string().optional()
+});
+
+const participantAccessSchema = z.object({
+  email: z.string().email(),
+  referenceCode: z.string().min(5)
+});
+
+export async function submitEnrollment(formData) {
+  const rawValues = Object.fromEntries(formData.entries());
+  const normalizedValues = {
+    courseSlug: sanitizeText(rawValues.courseSlug),
+    fullName: sanitizeText(rawValues.fullName),
+    email: normalizeEmail(rawValues.email),
+    phone: normalizePhone(rawValues.phone),
+    city: sanitizeText(rawValues.city),
+    organization: sanitizeText(rawValues.organization),
+    visualProfile: sanitizeText(rawValues.visualProfile),
+    notes: sanitizeText(rawValues.notes)
+  };
+  const parsed = enrollmentSchema.safeParse(normalizedValues);
+  const courseSlug = rawValues.courseSlug;
+
+  if (!parsed.success) {
+    redirect(`/cursos/${courseSlug}?error=${encodeURIComponent('Completa correctamente el formulario de inscripción.')}`);
+  }
+
+  if (!isValidPhone(parsed.data.phone)) {
+    redirect(`/cursos/${courseSlug}?error=${encodeURIComponent('Introduce un teléfono válido de 10 dígitos.')}`);
+  }
+
+  let destination = `/cursos/${courseSlug}?error=${encodeURIComponent('No se pudo completar la inscripción en este momento.')}`;
+
+  try {
+    await bootstrapAppData();
+
+    const course = await prisma.course.findUnique({
+      where: { slug: parsed.data.courseSlug },
+      include: { modules: true }
+    });
+
+    if (!course) {
+      destination = `/cursos/${courseSlug}?error=${encodeURIComponent('El curso solicitado no está disponible.')}`;
+    } else {
+      const participant = await prisma.participant.upsert({
+        where: { email: parsed.data.email },
+        update: {
+          fullName: parsed.data.fullName,
+          phone: parsed.data.phone,
+          city: parsed.data.city,
+          organization: parsed.data.organization,
+          visualProfile: parsed.data.visualProfile,
+          notes: parsed.data.notes
+        },
+        create: {
+          fullName: parsed.data.fullName,
+          email: parsed.data.email,
+          phone: parsed.data.phone,
+          city: parsed.data.city,
+          organization: parsed.data.organization,
+          visualProfile: parsed.data.visualProfile,
+          notes: parsed.data.notes
+        }
+      });
+
+      let referenceCode = generateReferenceCode();
+
+      while (await prisma.enrollment.findUnique({ where: { referenceCode } })) {
+        referenceCode = generateReferenceCode();
+      }
+
+      const enrollment = await prisma.enrollment.upsert({
+        where: {
+          courseId_participantId: {
+            courseId: course.id,
+            participantId: participant.id
+          }
+        },
+        update: {
+          status: 'CONFIRMED',
+          paymentStatus: 'PENDING'
+        },
+        create: {
+          referenceCode,
+          courseId: course.id,
+          participantId: participant.id,
+          status: 'CONFIRMED',
+          paymentStatus: 'PENDING'
+        }
+      });
+
+      await prisma.progress.createMany({
+        data: course.modules.map((moduleData) => ({
+          enrollmentId: enrollment.id,
+          moduleId: moduleData.id
+        })),
+        skipDuplicates: true
+      });
+
+      await createParticipantSession({
+        participantId: participant.id,
+        referenceCode: enrollment.referenceCode
+      });
+
+      revalidatePath('/');
+      revalidatePath('/cursos');
+      revalidatePath(`/cursos/${course.slug}`);
+      destination = `/campus?created=1&code=${encodeURIComponent(enrollment.referenceCode)}`;
+    }
+  } catch (error) {
+    destination = `/cursos/${courseSlug}?error=${encodeURIComponent('No se pudo completar la inscripción. Revisa la conexión a la base de datos.')}`;
+  }
+
+  redirect(destination);
+}
+
+export async function toggleModuleProgress(formData) {
+  const rawValues = Object.fromEntries(formData.entries());
+  const enrollmentId = String(rawValues.enrollmentId || '');
+  const moduleId = String(rawValues.moduleId || '');
+  const referenceCode = String(rawValues.referenceCode || '');
+  const completed = rawValues.completed === 'true';
+
+  if (!enrollmentId || !moduleId || !referenceCode) {
+    redirect('/cursos');
+  }
+
+  const session = await getParticipantSession();
+  const enrollment = await prisma.enrollment.findUnique({
+    where: { id: enrollmentId },
+    select: {
+      id: true,
+      participantId: true,
+      referenceCode: true
+    }
+  });
+
+  if (!session || !enrollment || session.participantId !== enrollment.participantId || enrollment.referenceCode !== referenceCode) {
+    redirect('/participantes?error=' + encodeURIComponent('Tu sesión no autoriza cambios sobre esta inscripción.'));
+  }
+
+  await prisma.progress.upsert({
+    where: {
+      enrollmentId_moduleId: {
+        enrollmentId,
+        moduleId
+      }
+    },
+    update: {
+      completed,
+      completedAt: completed ? new Date() : null
+    },
+    create: {
+      enrollmentId,
+      moduleId,
+      completed,
+      completedAt: completed ? new Date() : null
+    }
+  });
+
+  await syncEnrollmentProgress(enrollmentId);
+  revalidatePath(`/mi-inscripcion/${referenceCode}`);
+  revalidatePath('/campus');
+  redirect(`/mi-inscripcion/${referenceCode}`);
+}
+
+export async function participantAccessLogin(formData) {
+  const normalizedValues = {
+    email: normalizeEmail(formData.get('email')),
+    referenceCode: sanitizeText(formData.get('referenceCode')).toUpperCase()
+  };
+
+  const parsed = participantAccessSchema.safeParse(normalizedValues);
+
+  if (!parsed.success) {
+    redirect(`/participantes?error=${encodeURIComponent('Introduce tu correo y tu código de inscripción correctamente.')}`);
+  }
+
+  const enrollment = await getParticipantAccessEnrollment(parsed.data.referenceCode, parsed.data.email);
+
+  if (!enrollment) {
+    redirect(`/participantes?error=${encodeURIComponent('No encontramos una inscripción que coincida con ese correo y código.')}`);
+  }
+
+  await createParticipantSession({
+    participantId: enrollment.participantId,
+    referenceCode: enrollment.referenceCode
+  });
+
+  redirect('/campus');
+}
+
+export async function participantLogout() {
+  await destroyParticipantSession();
+  redirect('/participantes');
+}
+
+export async function adminLogin(formData) {
+  const password = sanitizeText(formData.get('password'));
+  const expectedPassword = process.env.ADMIN_ACCESS_PASSWORD || '';
+
+  const passwordBuffer = Buffer.from(password);
+  const expectedBuffer = Buffer.from(expectedPassword);
+
+  if (!password || !expectedPassword || passwordBuffer.length !== expectedBuffer.length || !timingSafeEqual(passwordBuffer, expectedBuffer)) {
+    redirect(`/admin/login?error=${encodeURIComponent('Credenciales inválidas.')}`);
+  }
+
+  await createAdminSession();
+  redirect('/admin');
+}
+
+export async function adminLogout() {
+  await destroyAdminSession();
+  redirect('/');
+}
+
+export async function updateEnrollmentAdmin(formData) {
+  await requireAdmin();
+
+  const rawValues = Object.fromEntries(formData.entries());
+  const parsed = adminUpdateSchema.safeParse(rawValues);
+
+  if (!parsed.success) {
+    redirect(`/admin?error=${encodeURIComponent('No se pudo guardar el estado de la inscripción.')}`);
+  }
+
+  const updated = await prisma.enrollment.update({
+    where: { id: parsed.data.enrollmentId },
+    data: {
+      status: parsed.data.status,
+      paymentStatus: parsed.data.paymentStatus,
+      attendancePercent: parsed.data.attendancePercent,
+      progressPercent: parsed.data.status === 'COMPLETED' ? 100 : undefined,
+      zoomConfirmed: parsed.data.zoomConfirmed === 'on',
+      completedAt: parsed.data.status === 'COMPLETED' ? new Date() : null
+    }
+  });
+
+  if (parsed.data.status === 'COMPLETED') {
+    await ensureCertificate(updated.id);
+  }
+
+  revalidatePath('/admin');
+  redirect('/admin');
+}
+
+export async function issueCertificateAction(formData) {
+  await requireAdmin();
+
+  const enrollmentId = String(formData.get('enrollmentId') || '');
+
+  if (enrollmentId) {
+    await ensureCertificate(enrollmentId);
+    revalidatePath('/admin');
+  }
+
+  redirect('/admin');
+}
