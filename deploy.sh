@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_FILE="$ROOT_DIR/docker-compose.portainer.yml"
 ENV_FILE="$ROOT_DIR/.env"
+ENV_EXAMPLE_FILE="$ROOT_DIR/.env.example"
 STACK_NAME="${STACK_NAME:-intevopedi}"
 APP_SERVICE="${STACK_NAME}_app"
 BOOTSTRAP=0
@@ -13,6 +14,12 @@ if [[ "${1:-}" == "--bootstrap" ]]; then
 fi
 
 if [[ ! -f "$ENV_FILE" ]]; then
+  if [[ -f "$ENV_EXAMPLE_FILE" ]]; then
+    cp "$ENV_EXAMPLE_FILE" "$ENV_FILE"
+    echo "Se creó $ENV_FILE desde .env.example"
+    echo "Edita .env con tus valores reales y vuelve a ejecutar deploy.sh"
+    exit 1
+  fi
   echo "Falta $ENV_FILE"
   exit 1
 fi
@@ -46,6 +53,20 @@ required_vars=(
 for var_name in "${required_vars[@]}"; do
   if [[ -z "${!var_name:-}" ]]; then
     echo "Falta la variable $var_name en .env"
+    exit 1
+  fi
+done
+
+placeholder_values=(
+  change_me
+  change_this_password
+  change_this_admin_session_secret
+  change_this_participant_secret
+)
+
+for placeholder in "${placeholder_values[@]}"; do
+  if grep -Fq "$placeholder" "$ENV_FILE"; then
+    echo "Tu .env todavía contiene valores de ejemplo. Reemplaza $placeholder antes de desplegar."
     exit 1
   fi
 done
