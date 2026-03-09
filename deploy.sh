@@ -111,7 +111,19 @@ if [[ "$BOOTSTRAP" -eq 1 ]]; then
   fi
 
   echo "Ejecutando prisma db push"
-  docker exec -i "$APP_CONTAINER_ID" npx prisma db push
+  PRISMA_PUSH_OK=0
+  for _ in {1..15}; do
+    if docker exec -i "$APP_CONTAINER_ID" npx prisma db push --skip-generate; then
+      PRISMA_PUSH_OK=1
+      break
+    fi
+    sleep 3
+  done
+
+  if [[ "$PRISMA_PUSH_OK" -ne 1 ]]; then
+    echo "No se pudo ejecutar prisma db push correctamente"
+    exit 1
+  fi
 
   echo "Ejecutando seed"
   docker exec -i "$APP_CONTAINER_ID" npm run prisma:seed
