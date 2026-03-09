@@ -5,7 +5,11 @@ import { formatDateTime } from '@/lib/formatters';
 
 export async function generateMetadata({ params }) {
   return {
-    title: `Certificado ${params.code} | INTEVOPEDI`
+    title: `Certificado ${params.code} | INTEVOPEDI`,
+    robots: {
+      index: false,
+      follow: false
+    }
   };
 }
 

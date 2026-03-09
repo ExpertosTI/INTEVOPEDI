@@ -1,13 +1,14 @@
 import Link from 'next/link';
 import { getCertificateByCode } from '@/lib/data';
 import { formatDateTime } from '@/lib/formatters';
+import { normalizeCertificateCode } from '@/lib/validation';
 
 export const metadata = {
   title: 'Verificar certificado | INTEVOPEDI'
 };
 
 export default async function VerifyPage({ searchParams }) {
-  const code = searchParams?.code?.trim();
+  const code = normalizeCertificateCode(searchParams?.code);
   const certificate = code ? await getCertificateByCode(code) : null;
 
   return (
