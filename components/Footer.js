@@ -36,9 +36,6 @@ export function Footer() {
             <Link href="/grupo-atrevete">Grupo Atrévete</Link>
           </p>
           <p>
-            <Link href="/admin/login">Panel admin</Link>
-          </p>
-          <p>
             <a href={siteConfig.repositoryUrl} target="_blank" rel="noreferrer">
               Repositorio GitHub
             </a>
