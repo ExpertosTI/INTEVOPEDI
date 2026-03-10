@@ -27,7 +27,6 @@ services:
       PARTICIPANT_SESSION_SECRET: ${PARTICIPANT_SESSION_SECRET}
       NODE_ENV: production
       PORT: 3000
-    depends_on: [db]
     networks:
       - intevopedi_internal
       - RenaceNet
