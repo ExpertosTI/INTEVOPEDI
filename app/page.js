@@ -9,7 +9,6 @@ import {
   heroMetrics,
   institutionalSections,
   programHighlights,
-  roadmapImprovements,
   siteConfig,
   testimonials
 } from '@/lib/site';
@@ -97,25 +96,6 @@ export default async function HomePage() {
           <div className="card-grid">
             {courses.map((course) => (
               <CourseCard key={course.id} course={course} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="shell">
-          <div className="section-heading">
-            <span className="eyebrow">Evolución tecnológica continua</span>
-            <h2>Una plataforma viva que crece contigo.</h2>
-            <p>
-              Hemos integrado nuevas capacidades para ofrecer una experiencia educativa de clase mundial.
-            </p>
-          </div>
-          <div className="improvements-grid">
-            {roadmapImprovements.map((item) => (
-              <article key={item} className="panel improvement-card">
-                <strong>{item}</strong>
-              </article>
             ))}
           </div>
         </div>
