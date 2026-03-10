@@ -198,36 +198,48 @@ main {
   border-radius: 999px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .button:active {
-  transform: scale(0.98);
+  transform: scale(0.96);
 }
 
 .button:focus-visible {
-  outline: 2px solid rgba(37, 99, 235, 0.4);
-  outline-offset: 2px;
+  outline: 2px solid rgba(37, 99, 235, 0.5);
+  outline-offset: 4px;
 }
 
 .button-secondary {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   color: var(--text);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .button-secondary:hover {
   border-color: var(--primary);
   color: var(--primary);
-  background: rgba(37, 99, 235, 0.05);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.1), 0 4px 6px -2px rgba(37, 99, 235, 0.05);
+  transform: translateY(-2px);
 }
 
 .button-dark {
-  background: var(--surface-dark);
+  background: linear-gradient(to bottom, #1e293b, #0f172a);
   color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+}
+
+.button-dark:hover {
+  background: linear-gradient(to bottom, #334155, #1e293b);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
 }
 
 /* Hero */
@@ -244,17 +256,20 @@ main {
 }
 
 .panel {
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: var(--radius-xl);
-  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
   padding: 32px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
 .panel:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1);
+  border-color: rgba(37, 99, 235, 0.2);
 }
 
 .panel-dark {
@@ -280,16 +295,17 @@ main {
 }
 
 .button-primary {
-  background: var(--primary);
+  background: linear-gradient(to bottom, #3b82f6, #2563eb);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-  transition: all 0.2s ease;
+  border: 1px solid #1d4ed8;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 6px rgba(37, 99, 235, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .button-primary:hover {
-  background: var(--primary-dark);
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
-  transform: translateY(-1px);
+  background: linear-gradient(to bottom, #60a5fa, #3b82f6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 10px 20px rgba(37, 99, 235, 0.3);
+  transform: translateY(-2px);
 }
 
 h1 {
@@ -427,53 +443,55 @@ p {
 .badge {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
-  padding: 0 16px;
+  min-height: 32px;
+  padding: 0 14px;
   border-radius: 999px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
-  transition: all 0.2s ease;
+  letter-spacing: 0.03em;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
 }
 
 .badge:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .badge-gold {
-  background: rgba(197, 160, 89, 0.18);
-  color: #b48a3a;
-  border: 1px solid rgba(197, 160, 89, 0.4);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.05));
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .badge-pending_payment,
 .badge-pending {
-  background: rgba(217, 119, 6, 0.15);
-  color: var(--warning);
-  border: 1px solid rgba(217, 119, 6, 0.35);
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(234, 88, 12, 0.05));
+  color: #c2410c;
+  border: 1px solid rgba(249, 115, 22, 0.3);
 }
 
 .badge-confirmed,
 .badge-verified {
-  background: rgba(37, 99, 235, 0.12);
-  color: var(--primary);
-  border: 1px solid rgba(37, 99, 235, 0.3);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.05));
+  color: #1d4ed8;
+  border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
 .badge-in_progress {
-  background: rgba(21, 94, 117, 0.15);
-  color: #0f766e;
-  border: 1px solid rgba(21, 94, 117, 0.35);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(2, 132, 199, 0.05));
+  color: #0369a1;
+  border: 1px solid rgba(14, 165, 233, 0.3);
 }
 
 .badge-completed,
 .badge-waived {
-  background: rgba(22, 130, 106, 0.15);
-  color: var(--success);
-  border: 1px solid rgba(22, 130, 106, 0.35);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.05));
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .section-heading {

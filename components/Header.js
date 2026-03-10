@@ -9,8 +9,7 @@ const baseNavigation = [
   { href: '/cursos', label: 'Cursos' },
   { href: '/recursos', label: 'Recursos' },
   { href: '/grupo-atrevete', label: 'Grupo Atrévete' },
-  { href: '/verificar', label: 'Verificar certificado' },
-  { href: '/admin/login', label: 'Admin' }
+  { href: '/verificar', label: 'Verificar certificado' }
 ];
 
 export async function Header() {
