@@ -427,39 +427,53 @@ p {
 .badge {
   display: inline-flex;
   align-items: center;
-  min-height: 34px;
-  padding: 0 12px;
+  min-height: 36px;
+  padding: 0 16px;
   border-radius: 999px;
-  font-size: 0.88rem;
-  font-weight: 800;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+}
+
+.badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
 }
 
 .badge-gold {
-  background: rgba(197, 160, 89, 0.14);
-  color: #946f2a;
+  background: rgba(197, 160, 89, 0.18);
+  color: #b48a3a;
+  border: 1px solid rgba(197, 160, 89, 0.4);
 }
 
 .badge-pending_payment,
 .badge-pending {
-  background: rgba(217, 119, 6, 0.12);
+  background: rgba(217, 119, 6, 0.15);
   color: var(--warning);
+  border: 1px solid rgba(217, 119, 6, 0.35);
 }
 
 .badge-confirmed,
 .badge-verified {
-  background: rgba(12, 74, 138, 0.12);
+  background: rgba(37, 99, 235, 0.12);
   color: var(--primary);
+  border: 1px solid rgba(37, 99, 235, 0.3);
 }
 
 .badge-in_progress {
-  background: rgba(21, 94, 117, 0.12);
+  background: rgba(21, 94, 117, 0.15);
   color: #0f766e;
+  border: 1px solid rgba(21, 94, 117, 0.35);
 }
 
 .badge-completed,
 .badge-waived {
-  background: rgba(22, 130, 106, 0.12);
+  background: rgba(22, 130, 106, 0.15);
   color: var(--success);
+  border: 1px solid rgba(22, 130, 106, 0.35);
 }
 
 .section-heading {
@@ -584,6 +598,17 @@ textarea:focus {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.footer-powered {
+  font-size: 0.75rem;
+  opacity: 0.4;
+  color: rgba(255, 255, 255, 0.6);
+  transition: opacity 0.2s ease;
+}
+
+.footer-powered:hover {
+  opacity: 0.6;
 }
 
 .table-wrapper {

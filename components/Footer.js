@@ -47,7 +47,7 @@ export function Footer() {
       </div>
       <div className="shell footer-bottom">
         <span>© 2026 {siteConfig.name}. Todos los derechos reservados.</span>
-        <span>Powered by Renace Tech</span>
+        <span className="footer-powered">Renace Tech</span>
       </div>
     </footer>
   );

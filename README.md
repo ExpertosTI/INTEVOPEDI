@@ -161,7 +161,7 @@ Si prefieres Portainer UI:
 
 ## Datos institucionales ajustados
 
-- Teléfono corregido: `829 954 8873`
+- Teléfono corregido: `829 954 8273`
 - Repositorio: `https://github.com/ExpertosTI/INTEVOPEDI`
 
 ## Notas importantes

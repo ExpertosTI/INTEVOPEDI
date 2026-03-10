@@ -43,7 +43,7 @@ export async function GET(request, { params }) {
   page.drawImage(qrImage, { x: 615, y: 132, width: 150, height: 150 });
   page.drawText('Validación pública', { x: 625, y: 110, size: 12, font: titleFont, color: rgb(0.04, 0.23, 0.43) });
   page.drawText(new URL(siteConfig.baseUrl).host, { x: 78, y: 82, size: 12, font: bodyFont, color: rgb(0.36, 0.45, 0.54) });
-  page.drawText('829 954 8873', { x: 78, y: 62, size: 12, font: bodyFont, color: rgb(0.36, 0.45, 0.54) });
+  page.drawText('829 954 8273', { x: 78, y: 62, size: 12, font: bodyFont, color: rgb(0.36, 0.45, 0.54) });
 
   const pdfBytes = await pdf.save();
 

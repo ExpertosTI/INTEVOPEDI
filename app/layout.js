@@ -51,7 +51,8 @@ export const metadata = {
   icons: {
     icon: '/Logo.png',
     apple: '/Logo.png'
-  }
+  },
+  manifest: '/manifest.json'
 };
 
 export default function RootLayout({ children }) {

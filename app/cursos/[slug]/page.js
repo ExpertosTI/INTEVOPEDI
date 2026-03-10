@@ -87,7 +87,7 @@ export default async function CourseDetailPage({ params, searchParams }) {
                 </label>
                 <label>
                   Teléfono
-                  <input type="tel" name="phone" required placeholder="829 954 8873" />
+                  <input type="tel" name="phone" required placeholder="829 954 8273" />
                 </label>
                 <label>
                   Ciudad
