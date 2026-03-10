@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { CourseCard } from '@/components/CourseCard';
+import { ProgressBar } from '@/components/ProgressBar';
 import { getFeaturedCourse, getPublishedCourses } from '@/lib/data';
 import {
   accessibilityFeatures,
@@ -75,12 +76,11 @@ export default async function HomePage() {
                 <dd>{featuredCourse.seats}</dd>
               </div>
             </dl>
-            <div className="progress-line" aria-hidden="true">
-              <span style={{ width: `${Math.min(100, Math.round(((featuredCourse.enrollments?.length || 0) / (featuredCourse.seats || 1)) * 100))}%` }} />
-            </div>
-            <p className="helper">
-              Inscritos actuales: <strong>{featuredCourse.enrollments?.length || 0}</strong> de {featuredCourse.seats || 'cupos abiertos'}.
-            </p>
+            <ProgressBar
+              current={featuredCourse.enrollments?.length || 0}
+              total={featuredCourse.seats}
+              label="Inscritos actuales"
+            />
           </div>
         </div>
       </section>

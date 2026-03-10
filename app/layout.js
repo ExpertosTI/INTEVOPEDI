@@ -55,8 +55,33 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'EducationalOrganization',
+    name: siteConfig.name,
+    url: siteConfig.baseUrl,
+    logo: `${siteConfig.baseUrl}/Logo.png`,
+    description: siteConfig.description,
+    address: {
+      '@type': 'PostalAddress',
+      addressCountry: 'DO',
+      streetAddress: siteConfig.address
+    },
+    contactPoint: {
+      '@type': 'ContactPoint',
+      telephone: siteConfig.contactPhone,
+      contactType: 'customer service'
+    }
+  };
+
   return (
     <html lang="es-DO">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="site-body">
         <a href="#main-content" className="skip-link">
           Saltar al contenido principal

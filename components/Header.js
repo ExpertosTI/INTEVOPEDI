@@ -31,7 +31,7 @@ export async function Header() {
             <span>{siteConfig.tagline}</span>
           </div>
         </Link>
-        <HeaderNav navigation={navigation} contactPhoneHref={siteConfig.contactPhoneHref} contactPhone={siteConfig.contactPhone} />
+        <HeaderNav navigation={navigation} />
       </div>
     </header>
   );

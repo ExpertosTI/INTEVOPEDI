@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
-export function HeaderNav({ navigation, contactPhoneHref, contactPhone }) {
+export function HeaderNav({ navigation }) {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
 
   const closeMenu = () => setIsOpen(false);
 
@@ -23,16 +25,21 @@ export function HeaderNav({ navigation, contactPhoneHref, contactPhone }) {
 
       <div className={`nav-panel${isOpen ? ' nav-panel-open' : ''}`}>
         <nav id="site-nav-links" className="site-nav" aria-label="Principal">
-          {navigation.map((item) => (
-            <Link key={item.href} href={item.href} className="nav-link" onClick={closeMenu}>
-              {item.label}
-            </Link>
-          ))}
+          {navigation.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`nav-link${isActive ? ' active' : ''}`}
+                aria-current={isActive ? 'page' : undefined}
+                onClick={closeMenu}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
-
-        <a href={contactPhoneHref} className="button button-secondary nav-cta" aria-label={`Contactar por WhatsApp al ${contactPhone}`}>
-          {contactPhone}
-        </a>
       </div>
     </>
   );
