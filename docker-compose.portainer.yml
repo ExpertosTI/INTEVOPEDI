@@ -40,7 +40,7 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.intevopedi.rule=Host(`${APP_HOST}`)"
+        - "traefik.http.routers.intevopedi.rule=Host(`${APP_HOST:-intevopedi.org}`)"
         - "traefik.http.routers.intevopedi.entrypoints=websecure"
         - "traefik.http.routers.intevopedi.tls=true"
         - "traefik.http.routers.intevopedi.tls.certresolver=letsencryptresolver"

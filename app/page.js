@@ -22,16 +22,16 @@ export default async function HomePage() {
       <section className="hero">
         <div className="shell hero-card">
           <div className="panel panel-dark stack">
-            <span className="eyebrow">Nueva plataforma de formación</span>
-            <h1>INTEVOPEDI ahora funciona como una app moderna de cursos accesibles.</h1>
+            <span className="eyebrow">Educación inclusiva en acción</span>
+            <h1>Formación accesible con seguimiento académico y certificación verificable.</h1>
             <p>
-              Registra participantes, organiza la formación, sigue el avance del curso y emite certificados PDF con verificación pública por QR.
+              Inscríbete, avanza por módulos y obtén tu certificado con validación pública por código y QR, en una experiencia clara desde móvil y escritorio.
             </p>
             <div className="hero-actions">
               <Link href={`/cursos/${featuredCourse.slug}`} className="button button-primary">
                 Inscribirme al curso destacado
               </Link>
-              <Link href="/verificar" className="button button-secondary">
+              <Link href="/verificar" className="button button-secondary button-dark">
                 Verificar certificado
               </Link>
             </div>
@@ -88,30 +88,10 @@ export default async function HomePage() {
       <section className="section">
         <div className="shell">
           <div className="section-heading">
-            <span className="eyebrow">Qué resuelve esta app</span>
-            <h2>Una experiencia más fluida, profesional y útil para la operación académica.</h2>
+            <span className="eyebrow">Catálogo de formación 2026</span>
+            <h2>Cursos diseñados para el impacto real.</h2>
             <p>
-              Partimos de la web institucional y la convertimos en una plataforma lista para Git, despliegue por Portainer, control de inscripciones y trazabilidad del certificado.
-            </p>
-          </div>
-          <div className="card-grid">
-            {programHighlights.map((item) => (
-              <article key={item.title} className="panel stat-card stack">
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="shell">
-          <div className="section-heading">
-            <span className="eyebrow">Curso inicial</span>
-            <h2>IA como Apoyo a la Discapacidad Visual</h2>
-            <p>
-              Un curso práctico para docentes, familias, facilitadores y profesionales que quieren crear materiales educativos más accesibles con apoyo de IA.
+              Oferta académica actualizada con enfoque en competencias digitales, accesibilidad y empleabilidad.
             </p>
           </div>
           <div className="card-grid">
@@ -123,36 +103,13 @@ export default async function HomePage() {
       </section>
 
       <section className="section">
-        <div className="shell dashboard-grid">
-          <div className="panel stack">
-            <span className="eyebrow">Accesibilidad primero</span>
-            <h2>Características pensadas para personas, no solo para pantallas.</h2>
-            <ul className="list">
-              {accessibilityFeatures.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="panel stack">
-            <span className="eyebrow">Áreas institucionales</span>
-            <h2>Secciones reforzadas para crecer el proyecto.</h2>
-            <div className="stack">
-              {institutionalSections.map((item) => (
-                <div key={item.title}>
-                  <h3>{item.title}</h3>
-                  <p>{item.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="section">
         <div className="shell">
           <div className="section-heading">
-            <span className="eyebrow">22 mejoras incluidas en el roadmap</span>
-            <h2>La app queda preparada para seguir creciendo.</h2>
+            <span className="eyebrow">Evolución tecnológica continua</span>
+            <h2>Una plataforma viva que crece contigo.</h2>
+            <p>
+              Hemos integrado nuevas capacidades para ofrecer una experiencia educativa de clase mundial.
+            </p>
           </div>
           <div className="improvements-grid">
             {roadmapImprovements.map((item) => (

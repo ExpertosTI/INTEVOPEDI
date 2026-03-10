@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getParticipantSession } from '@/lib/participant-auth';
 import { siteConfig } from '@/lib/site';
+import { HeaderNav } from '@/components/HeaderNav';
 
 const baseNavigation = [
   { href: '/', label: 'Inicio' },
@@ -30,18 +31,7 @@ export async function Header() {
             <span>{siteConfig.tagline}</span>
           </div>
         </Link>
-
-        <nav className="site-nav" aria-label="Principal">
-          {navigation.map((item) => (
-            <Link key={item.href} href={item.href} className="nav-link">
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <a href={siteConfig.contactPhoneHref} className="button button-secondary" aria-label={`Contactar por WhatsApp al ${siteConfig.contactPhone}`}>
-          {siteConfig.contactPhone}
-        </a>
+        <HeaderNav navigation={navigation} contactPhoneHref={siteConfig.contactPhoneHref} contactPhone={siteConfig.contactPhone} />
       </div>
     </header>
   );
