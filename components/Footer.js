@@ -35,11 +35,6 @@ export function Footer() {
           <p>
             <Link href="/grupo-atrevete">Grupo Atrévete</Link>
           </p>
-          <p>
-            <a href={siteConfig.repositoryUrl} target="_blank" rel="noreferrer">
-              Repositorio GitHub
-            </a>
-          </p>
         </nav>
       </div>
       <div className="shell footer-bottom">

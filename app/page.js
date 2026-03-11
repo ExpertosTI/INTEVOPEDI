@@ -153,9 +153,6 @@ export default async function HomePage() {
               <Link href="/verificar" className="button button-primary">
                 Verificar certificado
               </Link>
-              <a href={siteConfig.repositoryUrl} target="_blank" rel="noreferrer" className="button button-secondary">
-                Ver repositorio
-              </a>
             </div>
           </div>
           <div className="panel stack">

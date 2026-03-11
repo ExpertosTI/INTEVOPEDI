@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ParticipantLoginForm } from '@/components/ParticipantLoginForm';
 import { participantAccessLogin } from '@/app/actions';
 import { getParticipantSession } from '@/lib/participant-auth';
 import { participantHubBenefits } from '@/lib/site';
@@ -21,20 +22,8 @@ export default async function ParticipantAccessPage({ searchParams }) {
           <p>
             Si ya te inscribiste, introduce tu correo y tu código para entrar a tu campus, revisar progreso, recursos y certificado.
           </p>
-          {error ? <div className="banner banner-error" role="alert">{error}</div> : null}
-          <form action={participantAccessLogin} className="verify-box">
-            <label>
-              Correo electrónico
-              <input type="email" name="email" autoComplete="email" inputMode="email" placeholder="nombre@correo.com" required />
-            </label>
-            <label>
-              Código de inscripción
-              <input type="text" name="referenceCode" autoCapitalize="characters" autoComplete="off" placeholder="INT-AB12CD34" defaultValue={code} required />
-            </label>
-            <button type="submit" className="button button-primary">
-              Continuar
-            </button>
-          </form>
+          <ParticipantLoginForm />
+          
           {session ? (
             <div className="inline-actions">
               <Link href="/campus" className="button button-secondary">

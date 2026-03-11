@@ -194,6 +194,31 @@ export async function toggleModuleProgress(formData) {
   redirect(`/mi-inscripcion/${referenceCode}`);
 }
 
+export async function requestParticipantAccessCode(formData) {
+  const email = normalizeEmail(formData.get('email'));
+  
+  if (!email) {
+    return { error: 'Introduce un correo electrónico válido.' };
+  }
+
+  // Find any active enrollment for this email
+  const enrollment = await prisma.enrollment.findFirst({
+    where: { participant: { email } },
+    orderBy: { createdAt: 'desc' },
+    select: { referenceCode: true }
+  });
+
+  if (!enrollment) {
+    return { error: 'No encontramos ninguna inscripción con este correo.' };
+  }
+
+  // In a real app, this would trigger an email provider (Resend, SES, etc)
+  console.log(`\n\n📧 SIMULATED EMAIL TO: ${email}`);
+  console.log(`Tu código de acceso es: ${enrollment.referenceCode}\n\n`);
+
+  return { success: true };
+}
+
 export async function participantAccessLogin(formData) {
   const normalizedValues = {
     email: normalizeEmail(formData.get('email')),
