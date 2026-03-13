@@ -11,6 +11,7 @@ import { createParticipantSession, destroyParticipantSession, getParticipantSess
 import { ensureCertificate, generateReferenceCode, syncEnrollmentProgress } from '@/lib/certificates';
 import { getParticipantAccessEnrollment } from '@/lib/data';
 import { isValidPhone, normalizeEmail, normalizePhone, sanitizeText } from '@/lib/validation';
+import { sendEmail } from '@/lib/email';
 
 const enrollmentSchema = z.object({
   courseSlug: z.string().min(1),
@@ -132,6 +133,19 @@ export async function submitEnrollment(formData) {
         referenceCode: enrollment.referenceCode
       });
 
+      // Send Welcome / Confirmation Email
+      await sendEmail({
+        to: participant.email,
+        subject: `Inscripción Confirmada: ${course.title}`,
+        html: `
+          <h1>¡Hola ${participant.fullName}!</h1>
+          <p>Tu inscripción al curso <strong>${course.title}</strong> ha sido exitosa.</p>
+          <p>Tu código de acceso es: <strong>${enrollment.referenceCode}</strong></p>
+          <p>Puedes acceder al campus entrando aquí e ingresando tu correo junto con tu código:</p>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/participantes?code=${enrollment.referenceCode}">Ir al Campus</a>
+        `
+      });
+
       revalidatePath('/');
       revalidatePath('/cursos');
       revalidatePath(`/cursos/${course.slug}`);
@@ -212,9 +226,18 @@ export async function requestParticipantAccessCode(formData) {
     return { error: 'No encontramos ninguna inscripción con este correo.' };
   }
 
-  // In a real app, this would trigger an email provider (Resend, SES, etc)
-  console.log(`\n\n📧 SIMULATED EMAIL TO: ${email}`);
-  console.log(`Tu código de acceso es: ${enrollment.referenceCode}\n\n`);
+  // Send Access Code Email
+  await sendEmail({
+    to: email,
+    subject: 'Tu Código de Acceso - INTEVOPEDI',
+    html: `
+      <h2>Aquí tienes tu código de acceso</h2>
+      <p>Has solicitado tu código de acceso para entrar a los cursos de INTEVOPEDI.</p>
+      <p>Tu código es: <strong>${enrollment.referenceCode}</strong></p>
+      <p>Puedes acceder a tu campus ingresando a este enlace:</p>
+      <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/participantes?code=${enrollment.referenceCode}">Acceder al Campus</a>
+    `
+  });
 
   return { success: true };
 }
