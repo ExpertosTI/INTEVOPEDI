@@ -88,6 +88,9 @@ docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build
 echo "Desplegando stack $STACK_NAME"
 docker stack deploy -c "$COMPOSE_FILE" "$STACK_NAME"
 
+echo "Forzando actualización del servicio para tomar nueva imagen..."
+docker service update --force --image intevopedi-app:latest "$APP_SERVICE"
+
 echo "Servicios actuales"
 docker service ls
 

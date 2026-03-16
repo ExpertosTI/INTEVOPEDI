@@ -162,7 +162,7 @@ export async function submitEnrollment(formData) {
           <p>Tu inscripción al curso <strong>${course.title}</strong> ha sido exitosa.</p>
           <p>Tu código de acceso es: <strong>${enrollment.referenceCode}</strong></p>
           <p>Puedes acceder al campus entrando aquí e ingresando tu correo junto con tu código:</p>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/participantes?email=${encodeURIComponent(participant.email)}">Ir al Campus</a>
+          <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/participantes?email=${encodeURIComponent(participant.email)}">Ir al Campus</a>
         `
       });
 
@@ -255,7 +255,7 @@ export async function requestParticipantAccessCode(formData) {
       <p>Has solicitado tu código de acceso para entrar a los cursos de INTEVOPEDI.</p>
       <p>Tu código es: <strong>${enrollment.referenceCode}</strong></p>
       <p>Puedes acceder a tu campus ingresando a este enlace:</p>
-      <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/participantes?code=${enrollment.referenceCode}">Acceder al Campus</a>
+      <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/participantes?code=${enrollment.referenceCode}">Acceder al Campus</a>
     `
   });
 
