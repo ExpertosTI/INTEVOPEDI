@@ -89,25 +89,9 @@ export default async function CourseDetailPage({ params, searchParams }) {
                   Teléfono
                   <input type="tel" name="phone" required placeholder="829 954 8273" />
                 </label>
-                <label>
-                  Ciudad
-                  <input type="text" name="city" placeholder="Santo Domingo" />
-                </label>
-                <label>
-                  Organización o centro educativo
-                  <input type="text" name="organization" placeholder="Institución, escuela o proyecto" />
-                </label>
-                <label>
-                  Perfil o contexto de discapacidad visual
-                  <input type="text" name="visualProfile" placeholder="Docente, familia, terapeuta, estudiante..." />
-                </label>
               </div>
-              <label>
-                Necesidades o comentarios
-                <textarea name="notes" placeholder="Comparte si necesitas apoyo adicional o ajustes de accesibilidad." />
-              </label>
-              <button type="submit" className="button button-primary">
-                Inscribirme al curso
+              <button type="submit" className="button button-primary" style={{ marginTop: '1rem' }}>
+                Inscribirme y recibir código
               </button>
             </form>
           </aside>

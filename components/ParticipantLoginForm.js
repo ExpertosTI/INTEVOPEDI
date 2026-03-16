@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { requestParticipantAccessCode, participantAccessLogin } from '@/app/actions';
 
-export function ParticipantLoginForm() {
-  const [step, setStep] = useState(1);
-  const [email, setEmail] = useState('');
+export function ParticipantLoginForm({ defaultEmail = '', defaultCode = '' }) {
+  // If defaultEmail is provided (e.g. from registration), we can jump to step 2 if we also have a code, or just pre-fill email.
+  const [step, setStep] = useState(defaultEmail && !defaultCode ? 2 : 1);
+  const [email, setEmail] = useState(defaultEmail);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
@@ -46,6 +47,7 @@ export function ParticipantLoginForm() {
               placeholder="nombre@correo.com" 
               required 
               disabled={isLoading}
+              defaultValue={email}
             />
           </label>
           <button type="submit" className="button button-primary" disabled={isLoading}>
@@ -66,6 +68,7 @@ export function ParticipantLoginForm() {
               autoComplete="off" 
               placeholder="Ej. INT-AB12CD34" 
               required 
+              defaultValue={defaultCode}
             />
           </label>
           <div className="inline-actions">

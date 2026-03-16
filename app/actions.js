@@ -37,6 +37,31 @@ const participantAccessSchema = z.object({
   referenceCode: z.string().min(5)
 });
 
+export async function updateParticipantProfile(formData) {
+  const session = await getParticipantSession();
+  if (!session) redirect('/participantes');
+
+  const rawValues = Object.fromEntries(formData.entries());
+  
+  const data = {
+    fullName: sanitizeText(rawValues.fullName || ''),
+    phone: normalizePhone(rawValues.phone || ''),
+    city: sanitizeText(rawValues.city || ''),
+    organization: sanitizeText(rawValues.organization || ''),
+    visualProfile: sanitizeText(rawValues.visualProfile || ''),
+    notes: sanitizeText(rawValues.notes || '')
+  };
+
+  await prisma.participant.update({
+    where: { id: session.participantId },
+    data
+  });
+
+  revalidatePath('/campus');
+  revalidatePath('/perfil');
+  redirect('/campus?profileUpdated=1');
+}
+
 export async function submitEnrollment(formData) {
   const rawValues = Object.fromEntries(formData.entries());
   const normalizedValues = {
@@ -128,11 +153,6 @@ export async function submitEnrollment(formData) {
         skipDuplicates: true
       });
 
-      await createParticipantSession({
-        participantId: participant.id,
-        referenceCode: enrollment.referenceCode
-      });
-
       // Send Welcome / Confirmation Email
       await sendEmail({
         to: participant.email,
@@ -142,14 +162,14 @@ export async function submitEnrollment(formData) {
           <p>Tu inscripción al curso <strong>${course.title}</strong> ha sido exitosa.</p>
           <p>Tu código de acceso es: <strong>${enrollment.referenceCode}</strong></p>
           <p>Puedes acceder al campus entrando aquí e ingresando tu correo junto con tu código:</p>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/participantes?code=${enrollment.referenceCode}">Ir al Campus</a>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/participantes?email=${encodeURIComponent(participant.email)}">Ir al Campus</a>
         `
       });
 
       revalidatePath('/');
       revalidatePath('/cursos');
       revalidatePath(`/cursos/${course.slug}`);
-      destination = `/campus?created=1&code=${encodeURIComponent(enrollment.referenceCode)}`;
+      destination = `/participantes?registered=1&email=${encodeURIComponent(participant.email)}`;
     }
   } catch (error) {
     destination = `/cursos/${courseSlug}?error=${encodeURIComponent('No se pudo completar la inscripción. Revisa la conexión a la base de datos.')}`;

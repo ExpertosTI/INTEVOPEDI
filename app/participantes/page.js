@@ -10,7 +10,9 @@ export const metadata = {
 
 export default async function ParticipantAccessPage({ searchParams }) {
   const code = searchParams?.code?.trim() || '';
+  const emailParam = searchParams?.email?.trim() || '';
   const error = searchParams?.error;
+  const registered = searchParams?.registered;
   const session = await getParticipantSession();
 
   return (
@@ -22,7 +24,19 @@ export default async function ParticipantAccessPage({ searchParams }) {
           <p>
             Si ya te inscribiste, introduce tu correo y tu código para entrar a tu campus, revisar progreso, recursos y certificado.
           </p>
-          <ParticipantLoginForm />
+          
+          {registered ? (
+            <div className="banner banner-success" role="status">
+              ¡Inscripción exitosa! Revisa tu correo ({emailParam}) para obtener tu código de acceso.
+            </div>
+          ) : null}
+          {error ? (
+            <div className="banner banner-error" role="alert">
+              {error}
+            </div>
+          ) : null}
+
+          <ParticipantLoginForm defaultEmail={emailParam} defaultCode={code} />
           
           {session ? (
             <div className="inline-actions">

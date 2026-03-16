@@ -45,12 +45,23 @@ export default async function CampusPage({ searchParams }) {
             <h1>{participant.fullName}</h1>
             <p>Desde aquí puedes retomar tus cursos, revisar progreso y acceder a tus certificados cuando correspondan.</p>
           </div>
-          <form action={participantLogout} className="inline-form">
-            <button type="submit" className="button button-secondary">
-              Cerrar acceso
-            </button>
-          </form>
+          <div className="inline-actions">
+            <Link href="/perfil" className="button button-secondary">
+              Actualizar datos para certificado
+            </Link>
+            <form action={participantLogout} className="inline-form">
+              <button type="submit" className="button button-secondary">
+                Cerrar acceso
+              </button>
+            </form>
+          </div>
         </div>
+
+        {searchParams?.profileUpdated ? (
+          <div className="banner banner-success" role="status" aria-live="polite">
+            Tus datos han sido actualizados correctamente.
+          </div>
+        ) : null}
 
         <div className="admin-stats">
           <article className="panel stack">
