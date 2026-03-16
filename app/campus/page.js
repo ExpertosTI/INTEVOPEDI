@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { participantLogout } from '@/app/actions';
+import { participantLogout, claimCourseCertificate } from '@/app/actions';
 import { StatusPill } from '@/components/StatusPill';
 import { getParticipantSession, requireParticipantAuth } from '@/lib/participant-auth';
 import { getParticipantCampusData } from '@/lib/data';
@@ -166,7 +166,16 @@ export default async function CampusPage({ searchParams }) {
                       <a href={`/api/certificados/${enrollment.certificate.certificateCode}/pdf`} target="_blank" rel="noreferrer" className="button button-secondary">
                         Certificado
                       </a>
-                    ) : null}
+                    ) : (
+                      enrollment.course.slug === 'ia-apoyo-discapacidad-visual' ? (
+                        <form action={claimCourseCertificate}>
+                          <input type="hidden" name="enrollmentId" value={enrollment.id} />
+                          <button type="submit" className="button button-primary">
+                            Obtener Certificado
+                          </button>
+                        </form>
+                      ) : null
+                    )}
                   </div>
                 </article>
               );

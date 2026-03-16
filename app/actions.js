@@ -62,6 +62,47 @@ export async function updateParticipantProfile(formData) {
   redirect('/campus?profileUpdated=1');
 }
 
+export async function claimCourseCertificate(formData) {
+  const session = await getParticipantSession();
+  if (!session) redirect('/participantes');
+
+  const enrollmentId = String(formData.get('enrollmentId') || '');
+  
+  if (!enrollmentId) return;
+
+  const enrollment = await prisma.enrollment.findUnique({
+    where: { id: enrollmentId },
+    include: { course: true }
+  });
+
+  if (!enrollment || enrollment.participantId !== session.participantId) {
+    redirect('/campus?error=' + encodeURIComponent('No tienes permiso para esta acción.'));
+  }
+
+  // Permitir generación automática SOLO para el curso específico ya impartido
+  if (enrollment.course.slug === 'ia-apoyo-discapacidad-visual') {
+    // Marcar como completado si no lo estaba
+    if (enrollment.status !== 'COMPLETED') {
+      await prisma.enrollment.update({
+        where: { id: enrollmentId },
+        data: {
+          status: 'COMPLETED',
+          progressPercent: 100,
+          completedAt: new Date()
+        }
+      });
+    }
+
+    // Generar el certificado
+    await ensureCertificate(enrollmentId);
+    
+    revalidatePath('/campus');
+    redirect('/campus?certificateIssued=1');
+  } else {
+    redirect('/campus?error=' + encodeURIComponent('Este curso requiere completar todos los módulos manualmente.'));
+  }
+}
+
 export async function submitEnrollment(formData) {
   const rawValues = Object.fromEntries(formData.entries());
   const normalizedValues = {
