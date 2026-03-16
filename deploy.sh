@@ -48,6 +48,11 @@ required_vars=(
   POSTGRES_PASSWORD
   POSTGRES_DB
   APP_HOST
+  SMTP_HOST
+  SMTP_PORT
+  SMTP_USER
+  SMTP_PASS
+  EMAIL_FROM
 )
 
 for var_name in "${required_vars[@]}"; do
