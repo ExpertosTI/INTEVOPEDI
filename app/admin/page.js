@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { adminLogout, issueCertificateAction, updateEnrollmentAdmin } from '@/app/actions';
 import { requireAdmin } from '@/lib/admin-auth';
 import { getAdminDashboardData } from '@/lib/data';
@@ -56,11 +57,16 @@ export default async function AdminPage({ searchParams }) {
             <h1>Panel administrativo</h1>
             <p>Gestiona cursos, inscripciones, pagos y certificados sin salir de la plataforma.</p>
           </div>
-          <form action={adminLogout} className="inline-form">
-            <button type="submit" className="button button-secondary">
-              Cerrar sesión
-            </button>
-          </form>
+          <div className="inline-actions">
+            <Link href="/admin/ajustes" className="button button-primary">
+              Ajustes IA
+            </Link>
+            <form action={adminLogout} className="inline-form">
+              <button type="submit" className="button button-secondary">
+                Cerrar sesión
+              </button>
+            </form>
+          </div>
         </div>
 
         {searchParams?.error ? <div className="banner banner-error" role="alert">{searchParams.error}</div> : null}
