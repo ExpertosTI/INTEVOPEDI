@@ -17,6 +17,8 @@ export function AdminAssistant({ courses = [] }) {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [draftPayload, setDraftPayload] = useState('');
+  const [confirmCreate, setConfirmCreate] = useState(false);
+  const [confirmAppend, setConfirmAppend] = useState(false);
 
   const selectedCourse = useMemo(() => courses.find((course) => course.id === courseId) || null, [courses, courseId]);
 
@@ -25,6 +27,8 @@ export function AdminAssistant({ courses = [] }) {
     setNotice('');
     setResult(null);
     setDraftPayload('');
+    setConfirmCreate(false);
+    setConfirmAppend(false);
 
     const data = new FormData();
     data.set('prompt', prompt);
@@ -48,6 +52,10 @@ export function AdminAssistant({ courses = [] }) {
     setError('');
     setNotice('');
     if (!draftPayload) return;
+    if (!confirmCreate) {
+      setError('Confirma la creación del curso antes de proceder.');
+      return;
+    }
 
     const formData = new FormData();
     formData.set('courseDraft', draftPayload);
@@ -62,6 +70,8 @@ export function AdminAssistant({ courses = [] }) {
       setPrompt('');
       setResult(null);
       setDraftPayload('');
+      setConfirmCreate(false);
+      setConfirmAppend(false);
     });
   }
 
@@ -69,6 +79,10 @@ export function AdminAssistant({ courses = [] }) {
     setError('');
     setNotice('');
     if (!courseId || !result?.courseContentDraft?.newModules) return;
+    if (!confirmAppend) {
+      setError('Confirma la adición de módulos antes de proceder.');
+      return;
+    }
 
     const formData = new FormData();
     formData.set('courseId', courseId);
@@ -82,6 +96,7 @@ export function AdminAssistant({ courses = [] }) {
       }
       setNotice(response?.message || 'Contenido agregado correctamente.');
       setResult(null);
+      setConfirmAppend(false);
     });
   }
 
@@ -216,6 +231,14 @@ export function AdminAssistant({ courses = [] }) {
                     Revisión (JSON)
                     <textarea value={draftPayload} onChange={(e) => setDraftPayload(e.target.value)} />
                   </label>
+                  <label className="confirm-inline">
+                    <input
+                      type="checkbox"
+                      checked={confirmCreate}
+                      onChange={(e) => setConfirmCreate(e.target.checked)}
+                    />
+                    <span>Entiendo que se creará un curso nuevo con estos datos.</span>
+                  </label>
                   <button type="button" className="button button-primary" onClick={createCourseFromDraft} disabled={isPending}>
                     Confirmar y crear curso
                   </button>
@@ -267,6 +290,14 @@ export function AdminAssistant({ courses = [] }) {
                           <li key={item.title}>{item.title}</li>
                         ))}
                       </ul>
+                      <label className="confirm-inline">
+                        <input
+                          type="checkbox"
+                          checked={confirmAppend}
+                          onChange={(e) => setConfirmAppend(e.target.checked)}
+                        />
+                        <span>Entiendo que se agregarán estos módulos al curso seleccionado.</span>
+                      </label>
                       <button type="button" className="button button-primary" onClick={appendModules} disabled={isPending || !courseId}>
                         Agregar módulos al curso
                       </button>

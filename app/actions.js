@@ -1,6 +1,7 @@
 'use server';
 
-import { timingSafeEqual } from 'node:crypto';
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
@@ -67,6 +68,33 @@ const assistantCourseSchema = z.object({
   ).min(1).max(12)
 });
 
+// Simple in-memory rate limiting for admin login (per instance)
+const loginAttempts = new Map();
+const LOGIN_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const LOGIN_MAX_ATTEMPTS = 5;
+
+function getRateLimitKey(formData) {
+  // Fall back to user-agent when IP is unavailable in server actions
+  const ip = formData.get('ip') || '';
+  const ua = formData.get('userAgent') || '';
+  return `${ip}|${ua}`.trim() || 'unknown';
+}
+
+function isRateLimited(key) {
+  const now = Date.now();
+  const entry = loginAttempts.get(key) || [];
+  const recent = entry.filter((ts) => now - ts < LOGIN_WINDOW_MS);
+  loginAttempts.set(key, recent);
+  return recent.length >= LOGIN_MAX_ATTEMPTS;
+}
+
+function recordAttempt(key) {
+  const now = Date.now();
+  const entry = loginAttempts.get(key) || [];
+  entry.push(now);
+  loginAttempts.set(key, entry);
+}
+
 function normalizeSlug(rawValue) {
   return String(rawValue || '')
     .toLowerCase()
@@ -104,6 +132,69 @@ function readGeminiTextResponse(payload) {
     return '';
   }
   return parts.map((part) => part?.text || '').join('\n').trim();
+}
+
+const ASSISTANT_ENABLED = process.env.ADMIN_ASSISTANT_DISABLED !== '1';
+const ADMIN_RESET_EMAIL = process.env.ADMIN_RESET_EMAIL || 'expertostird@gmail.com';
+const ADMIN_RESET_TTL_MS = 1000 * 60 * 20; // 20 minutos
+const ADMIN_RESET_MAX_ATTEMPTS = 3;
+const ADMIN_PASSWORD_HASH_KEY = 'admin_password_hash';
+const ADMIN_RESET_TOKEN_KEY = 'admin_reset_token';
+
+function logAssistantEvent(event) {
+  // Placeholder for structured logging; replace with real logger/DB audit
+  console.info('[assistant]', JSON.stringify(event));
+}
+
+function generateToken(size = 32) {
+  return randomBytes(size).toString('hex');
+}
+
+function getPasswordSecret() {
+  return process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_ACCESS_PASSWORD || 'intevopedi-local-admin';
+}
+
+function hashAdminPassword(raw) {
+  return createHmac('sha256', getPasswordSecret()).update(raw).digest('hex');
+}
+
+async function getStoredAdminPasswordHash() {
+  const setting = await prisma.adminSetting.findUnique({ where: { key: ADMIN_PASSWORD_HASH_KEY }, select: { value: true } });
+  return setting?.value || '';
+}
+
+async function setStoredAdminPasswordHash(rawPassword) {
+  const hashed = hashAdminPassword(rawPassword);
+  await prisma.adminSetting.upsert({
+    where: { key: ADMIN_PASSWORD_HASH_KEY },
+    update: { value: hashed },
+    create: { key: ADMIN_PASSWORD_HASH_KEY, value: hashed }
+  });
+  return hashed;
+}
+
+async function saveResetToken(token, expiresAt) {
+  await prisma.adminSetting.upsert({
+    where: { key: ADMIN_RESET_TOKEN_KEY },
+    update: { value: JSON.stringify({ token, expiresAt }) },
+    create: { key: ADMIN_RESET_TOKEN_KEY, value: JSON.stringify({ token, expiresAt }) }
+  });
+}
+
+async function readResetToken() {
+  const setting = await prisma.adminSetting.findUnique({ where: { key: ADMIN_RESET_TOKEN_KEY }, select: { value: true } });
+  if (!setting?.value) return null;
+  try {
+    return JSON.parse(setting.value);
+  } catch (error) {
+    return null;
+  }
+}
+
+async function clearResetToken() {
+  try {
+    await prisma.adminSetting.delete({ where: { key: ADMIN_RESET_TOKEN_KEY } });
+  } catch (error) {}
 }
 
 export async function updateParticipantProfile(formData) {
@@ -404,18 +495,121 @@ export async function participantLogout() {
 }
 
 export async function adminLogin(formData) {
+  const hdrs = headers();
+  const key = getRateLimitKey({
+    get(name) {
+      if (name === 'ip') return hdrs.get('x-forwarded-for') || hdrs.get('x-real-ip') || '';
+      if (name === 'userAgent') return hdrs.get('user-agent') || '';
+      return '';
+    }
+  });
+
+  if (isRateLimited(key)) {
+    redirect(`/admin/login?error=${encodeURIComponent('Demasiados intentos. Inténtalo en unos minutos.')}`);
+  }
+
   const password = sanitizeText(formData.get('password'));
   const expectedPassword = process.env.ADMIN_ACCESS_PASSWORD || '';
+  const storedHash = await getStoredAdminPasswordHash();
+
+  if (!password || password.length < 12) {
+    recordAttempt(key);
+    redirect(`/admin/login?error=${encodeURIComponent('Contraseña inválida o demasiado corta.')}`);
+  }
 
   const passwordBuffer = Buffer.from(password);
   const expectedBuffer = Buffer.from(expectedPassword);
+  const computedHash = hashAdminPassword(password);
+  const storedHashBuffer = storedHash ? Buffer.from(storedHash) : null;
 
-  if (!password || !expectedPassword || passwordBuffer.length !== expectedBuffer.length || !timingSafeEqual(passwordBuffer, expectedBuffer)) {
+  const matchesEnv = expectedPassword && passwordBuffer.length === expectedBuffer.length && timingSafeEqual(passwordBuffer, expectedBuffer);
+  const matchesStored = storedHashBuffer && storedHashBuffer.length === Buffer.from(computedHash).length && timingSafeEqual(storedHashBuffer, Buffer.from(computedHash));
+
+  if (!matchesEnv && !matchesStored) {
+    recordAttempt(key);
     redirect(`/admin/login?error=${encodeURIComponent('Credenciales inválidas.')}`);
   }
 
+  // Successful auth: reset attempts for key
+  loginAttempts.delete(key);
   await createAdminSession();
   redirect('/admin');
+}
+
+const resetRequests = new Map();
+
+function recordResetAttempt(key) {
+  const now = Date.now();
+  const entry = resetRequests.get(key) || [];
+  const recent = entry.filter((ts) => now - ts < ADMIN_RESET_TTL_MS);
+  recent.push(now);
+  resetRequests.set(key, recent);
+  return recent.length;
+}
+
+export async function requestAdminPasswordReset() {
+  const hdrs = headers();
+  const key = getRateLimitKey({
+    get(name) {
+      if (name === 'ip') return hdrs.get('x-forwarded-for') || hdrs.get('x-real-ip') || '';
+      if (name === 'userAgent') return hdrs.get('user-agent') || '';
+      return '';
+    }
+  });
+
+  const attempts = recordResetAttempt(key);
+  if (attempts > ADMIN_RESET_MAX_ATTEMPTS) {
+    redirect(`/admin/login?error=${encodeURIComponent('Demasiadas solicitudes. Intenta más tarde.')}`);
+  }
+
+  const active = await readResetToken();
+  if (active?.expiresAt && active.expiresAt > Date.now()) {
+    redirect(`/admin/login?saved=${encodeURIComponent('Ya se envió un enlace de restablecimiento vigente.')}`);
+  }
+
+  const token = generateToken(24);
+  const expiresAt = Date.now() + ADMIN_RESET_TTL_MS;
+  await saveResetToken(token, expiresAt);
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const resetLink = `${baseUrl}/admin/reset?token=${encodeURIComponent(token)}`;
+
+  await sendEmail({
+    to: ADMIN_RESET_EMAIL,
+    subject: 'Restablecer contraseña de administrador - INTEVOPEDI',
+    html: `
+      <p>Recibimos una solicitud para restablecer la contraseña de administración.</p>
+      <p>Haz clic en el siguiente enlace para definir una nueva contraseña (expira en 20 minutos):</p>
+      <p><a href="${resetLink}">${resetLink}</a></p>
+      <p>Si no solicitaste este cambio, ignora este correo.</p>
+    `
+  });
+
+  redirect(`/admin/login?saved=${encodeURIComponent('Enviamos un enlace de restablecimiento al correo del administrador.')}`);
+}
+
+export async function completeAdminPasswordReset(formData) {
+  const token = sanitizeText(formData.get('token'));
+  const newPassword = sanitizeText(formData.get('password'));
+
+  if (!token || !newPassword || newPassword.length < 12) {
+    redirect(`/admin/reset?error=${encodeURIComponent('Token inválido o contraseña demasiado corta.')}`);
+  }
+
+  const stored = await readResetToken();
+  if (!stored?.token || !stored?.expiresAt || stored.expiresAt < Date.now()) {
+    redirect(`/admin/reset?error=${encodeURIComponent('El enlace ha expirado o no es válido.')}`);
+  }
+
+  if (stored.token !== token) {
+    redirect(`/admin/reset?error=${encodeURIComponent('Token incorrecto.')}`);
+  }
+
+  await setStoredAdminPasswordHash(newPassword);
+  await clearResetToken();
+  loginAttempts.clear();
+
+  redirect(`/admin/login?saved=${encodeURIComponent('Contraseña actualizada. Inicia sesión con la nueva clave.')}`);
 }
 
 export async function adminLogout() {
@@ -438,6 +632,9 @@ export async function updateGeminiApiKeyAction(formData) {
 
 export async function runAdminAssistantAction(formData) {
   await requireAdmin();
+  if (!ASSISTANT_ENABLED) {
+    return { ok: false, error: 'El asistente está deshabilitado por configuración.' };
+  }
   const parsed = assistantRequestSchema.safeParse({
     prompt: String(formData.get('prompt') || '').trim(),
     actionType: String(formData.get('actionType') || 'general'),
@@ -542,23 +739,35 @@ ${modeGuide}
     const text = readGeminiTextResponse(payload);
     const data = extractJsonObject(text);
 
-    return {
-      ok: true,
-      data: {
-        summary: String(data.summary || ''),
-        audioBrief: String(data.audioBrief || ''),
-        suggestedButtons: Array.isArray(data.suggestedButtons) ? data.suggestedButtons.slice(0, 4) : [],
-        courseDraft: data.courseDraft || null,
-        courseContentDraft: data.courseContentDraft || null
-      }
+    const sanitized = {
+      summary: String(data.summary || ''),
+      audioBrief: String(data.audioBrief || ''),
+      suggestedButtons: Array.isArray(data.suggestedButtons) ? data.suggestedButtons.slice(0, 4) : [],
+      courseDraft: data.courseDraft || null,
+      courseContentDraft: data.courseContentDraft || null
     };
+
+    logAssistantEvent({
+      type: 'assistant.response',
+      prompt: parsed.data.prompt.slice(0, 300),
+      actionType: parsed.data.actionType,
+      courseId: parsed.data.courseId || null,
+      hasCourseDraft: Boolean(sanitized.courseDraft),
+      hasContentDraft: Boolean(sanitized.courseContentDraft)
+    });
+
+    return { ok: true, data: sanitized };
   } catch (error) {
+    logAssistantEvent({ type: 'assistant.error', message: String(error?.message || error) });
     return { ok: false, error: 'No se pudo procesar la respuesta del asistente.' };
   }
 }
 
 export async function createCourseFromAssistantAction(formData) {
   await requireAdmin();
+  if (!ASSISTANT_ENABLED) {
+    return { ok: false, error: 'El asistente está deshabilitado por configuración.' };
+  }
   const payload = String(formData.get('courseDraft') || '');
   if (!payload) {
     return { ok: false, error: 'No se recibió borrador de curso.' };
@@ -584,7 +793,7 @@ export async function createCourseFromAssistantAction(formData) {
         duration: draft.duration,
         location: draft.location,
         instructor: draft.instructor,
-        status: draft.status || 'DRAFT'
+        status: 'DRAFT'
       }
     });
 
@@ -600,41 +809,53 @@ export async function createCourseFromAssistantAction(formData) {
 
     revalidatePath('/admin');
     revalidatePath('/admin/ajustes');
-    revalidatePath('/cursos');
 
-    return { ok: true, message: `Curso creado: ${course.title}` };
+    logAssistantEvent({ type: 'assistant.createCourse', courseId: course.id, title: draft.title });
+    return { ok: true, message: 'Curso creado como borrador.' };
   } catch (error) {
-    return { ok: false, error: 'No se pudo crear el curso desde el borrador generado.' };
+    logAssistantEvent({ type: 'assistant.createCourse.error', message: String(error?.message || error) });
+    return { ok: false, error: 'No se pudo crear el curso.' };
   }
 }
 
 export async function appendModulesFromAssistantAction(formData) {
   await requireAdmin();
+  if (!ASSISTANT_ENABLED) {
+    return { ok: false, error: 'El asistente está deshabilitado por configuración.' };
+  }
   const courseId = String(formData.get('courseId') || '');
-  const payload = String(formData.get('newModules') || '');
-  if (!courseId || !payload) {
-    return { ok: false, error: 'Faltan datos para agregar módulos.' };
+  const rawModules = String(formData.get('newModules') || '');
+
+  if (!courseId || !rawModules) {
+    return { ok: false, error: 'Faltan datos para agregar contenido.' };
   }
 
   try {
-    const parsed = z.array(
+    const parsed = JSON.parse(rawModules);
+    const modules = z.array(
       z.object({
         title: z.string().min(4),
         description: z.string().min(10),
         durationMinutes: z.coerce.number().min(10).max(300).optional()
       })
-    ).min(1).max(8).parse(JSON.parse(payload));
+    ).min(1).max(8).parse(parsed);
 
-    const maxOrder = await prisma.module.aggregate({
-      where: { courseId },
-      _max: { order: true }
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      include: { modules: { select: { id: true } } }
     });
-    const baseOrder = maxOrder._max.order || 0;
+    if (!course) {
+      return { ok: false, error: 'Curso no encontrado.' };
+    }
+    const currentModulesCount = course.modules.length;
+    if (currentModulesCount + modules.length > 20) {
+      return { ok: false, error: 'No se pueden agregar más de 20 módulos.' };
+    }
 
     await prisma.module.createMany({
-      data: parsed.map((moduleItem, index) => ({
+      data: modules.map((moduleItem, index) => ({
         courseId,
-        order: baseOrder + index + 1,
+        order: currentModulesCount + index + 1,
         title: moduleItem.title,
         description: moduleItem.description,
         durationMinutes: moduleItem.durationMinutes || null
@@ -642,11 +863,12 @@ export async function appendModulesFromAssistantAction(formData) {
     });
 
     revalidatePath('/admin');
-    revalidatePath('/admin/ajustes');
     revalidatePath('/cursos');
+    logAssistantEvent({ type: 'assistant.appendModules', courseId, added: modules.length });
     return { ok: true, message: 'Módulos agregados correctamente al curso seleccionado.' };
   } catch (error) {
-    return { ok: false, error: 'No se pudieron agregar los módulos sugeridos.' };
+    logAssistantEvent({ type: 'assistant.appendModules.error', courseId, message: String(error?.message || error) });
+    return { ok: false, error: 'No se pudo agregar contenido.' };
   }
 }
 
