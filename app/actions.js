@@ -726,7 +726,7 @@ ${modeGuide}
         ],
         generationConfig: {
           temperature: 0.5,
-          maxOutputTokens: 1800
+          maxOutputTokens: 3000
         }
       })
     });
