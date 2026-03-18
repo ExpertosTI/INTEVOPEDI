@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { runAdminAssistantAction } from '@/app/actions';
 
 export function AdminFloatingAssistant({ courses = [] }) {
@@ -12,7 +12,10 @@ export function AdminFloatingAssistant({ courses = [] }) {
   const [courseId, setCourseId] = useState('');
   const [error, setError] = useState('');
   const [listening, setListening] = useState(false);
+  const [micStatus, setMicStatus] = useState('idle');
   const recognitionRef = useRef(null);
+  const chatRef = useRef(null);
+  const inputRef = useRef(null);
 
   const selectedCourse = useMemo(() => courses.find((c) => c.id === courseId) || null, [courses, courseId]);
 
@@ -48,7 +51,15 @@ export function AdminFloatingAssistant({ courses = [] }) {
       return;
     }
     setError('');
+    setMicStatus('request');
+    if (navigator.mediaDevices?.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => {
+        setMicStatus('denied');
+        setListening(false);
+      });
+    }
     setListening(true);
+    setMicStatus('listening');
     rec.onresult = (event) => {
       const transcript = Array.from(event.results).map((r) => r[0].transcript).join(' ').trim();
       if (transcript) {
@@ -58,8 +69,12 @@ export function AdminFloatingAssistant({ courses = [] }) {
     };
     rec.onerror = () => {
       setListening(false);
+      setMicStatus('error');
     };
-    rec.onend = () => setListening(false);
+    rec.onend = () => {
+      setListening(false);
+      setMicStatus('idle');
+    };
     rec.start();
   }
 
@@ -116,6 +131,18 @@ export function AdminFloatingAssistant({ courses = [] }) {
     }
   }
 
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   return (
     <div className={`admin-floating-assistant ${isOpen ? 'open' : ''}`}>
       <button
@@ -158,7 +185,7 @@ export function AdminFloatingAssistant({ courses = [] }) {
 
           {error ? <div className="banner banner-error" role="alert">{error}</div> : null}
 
-          <div className="assistant-chat" aria-live="polite">
+          <div className="assistant-chat" aria-live="polite" ref={chatRef}>
             {messages.length === 0 ? <p className="helper">Empieza con una pregunta o usa un atajo.</p> : null}
             {messages.map((m) => (
               <div key={m.ts} className={`msg msg-${m.role}`}>
@@ -175,10 +202,15 @@ export function AdminFloatingAssistant({ courses = [] }) {
               placeholder="Pide una acción o un resumen"
               rows={3}
               disabled={isPending}
+              ref={inputRef}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
                   sendPrompt();
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  setIsOpen(false);
                 }
               }}
             />
@@ -198,7 +230,7 @@ export function AdminFloatingAssistant({ courses = [] }) {
                 {listening ? 'Escuchando…' : 'Hablar' }
               </button>
             </div>
-            <p className="helper">Enter envía, Shift+Enter hace salto de línea. Comandos rápidos: "sí", "no", "confirmar" tras una respuesta.</p>
+            <p className="helper">Enter envía, Shift+Enter hace salto de línea, Esc cierra. Micrófono: {micStatus === 'listening' ? 'escuchando' : micStatus === 'denied' ? 'permiso denegado' : micStatus === 'unsupported' ? 'no soportado' : 'listo'}.</p>
           </div>
 
           {quick.length ? (
