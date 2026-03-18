@@ -650,7 +650,7 @@ export async function runAdminAssistantAction(formData) {
     return { ok: false, error: 'Configura tu API key de Gemini en Ajustes antes de usar el asistente.' };
   }
 
-  const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
   const selectedCourse = parsed.data.courseId
     ? await prisma.course.findUnique({
         where: { id: parsed.data.courseId },

@@ -14,6 +14,15 @@ export function AdminFloatingAssistant({ courses = [] }) {
 
   const selectedCourse = useMemo(() => courses.find((c) => c.id === courseId) || null, [courses, courseId]);
 
+  function speak(text) {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'es-ES';
+    utterance.rate = 0.98;
+    window.speechSynthesis.speak(utterance);
+  }
+
   function addMessage(role, content) {
     setMessages((prev) => [...prev, { role, content, ts: Date.now() }].slice(-12));
   }
@@ -41,6 +50,7 @@ export function AdminFloatingAssistant({ courses = [] }) {
       }
       if (response.data?.summary) {
         addMessage('assistant', response.data.summary);
+        speak(response.data.summary);
       }
       if (response.data?.courseDraft) {
         addMessage('assistant', 'Se generó un borrador de curso. Revisa en Ajustes IA.');
@@ -117,6 +127,12 @@ export function AdminFloatingAssistant({ courses = [] }) {
               placeholder="Pide una acción o un resumen"
               rows={3}
               disabled={isPending}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  sendPrompt();
+                }
+              }}
             />
             <div className="inline-actions">
               <button type="button" className="button button-primary" onClick={sendPrompt} disabled={isPending || prompt.trim().length < 8}>
@@ -131,7 +147,41 @@ export function AdminFloatingAssistant({ courses = [] }) {
           {quick.length ? (
             <div className="assistant-quick" role="group" aria-label="Atajos sugeridos">
               {quick.map((q) => (
-                <button key={q} type="button" className="button button-secondary" onClick={() => setPrompt(q)} disabled={isPending}>
+                <button
+                  key={q}
+                  type="button"
+                  className="button button-secondary"
+                  onClick={() => {
+                    setPrompt(q);
+                    speak(q);
+                    // Ejecutar de inmediato con el atajo cargado
+                    startTransition(() => {
+                      setPrompt(q);
+                      addMessage('admin', q);
+                      const data = new FormData();
+                      data.set('prompt', q);
+                      data.set('actionType', actionType);
+                      if (courseId) data.set('courseId', courseId);
+                      runAdminAssistantAction(data).then((response) => {
+                        if (!response?.ok) {
+                          setError(response?.error || 'No se pudo ejecutar el asistente.');
+                          return;
+                        }
+                        if (response.data?.summary) {
+                          addMessage('assistant', response.data.summary);
+                          speak(response.data.summary);
+                        }
+                        if (response.data?.courseDraft) {
+                          addMessage('assistant', 'Se generó un borrador de curso. Revisa en Ajustes IA.');
+                        }
+                        if (response.data?.courseContentDraft) {
+                          addMessage('assistant', 'Contenido generado para el curso seleccionado.');
+                        }
+                      });
+                    });
+                  }}
+                  disabled={isPending}
+                >
                   {q}
                 </button>
               ))}
