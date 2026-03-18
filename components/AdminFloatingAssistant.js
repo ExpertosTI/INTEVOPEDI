@@ -16,6 +16,7 @@ export function AdminFloatingAssistant({ courses = [] }) {
   const recognitionRef = useRef(null);
   const chatRef = useRef(null);
   const inputRef = useRef(null);
+  const panelRef = useRef(null);
 
   const selectedCourse = useMemo(() => courses.find((c) => c.id === courseId) || null, [courses, courseId]);
 
@@ -35,7 +36,10 @@ export function AdminFloatingAssistant({ courses = [] }) {
   function ensureRecognition() {
     if (recognitionRef.current || typeof window === 'undefined') return recognitionRef.current;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return null;
+    if (!SpeechRecognition) {
+      setMicStatus('unsupported');
+      return null;
+    }
     const rec = new SpeechRecognition();
     rec.lang = 'es-ES';
     rec.continuous = false;
@@ -143,6 +147,32 @@ export function AdminFloatingAssistant({ courses = [] }) {
     }
   }, [messages]);
 
+  // Focus trap básico dentro del panel
+  useEffect(() => {
+    function handleKey(e) {
+      if (!isOpen || !panelRef.current) return;
+      if (e.key === 'Tab') {
+        const focusables = panelRef.current.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const list = Array.from(focusables).filter((el) => !el.hasAttribute('disabled'));
+        if (list.length === 0) return;
+        const first = list[0];
+        const last = list[list.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [isOpen]);
+
   return (
     <div className={`admin-floating-assistant ${isOpen ? 'open' : ''}`}>
       <button
@@ -155,7 +185,13 @@ export function AdminFloatingAssistant({ courses = [] }) {
       </button>
 
       {isOpen ? (
-        <div className="assistant-panel panel stack">
+        <div
+          className="assistant-panel panel stack"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Asistente administrativo"
+          ref={panelRef}
+        >
           <div className="row-between">
             <div className="stack">
               <span className="eyebrow">Super asistente</span>
@@ -182,6 +218,10 @@ export function AdminFloatingAssistant({ courses = [] }) {
               </label>
             </div>
           </div>
+
+          <button type="button" className="button button-secondary" onClick={() => inputRef.current?.focus()}>
+            Ir a la entrada
+          </button>
 
           {error ? <div className="banner banner-error" role="alert">{error}</div> : null}
 
