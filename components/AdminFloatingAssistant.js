@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useRef, useState, useTransition } from 'react';
 import { runAdminAssistantAction } from '@/app/actions';
 
 export function AdminFloatingAssistant({ courses = [] }) {
@@ -11,6 +11,8 @@ export function AdminFloatingAssistant({ courses = [] }) {
   const [actionType, setActionType] = useState('general');
   const [courseId, setCourseId] = useState('');
   const [error, setError] = useState('');
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef(null);
 
   const selectedCourse = useMemo(() => courses.find((c) => c.id === courseId) || null, [courses, courseId]);
 
@@ -25,6 +27,40 @@ export function AdminFloatingAssistant({ courses = [] }) {
 
   function addMessage(role, content) {
     setMessages((prev) => [...prev, { role, content, ts: Date.now() }].slice(-12));
+  }
+
+  function ensureRecognition() {
+    if (recognitionRef.current || typeof window === 'undefined') return recognitionRef.current;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return null;
+    const rec = new SpeechRecognition();
+    rec.lang = 'es-ES';
+    rec.continuous = false;
+    rec.interimResults = false;
+    recognitionRef.current = rec;
+    return rec;
+  }
+
+  function startListening() {
+    const rec = ensureRecognition();
+    if (!rec) {
+      setError('Tu navegador no soporta reconocimiento de voz.');
+      return;
+    }
+    setError('');
+    setListening(true);
+    rec.onresult = (event) => {
+      const transcript = Array.from(event.results).map((r) => r[0].transcript).join(' ').trim();
+      if (transcript) {
+        setPrompt((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        speak(`Escuchado: ${transcript}. Presiona Enter para enviar.`);
+      }
+    };
+    rec.onerror = () => {
+      setListening(false);
+    };
+    rec.onend = () => setListening(false);
+    rec.start();
   }
 
   function sendPrompt() {
@@ -65,8 +101,20 @@ export function AdminFloatingAssistant({ courses = [] }) {
     'Resumen ejecutivo de inscripciones y pagos pendientes',
     'Preparar anuncio del nuevo curso con bullets',
     'Crear curso accesible de IA con 3 módulos, 6 horas, modalidad virtual',
-    selectedCourse ? `Generar contenido para ${selectedCourse.title}` : null
+    'Crear curso completo: título, objetivo, duración 12h, 5 módulos, modalidad híbrida, incluye PDF de apoyo y tareas',
+    selectedCourse ? `Generar contenido avanzado para ${selectedCourse.title} con materiales y evaluaciones` : null
   ].filter(Boolean);
+
+  // Confirmaciones rápidas por accesibilidad
+  function handleConfirmation(command) {
+    const lower = command.trim().toLowerCase();
+    if (['sí', 'si', 'confirmar', 'aceptar'].includes(lower)) {
+      speak('Confirmado. Ejecuta la acción o revisa el borrador.');
+    }
+    if (['no', 'cancelar', 'detener'].includes(lower)) {
+      speak('Acción cancelada.');
+    }
+  }
 
   return (
     <div className={`admin-floating-assistant ${isOpen ? 'open' : ''}`}>
@@ -141,7 +189,16 @@ export function AdminFloatingAssistant({ courses = [] }) {
               <button type="button" className="button button-secondary" onClick={() => setMessages([])} disabled={isPending}>
                 Limpiar historial
               </button>
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={startListening}
+                disabled={isPending || listening}
+              >
+                {listening ? 'Escuchando…' : 'Hablar' }
+              </button>
             </div>
+            <p className="helper">Enter envía, Shift+Enter hace salto de línea. Comandos rápidos: "sí", "no", "confirmar" tras una respuesta.</p>
           </div>
 
           {quick.length ? (
@@ -156,7 +213,6 @@ export function AdminFloatingAssistant({ courses = [] }) {
                     speak(q);
                     // Ejecutar de inmediato con el atajo cargado
                     startTransition(() => {
-                      setPrompt(q);
                       addMessage('admin', q);
                       const data = new FormData();
                       data.set('prompt', q);
