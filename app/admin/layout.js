@@ -1,5 +1,5 @@
 import { AdminFloatingAssistant } from '@/components/AdminFloatingAssistant';
-import { requireAdmin } from '@/lib/admin-auth';
+import { getAdminSessionPayload } from '@/lib/admin-auth';
 import { getAdminDashboardData } from '@/lib/data';
 
 export const metadata = {
@@ -7,13 +7,17 @@ export const metadata = {
 };
 
 export default async function AdminLayout({ children }) {
-  await requireAdmin();
-  const data = await getAdminDashboardData();
+  const session = getAdminSessionPayload();
+  let courses = [];
+  if (session) {
+    const data = await getAdminDashboardData();
+    courses = data.courses;
+  }
 
   return (
     <>
       {children}
-      <AdminFloatingAssistant courses={data.courses} />
+      {session ? <AdminFloatingAssistant courses={courses} /> : null}
     </>
   );
 }
