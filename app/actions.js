@@ -943,7 +943,7 @@ export async function runAdminAssistantAction(formData) {
   }
 
   const configuredModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-  const models = Array.from(new Set([configuredModel, 'gemini-2.0-flash', 'gemini-1.5-flash']));
+  const models = Array.from(new Set([configuredModel, 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-1.0-pro', 'gemini-pro']));
   const selectedCourse = parsed.data.courseId
     ? await prisma.course.findUnique({
         where: { id: parsed.data.courseId },

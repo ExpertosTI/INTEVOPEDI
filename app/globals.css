@@ -1188,6 +1188,18 @@ input[type="checkbox"] {
   font-size: 0.92rem;
 }
 
+[data-theme="dark"] .assistant-chat .msg {
+  background: var(--bg-dark-soft);
+  border-color: var(--border-strong);
+}
+[data-theme="dark"] .assistant-chat .msg-assistant {
+  background: var(--primary-light);
+  border-color: var(--primary-ring);
+}
+[data-theme="dark"] .assistant-chat .msg p {
+  color: var(--text-secondary);
+}
+
 /* Markdown in chat messages */
 .assistant-chat .msg ul,
 .assistant-chat .msg ol {
