@@ -386,7 +386,7 @@ function readGeminiTextResponse(payload) {
 }
 
 const ASSISTANT_ENABLED = process.env.ADMIN_ASSISTANT_DISABLED !== '1';
-const ADMIN_RESET_EMAIL = process.env.ADMIN_RESET_EMAIL || 'expertostird@gmail.com';
+const ADMIN_RESET_EMAIL = process.env.ADMIN_RESET_EMAIL || process.env.ADMIN_EMAIL || 'expertostird@gmail.com';
 const ADMIN_RESET_TTL_MS = 1000 * 60 * 20; // 20 minutos
 const ADMIN_RESET_MAX_ATTEMPTS = 3;
 const ADMIN_PASSWORD_HASH_KEY = 'admin_password_hash';
