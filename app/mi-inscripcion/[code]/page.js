@@ -23,6 +23,7 @@ export default async function EnrollmentPage({ params, searchParams }) {
 
   const experience = courseExperienceBySlug[enrollment.course.slug];
   const resourceLibrary = getCourseResourceLibrary(enrollment.course.slug);
+  const attachedResources = enrollment.course.resources || [];
 
   return (
     <section className="section spaced-page">
@@ -181,6 +182,28 @@ export default async function EnrollmentPage({ params, searchParams }) {
                   </ul>
                 </article>
               ))}
+            </div>
+          </article>
+        ) : null}
+        {attachedResources.length ? (
+          <article className="panel stack">
+            <span className="eyebrow">Adjuntos del curso</span>
+            <h2>Recursos cargados por administración</h2>
+            <div className="card-grid compact-grid">
+              {attachedResources.map((resource) => {
+                const href = resource.type === 'LINK' ? resource.url : resource.filePath;
+                return (
+                  <article key={resource.id} className="panel stack stat-card">
+                    <h3>{resource.title}</h3>
+                    {resource.description ? <p>{resource.description}</p> : null}
+                    {href ? (
+                      <a href={href} target="_blank" rel="noreferrer" className="button button-secondary">
+                        Abrir recurso
+                      </a>
+                    ) : null}
+                  </article>
+                );
+              })}
             </div>
           </article>
         ) : null}

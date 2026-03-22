@@ -1,46 +1,50 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
-export function HeaderNav({ navigation }) {
+const navLinks = [
+  { label: 'Cursos', href: '/cursos' },
+  { label: 'Participantes', href: '/participantes' },
+  { label: 'Verificar', href: '/verificar' },
+  { label: 'Grupo Atrévete', href: '/grupo-atrevete' }
+];
+
+export function HeaderNav() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
-  const closeMenu = () => setIsOpen(false);
-
   return (
     <>
+      <div className={`nav-panel ${isOpen ? 'nav-panel-open' : ''}`}>
+        <nav className="site-nav" aria-label="Navegación principal">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`nav-link ${pathname === link.href ? 'active' : ''}`}
+              onClick={() => setIsOpen(false)}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+        <ThemeToggle />
+        <Link href="/participantes" className="button button-primary nav-cta" onClick={() => setIsOpen(false)}>
+          Acceder al campus
+        </Link>
+      </div>
       <button
         type="button"
         className="nav-toggle"
-        aria-label="Abrir menú principal"
+        onClick={() => setIsOpen((v) => !v)}
         aria-expanded={isOpen}
-        aria-controls="site-nav-links"
-        onClick={() => setIsOpen((value) => !value)}
+        aria-label="Alternar menú de navegación"
       >
-        Menú
+        {isOpen ? '✕' : '☰'}
       </button>
-
-      <div className={`nav-panel${isOpen ? ' nav-panel-open' : ''}`}>
-        <nav id="site-nav-links" className="site-nav" aria-label="Principal">
-          {navigation.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`nav-link${isActive ? ' active' : ''}`}
-                aria-current={isActive ? 'page' : undefined}
-                onClick={closeMenu}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
     </>
   );
 }

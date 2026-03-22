@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { participantLogout, claimCourseCertificate } from '@/app/actions';
 import { StatusPill } from '@/components/StatusPill';
+import { ProgressRing } from '@/components/ProgressRing';
+import { Breadcrumb } from '@/components/Breadcrumb';
 import { getParticipantSession, requireParticipantAuth } from '@/lib/participant-auth';
 import { getParticipantCampusData } from '@/lib/data';
 import { courseExperienceBySlug, getCourseResourceLibrary, getCourseResourceStats, participantCampusSections } from '@/lib/site';
@@ -28,14 +30,23 @@ export default async function CampusPage({ searchParams }) {
     ? Math.round(participant.enrollments.reduce((sum, item) => sum + item.progressPercent, 0) / totalEnrollments)
     : 0;
   const created = searchParams?.created;
+  const certificateIssued = searchParams?.certificateIssued;
   const latestSession = await getParticipantSession();
 
   return (
     <section className="section spaced-page">
       <div className="shell stack">
+        <Breadcrumb items={[{ label: 'Campus', href: '/campus' }]} />
+
         {created ? (
           <div className="banner banner-success" role="status" aria-live="polite">
             Tu inscripción quedó registrada y tu campus ya está listo. Guarda tu código <strong>{searchParams?.code || latestSession?.referenceCode}</strong>.
+          </div>
+        ) : null}
+
+        {certificateIssued ? (
+          <div className="banner banner-success" role="status" aria-live="polite">
+            🎉 ¡Certificado generado exitosamente! Descárgalo desde tu inscripción.
           </div>
         ) : null}
 
@@ -66,30 +77,35 @@ export default async function CampusPage({ searchParams }) {
         <div className="admin-stats">
           <article className="panel stack">
             <span className="eyebrow">Cursos</span>
-            <h2>{totalEnrollments}</h2>
-            <p>Inscripciones vinculadas a tu perfil.</p>
+            <strong style={{ fontSize: '2rem', fontWeight: 800 }}>{totalEnrollments}</strong>
+            <p className="helper">Inscripciones vinculadas a tu perfil.</p>
           </article>
           <article className="panel stack">
             <span className="eyebrow">Completados</span>
-            <h2>{completedEnrollments}</h2>
-            <p>Recorridos ya cerrados.</p>
+            <strong style={{ fontSize: '2rem', fontWeight: 800 }}>{completedEnrollments}</strong>
+            <p className="helper">Recorridos ya cerrados.</p>
           </article>
           <article className="panel stack">
             <span className="eyebrow">Progreso promedio</span>
-            <h2>{averageProgress}%</h2>
-            <p>Avance global de tu campus.</p>
+            <div className="progress-ring-wrap">
+              <ProgressRing percent={averageProgress} />
+              <div>
+                <strong>{averageProgress}%</strong>
+                <p className="helper">Avance global</p>
+              </div>
+            </div>
           </article>
           <article className="panel stack">
             <span className="eyebrow">Correo</span>
-            <h2>{participant.email}</h2>
-            <p>Cuenta usada para este acceso.</p>
+            <strong style={{ fontSize: '0.95rem', fontWeight: 700, wordBreak: 'break-all' }}>{participant.email}</strong>
+            <p className="helper">Cuenta usada para este acceso.</p>
           </article>
         </div>
 
         <div className="dashboard-grid">
           <article className="panel stack">
-            <span className="eyebrow">Experiencia Fase 2</span>
-            <h2>Qué puedes hacer en tu campus</h2>
+            <span className="eyebrow">Tu campus</span>
+            <h2>Qué puedes hacer aquí</h2>
             <ul className="list">
               {participantCampusSections.map((item) => (
                 <li key={item}>{item}</li>
@@ -121,6 +137,7 @@ export default async function CampusPage({ searchParams }) {
               const experience = courseExperienceBySlug[enrollment.course.slug];
               const resourceLibrary = getCourseResourceLibrary(enrollment.course.slug);
               const resourceStats = getCourseResourceStats(enrollment.course.slug);
+              const attachedResources = enrollment.course.resources || [];
               const completedModules = enrollment.progress.filter((item) => item.completed).length;
 
               return (
@@ -133,27 +150,21 @@ export default async function CampusPage({ searchParams }) {
                     <StatusPill value={enrollment.status} />
                   </div>
                   <p>{enrollment.course.summary}</p>
-                  <div className="progress-line" aria-hidden="true">
-                    <span style={{ width: `${enrollment.progressPercent}%` }} />
+                  <div className="progress-ring-wrap">
+                    <ProgressRing percent={enrollment.progressPercent} size={48} />
+                    <div>
+                      <strong>{enrollment.progressPercent}%</strong>
+                      <p className="helper">{completedModules} de {enrollment.course.modules.length} módulos</p>
+                    </div>
                   </div>
-                  <p className="helper">{completedModules} de {enrollment.course.modules.length} módulos completados.</p>
-                  {resourceLibrary ? <p className="helper">{resourceStats.itemsCount} recursos organizados en {resourceStats.collectionsCount} colecciones.</p> : null}
+                  {resourceLibrary ? <p className="helper">{resourceStats.itemsCount} recursos en {resourceStats.collectionsCount} colecciones.</p> : null}
+                  {attachedResources.length ? <p className="helper">Recursos adjuntos: {attachedResources.length}.</p> : null}
                   {experience ? (
                     <ul className="list compact-list">
                       {experience.materials.slice(0, 2).map((item) => (
                         <li key={item.title}>{item.title}</li>
                       ))}
                     </ul>
-                  ) : null}
-                  {resourceLibrary ? (
-                    <div className="card-grid compact-grid">
-                      {resourceLibrary.collections.slice(0, 2).map((collection) => (
-                        <article key={collection.title} className="panel stack stat-card">
-                          <h4>{collection.title}</h4>
-                          <p className="helper">{collection.items.length} recurso(s)</p>
-                        </article>
-                      ))}
-                    </div>
                   ) : null}
                   <div className="inline-actions">
                     <Link href={`/mi-inscripcion/${enrollment.referenceCode}`} className="button button-primary">
@@ -164,17 +175,15 @@ export default async function CampusPage({ searchParams }) {
                     </Link>
                     {enrollment.certificate ? (
                       <a href={`/api/certificados/${enrollment.certificate.certificateCode}/pdf`} target="_blank" rel="noreferrer" className="button button-secondary">
-                        Certificado
+                        📄 Certificado
                       </a>
                     ) : (
-                      enrollment.course.slug === 'ia-apoyo-discapacidad-visual' ? (
-                        <form action={claimCourseCertificate}>
-                          <input type="hidden" name="enrollmentId" value={enrollment.id} />
-                          <button type="submit" className="button button-primary">
-                            Obtener Certificado
-                          </button>
-                        </form>
-                      ) : null
+                      <form action={claimCourseCertificate}>
+                        <input type="hidden" name="enrollmentId" value={enrollment.id} />
+                        <button type="submit" className="button button-primary">
+                          🎓 Obtener Certificado
+                        </button>
+                      </form>
                     )}
                   </div>
                 </article>

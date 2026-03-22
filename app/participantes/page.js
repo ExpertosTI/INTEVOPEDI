@@ -13,6 +13,7 @@ export default async function ParticipantAccessPage({ searchParams }) {
   const emailParam = searchParams?.email?.trim() || '';
   const error = searchParams?.error;
   const registered = searchParams?.registered;
+  const verified = searchParams?.verified;
   const session = await getParticipantSession();
 
   return (
@@ -25,9 +26,14 @@ export default async function ParticipantAccessPage({ searchParams }) {
             Si ya te inscribiste, introduce tu correo y tu código para entrar a tu campus, revisar progreso, recursos y certificado.
           </p>
           
+          {verified ? (
+            <div className="banner banner-success" role="status">
+              Tu correo quedó verificado. Ya puedes entrar con tu contraseña.
+            </div>
+          ) : null}
           {registered ? (
             <div className="banner banner-success" role="status">
-              ¡Inscripción exitosa! Revisa tu correo ({emailParam}) para obtener tu código de acceso.
+              Cuenta creada. Revisa tu correo ({emailParam}) para verificar tu acceso (vigente 72h).
             </div>
           ) : null}
           {error ? (

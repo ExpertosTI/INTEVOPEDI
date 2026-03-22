@@ -1,145 +1,48 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
-import { runAdminAssistantAction } from '@/app/actions';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useAssistant } from '@/lib/useAssistant';
+
+function formatMarkdown(text) {
+  if (!text) return '';
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*?<\/li>)+/gs, '<ul>$&</ul>')
+    .replace(/\n/g, '<br />');
+}
 
 export function AdminFloatingAssistant({ courses = [] }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const [messages, setMessages] = useState([]);
-  const [prompt, setPrompt] = useState('');
-  const [actionType, setActionType] = useState('general');
-  const [courseId, setCourseId] = useState('');
-  const [error, setError] = useState('');
-  const [listening, setListening] = useState(false);
-  const [micStatus, setMicStatus] = useState('idle');
-  const recognitionRef = useRef(null);
+  const {
+    isPending,
+    messages,
+    prompt, setPrompt,
+    actionType, setActionType,
+    courseId, setCourseId,
+    error,
+    listening, micStatus,
+    clearMessages,
+    sendPrompt,
+    startListening,
+    copyToClipboard
+  } = useAssistant();
+
+  const [open, setOpen] = useState(false);
   const chatRef = useRef(null);
   const inputRef = useRef(null);
   const panelRef = useRef(null);
+  const openRef = useRef(open);
+
+  useEffect(() => { openRef.current = open; }, [open]);
 
   const selectedCourse = useMemo(() => courses.find((c) => c.id === courseId) || null, [courses, courseId]);
 
-  function speak(text) {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'es-ES';
-    utterance.rate = 0.98;
-    window.speechSynthesis.speak(utterance);
-  }
-
-  function addMessage(role, content) {
-    setMessages((prev) => [...prev, { role, content, ts: Date.now() }].slice(-12));
-  }
-
-  function ensureRecognition() {
-    if (recognitionRef.current || typeof window === 'undefined') return recognitionRef.current;
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setMicStatus('unsupported');
-      return null;
-    }
-    const rec = new SpeechRecognition();
-    rec.lang = 'es-ES';
-    rec.continuous = false;
-    rec.interimResults = false;
-    recognitionRef.current = rec;
-    return rec;
-  }
-
-  function startListening() {
-    const rec = ensureRecognition();
-    if (!rec) {
-      setError('Tu navegador no soporta reconocimiento de voz.');
-      return;
-    }
-    setError('');
-    setMicStatus('request');
-    if (navigator.mediaDevices?.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => {
-        setMicStatus('denied');
-        setListening(false);
-      });
-    }
-    setListening(true);
-    setMicStatus('listening');
-    rec.onresult = (event) => {
-      const transcript = Array.from(event.results).map((r) => r[0].transcript).join(' ').trim();
-      if (transcript) {
-        setPrompt((prev) => (prev ? `${prev} ${transcript}` : transcript));
-        speak(`Escuchado: ${transcript}. Presiona Enter para enviar.`);
-      }
-    };
-    rec.onerror = () => {
-      setListening(false);
-      setMicStatus('error');
-    };
-    rec.onend = () => {
-      setListening(false);
-      setMicStatus('idle');
-    };
-    rec.start();
-  }
-
-  function sendPrompt() {
-    if (prompt.trim().length < 8) {
-      setError('Escribe una solicitud más completa.');
-      return;
-    }
-    setError('');
-    const input = prompt.trim();
-    addMessage('admin', input);
-    setPrompt('');
-
-    const formData = new FormData();
-    formData.set('prompt', input);
-    formData.set('actionType', actionType);
-    if (courseId) formData.set('courseId', courseId);
-
-    startTransition(async () => {
-      const response = await runAdminAssistantAction(formData);
-      if (!response?.ok) {
-        setError(response?.error || 'No se pudo ejecutar el asistente.');
-        return;
-      }
-      if (response.data?.summary) {
-        addMessage('assistant', response.data.summary);
-        speak(response.data.summary);
-      }
-      if (response.data?.courseDraft) {
-        addMessage('assistant', 'Se generó un borrador de curso. Revisa en Ajustes IA.');
-      }
-      if (response.data?.courseContentDraft) {
-        addMessage('assistant', 'Contenido generado para el curso seleccionado.');
-      }
-    });
-  }
-
-  const quick = [
-    'Resumen ejecutivo de inscripciones y pagos pendientes',
-    'Preparar anuncio del nuevo curso con bullets',
-    'Crear curso accesible de IA con 3 módulos, 6 horas, modalidad virtual',
-    'Crear curso completo: título, objetivo, duración 12h, 5 módulos, modalidad híbrida, incluye PDF de apoyo y tareas',
-    selectedCourse ? `Generar contenido avanzado para ${selectedCourse.title} con materiales y evaluaciones` : null
-  ].filter(Boolean);
-
-  // Confirmaciones rápidas por accesibilidad
-  function handleConfirmation(command) {
-    const lower = command.trim().toLowerCase();
-    if (['sí', 'si', 'confirmar', 'aceptar'].includes(lower)) {
-      speak('Confirmado. Ejecuta la acción o revisa el borrador.');
-    }
-    if (['no', 'cancelar', 'detener'].includes(lower)) {
-      speak('Acción cancelada.');
-    }
-  }
-
   useEffect(() => {
-    if (isOpen && inputRef.current) {
+    if (open && inputRef.current) {
       inputRef.current.focus();
     }
-  }, [isOpen]);
+  }, [open]);
 
   useEffect(() => {
     if (chatRef.current) {
@@ -147,10 +50,9 @@ export function AdminFloatingAssistant({ courses = [] }) {
     }
   }, [messages]);
 
-  // Focus trap básico dentro del panel
   useEffect(() => {
     function handleKey(e) {
-      if (!isOpen || !panelRef.current) return;
+      if (!openRef.current || !panelRef.current) return;
       if (e.key === 'Tab') {
         const focusables = panelRef.current.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
         const list = Array.from(focusables).filter((el) => !el.hasAttribute('disabled'));
@@ -166,25 +68,32 @@ export function AdminFloatingAssistant({ courses = [] }) {
         }
       }
       if (e.key === 'Escape') {
-        setIsOpen(false);
+        setOpen(false);
       }
     }
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [isOpen]);
+  }, []);
+
+  const quick = [
+    'Resumen ejecutivo de inscripciones y pagos pendientes',
+    'Crear curso accesible de IA con 3 módulos, 6 horas, modalidad virtual',
+    'Crear curso: título, objetivo, 12h, 5 módulos, modalidad híbrida',
+    selectedCourse ? `Generar contenido avanzado para ${selectedCourse.title}` : null
+  ].filter(Boolean);
 
   return (
-    <div className={`admin-floating-assistant ${isOpen ? 'open' : ''}`}>
+    <div className={`admin-floating-assistant ${open ? 'open' : ''}`}>
       <button
         type="button"
         className="assistant-toggle button button-primary"
-        onClick={() => setIsOpen((v) => !v)}
-        aria-expanded={isOpen}
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
       >
-        {isOpen ? 'Cerrar asistente' : 'Asistente admin'}
+        {open ? '✕ Cerrar' : '🤖 Asistente IA'}
       </button>
 
-      {isOpen ? (
+      {open ? (
         <div
           className="assistant-panel panel stack"
           role="dialog"
@@ -196,7 +105,7 @@ export function AdminFloatingAssistant({ courses = [] }) {
             <div className="stack">
               <span className="eyebrow">Super asistente</span>
               <strong>Acciones globales como super admin</strong>
-              <p className="helper">Usa frases cortas. El asistente puede crear cursos, generar contenido y resumir estado.</p>
+              <p className="helper">Usa frases cortas. El asistente crea cursos, genera contenido y resume estado.</p>
             </div>
             <div className="assistant-meta">
               <label>
@@ -219,20 +128,39 @@ export function AdminFloatingAssistant({ courses = [] }) {
             </div>
           </div>
 
-          <button type="button" className="button button-secondary" onClick={() => inputRef.current?.focus()}>
-            Ir a la entrada
-          </button>
-
           {error ? <div className="banner banner-error" role="alert">{error}</div> : null}
 
           <div className="assistant-chat" aria-live="polite" ref={chatRef}>
             {messages.length === 0 ? <p className="helper">Empieza con una pregunta o usa un atajo.</p> : null}
-            {messages.map((m) => (
-              <div key={m.ts} className={`msg msg-${m.role}`}>
-                <strong>{m.role === 'admin' ? 'Tú' : 'Asistente'}</strong>
-                <p>{m.content}</p>
+            {messages.map((m, i) => (
+              <div key={`${m.ts}-${i}`} className={`msg msg-${m.role}`}>
+                <strong>{m.role === 'admin' ? 'Tú' : '🤖 Asistente'}</strong>
+                {m.role === 'assistant' ? (
+                  <p dangerouslySetInnerHTML={{ __html: formatMarkdown(m.content) }} />
+                ) : (
+                  <p>{m.content}</p>
+                )}
+                {m.role === 'assistant' ? (
+                  <div className="msg-actions">
+                    <button
+                      type="button"
+                      className="msg-action-btn"
+                      onClick={() => copyToClipboard(m.content)}
+                      title="Copiar respuesta"
+                    >
+                      📋 Copiar
+                    </button>
+                  </div>
+                ) : null}
               </div>
             ))}
+            {isPending ? (
+              <div className="typing-indicator">
+                <span className="typing-dot" />
+                <span className="typing-dot" />
+                <span className="typing-dot" />
+              </div>
+            ) : null}
           </div>
 
           <div className="assistant-input">
@@ -250,16 +178,16 @@ export function AdminFloatingAssistant({ courses = [] }) {
                 }
                 if (e.key === 'Escape') {
                   e.preventDefault();
-                  setIsOpen(false);
+                  setOpen(false);
                 }
               }}
             />
             <div className="inline-actions">
-              <button type="button" className="button button-primary" onClick={sendPrompt} disabled={isPending || prompt.trim().length < 8}>
+              <button type="button" className="button button-primary" onClick={() => sendPrompt()} disabled={isPending || prompt.trim().length < 8}>
                 {isPending ? 'Procesando…' : 'Enviar'}
               </button>
-              <button type="button" className="button button-secondary" onClick={() => setMessages([])} disabled={isPending}>
-                Limpiar historial
+              <button type="button" className="button button-secondary" onClick={clearMessages} disabled={isPending}>
+                Limpiar
               </button>
               <button
                 type="button"
@@ -267,10 +195,10 @@ export function AdminFloatingAssistant({ courses = [] }) {
                 onClick={startListening}
                 disabled={isPending || listening}
               >
-                {listening ? 'Escuchando…' : 'Hablar' }
+                {listening ? '🎤 Escuchando…' : '🎤 Hablar'}
               </button>
             </div>
-            <p className="helper">Enter envía, Shift+Enter hace salto de línea, Esc cierra. Micrófono: {micStatus === 'listening' ? 'escuchando' : micStatus === 'denied' ? 'permiso denegado' : micStatus === 'unsupported' ? 'no soportado' : 'listo'}.</p>
+            <p className="helper">Enter envía · Shift+Enter salto · Esc cierra · Mic: {micStatus === 'listening' ? 'escuchando' : micStatus === 'denied' ? 'denegado' : micStatus === 'unsupported' ? 'no soportado' : 'listo'}.</p>
           </div>
 
           {quick.length ? (
@@ -280,37 +208,11 @@ export function AdminFloatingAssistant({ courses = [] }) {
                   key={q}
                   type="button"
                   className="button button-secondary"
-                  onClick={() => {
-                    setPrompt(q);
-                    speak(q);
-                    // Ejecutar de inmediato con el atajo cargado
-                    startTransition(() => {
-                      addMessage('admin', q);
-                      const data = new FormData();
-                      data.set('prompt', q);
-                      data.set('actionType', actionType);
-                      if (courseId) data.set('courseId', courseId);
-                      runAdminAssistantAction(data).then((response) => {
-                        if (!response?.ok) {
-                          setError(response?.error || 'No se pudo ejecutar el asistente.');
-                          return;
-                        }
-                        if (response.data?.summary) {
-                          addMessage('assistant', response.data.summary);
-                          speak(response.data.summary);
-                        }
-                        if (response.data?.courseDraft) {
-                          addMessage('assistant', 'Se generó un borrador de curso. Revisa en Ajustes IA.');
-                        }
-                        if (response.data?.courseContentDraft) {
-                          addMessage('assistant', 'Contenido generado para el curso seleccionado.');
-                        }
-                      });
-                    });
-                  }}
+                  onClick={() => sendPrompt(q)}
                   disabled={isPending}
+                  style={{ fontSize: '0.78rem', height: '36px', padding: '0 14px' }}
                 >
-                  {q}
+                  {q.length > 50 ? `${q.slice(0, 50)}…` : q}
                 </button>
               ))}
             </div>

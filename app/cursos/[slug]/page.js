@@ -3,6 +3,7 @@ import { submitEnrollment } from '@/app/actions';
 import { getCourseBySlug } from '@/lib/data';
 import { formatDateTime } from '@/lib/formatters';
 import { courseExperienceBySlug, getCourseResourceLibrary, getCourseResourceStats } from '@/lib/site';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 export async function generateMetadata({ params }) {
   const course = await getCourseBySlug(params.slug);
@@ -23,13 +24,23 @@ export default async function CourseDetailPage({ params, searchParams }) {
   const experience = courseExperienceBySlug[course.slug];
   const resourceLibrary = getCourseResourceLibrary(course.slug);
   const resourceStats = getCourseResourceStats(course.slug);
+  const attachedResources = course.resources || [];
+  const enrolledCount = course.enrollments?.length || 0;
+  const hasSeatLimit = course.seats && course.seats > 0;
+  const isFull = hasSeatLimit && enrolledCount >= course.seats;
+  const fillPercent = hasSeatLimit ? Math.min(100, Math.round((enrolledCount / course.seats) * 100)) : 0;
 
   return (
     <section className="section spaced-page">
       <div className="shell stack">
+        <Breadcrumb items={[
+          { label: 'Cursos', href: '/cursos' },
+          { label: course.title, href: `/cursos/${course.slug}` }
+        ]} />
+
         <div className="hero-card">
           <article className="panel panel-dark stack">
-            <span className="eyebrow">Curso en inscripción</span>
+            <span className="eyebrow">{isFull ? 'Cupos agotados' : 'Curso en inscripción'}</span>
             <h1>{course.title}</h1>
             <p>{course.description}</p>
             <dl className="details-grid">
@@ -59,41 +70,46 @@ export default async function CourseDetailPage({ params, searchParams }) {
               </div>
             </dl>
             <div className="progress-line" aria-hidden="true">
-              <span style={{ width: `${Math.min(100, Math.round(((course.enrollments?.length || 0) / (course.seats || 1)) * 100))}%` }} />
+              <span style={{ width: `${fillPercent}%` }} />
             </div>
             <p className="helper">
-              {course.enrollments?.length || 0} persona(s) inscritas de {course.seats || 'cupos abiertos'}.
+              {enrolledCount} persona(s) inscritas de {course.seats || 'cupos abiertos'}.
             </p>
             {resourceLibrary ? <p className="helper">Incluye {resourceStats.itemsCount} recursos organizados en {resourceStats.collectionsCount} colecciones.</p> : null}
+            {attachedResources.length ? <p className="helper">Además tiene {attachedResources.length} recurso(s) adjunto(s).</p> : null}
           </article>
 
-          <aside className="panel form-card stack">
+          <aside className="panel form-card stack" style={{ position: 'sticky', top: '84px', alignSelf: 'start' }}>
             <span className="eyebrow">Inscripción inmediata</span>
             <h2>Reserva tu participación</h2>
             <p>
               Completa el formulario y recibirás un código de inscripción para entrar a tu campus, revisar avance, materiales y descargar tu certificado cuando corresponda.
             </p>
             {error ? <div className="banner banner-error">{error}</div> : null}
-            <form action={submitEnrollment}>
-              <input type="hidden" name="courseSlug" value={course.slug} />
-              <div className="form-grid">
-                <label>
-                  Nombre completo
-                  <input type="text" name="fullName" required placeholder="Tu nombre y apellido" />
-                </label>
-                <label>
-                  Correo electrónico
-                  <input type="email" name="email" required placeholder="nombre@correo.com" />
-                </label>
-                <label>
-                  Teléfono
-                  <input type="tel" name="phone" required placeholder="829 954 8273" />
-                </label>
-              </div>
-              <button type="submit" className="button button-primary" style={{ marginTop: '1rem' }}>
-                Inscribirme y recibir código
-              </button>
-            </form>
+            {isFull ? (
+              <div className="banner banner-error">Los cupos están agotados para este curso.</div>
+            ) : (
+              <form action={submitEnrollment}>
+                <input type="hidden" name="courseSlug" value={course.slug} />
+                <div className="form-grid">
+                  <label>
+                    Nombre completo
+                    <input type="text" name="fullName" required placeholder="Tu nombre y apellido" />
+                  </label>
+                  <label>
+                    Correo electrónico
+                    <input type="email" name="email" required placeholder="nombre@correo.com" />
+                  </label>
+                  <label>
+                    Teléfono
+                    <input type="tel" name="phone" required placeholder="829 954 8273" />
+                  </label>
+                </div>
+                <button type="submit" className="button button-primary" style={{ marginTop: '1rem' }}>
+                  Inscribirme y recibir código
+                </button>
+              </form>
+            )}
           </aside>
         </div>
 
@@ -191,6 +207,35 @@ export default async function CourseDetailPage({ params, searchParams }) {
                   </ul>
                 </article>
               ))}
+            </div>
+          </article>
+        ) : null}
+
+        {attachedResources.length ? (
+          <article className="panel stack">
+            <div className="section-heading">
+              <span className="eyebrow">Adjuntos del curso</span>
+              <h2>Recursos publicados por administración</h2>
+              <p>Estos recursos se cargan en el panel admin y quedan disponibles para participantes.</p>
+            </div>
+            <div className="card-grid compact-grid">
+              {attachedResources.map((resource) => {
+                const href = resource.type === 'LINK' ? resource.url : resource.filePath;
+                return (
+                  <article key={resource.id} className="panel stack stat-card">
+                    <strong>{resource.type === 'FILE' ? '📁 Archivo' : '🔗 Enlace'}</strong>
+                    <h3>{resource.title}</h3>
+                    {resource.description ? <p>{resource.description}</p> : null}
+                    {href ? (
+                      <a href={href} target="_blank" rel="noreferrer" className="button button-secondary">
+                        Abrir recurso
+                      </a>
+                    ) : (
+                      <p className="helper">Este recurso no tiene URL disponible.</p>
+                    )}
+                  </article>
+                );
+              })}
             </div>
           </article>
         ) : null}

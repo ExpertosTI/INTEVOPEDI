@@ -1,5 +1,6 @@
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { ToastProvider } from '@/components/ToastProvider';
 import { siteConfig } from '@/lib/site';
 import '@/app/globals.css';
 
@@ -76,8 +77,22 @@ export default function RootLayout({ children }) {
   };
 
   return (
-    <html lang="es-DO">
+    <html lang="es-DO" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var t = localStorage.getItem('intevopedi_theme');
+                  if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                  }
+                } catch(e) {}
+              })();
+            `
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -87,9 +102,11 @@ export default function RootLayout({ children }) {
         <a href="#main-content" className="skip-link">
           Saltar al contenido principal
         </a>
-        <Header />
-        <main id="main-content" tabIndex="-1">{children}</main>
-        <Footer />
+        <ToastProvider>
+          <Header />
+          <main id="main-content" tabIndex="-1">{children}</main>
+          <Footer />
+        </ToastProvider>
       </body>
     </html>
   );

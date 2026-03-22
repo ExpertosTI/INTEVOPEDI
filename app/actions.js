@@ -1,6 +1,9 @@
 'use server';
 
-import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import { createHmac, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
+import { mkdir, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { promisify } from 'node:util';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
@@ -39,6 +42,22 @@ const participantAccessSchema = z.object({
   referenceCode: z.string().min(5)
 });
 
+const participantRegisterSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8).max(128),
+  fullName: z.string().min(2).max(120).optional()
+});
+
+const participantVerifySchema = z.object({
+  email: z.string().email(),
+  token: z.string().min(10)
+});
+
+const participantPasswordLoginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8).max(128)
+});
+
 const assistantRequestSchema = z.object({
   prompt: z.string().min(12).max(6000),
   actionType: z.enum(['general', 'create-course', 'create-content']),
@@ -59,6 +78,13 @@ const assistantCourseSchema = z.object({
   location: z.string().min(2),
   instructor: z.string().min(2),
   status: z.enum(['DRAFT', 'PUBLISHED', 'CLOSED']).optional(),
+  resources: z.array(
+    z.object({
+      title: z.string().min(3),
+      description: z.string().optional(),
+      url: z.string().url()
+    })
+  ).max(12).optional(),
   modules: z.array(
     z.object({
       title: z.string().min(4),
@@ -66,6 +92,35 @@ const assistantCourseSchema = z.object({
       durationMinutes: z.coerce.number().min(10).max(300).optional()
     })
   ).min(1).max(12)
+});
+
+const adminCourseResourceLinkSchema = z.object({
+  courseId: z.string().min(1),
+  title: z.string().min(3).max(120),
+  description: z.string().max(400).optional(),
+  resourceUrl: z.string().url().max(1000)
+});
+
+const adminCourseResourceFileSchema = z.object({
+  courseId: z.string().min(1),
+  title: z.string().min(3).max(120),
+  description: z.string().max(400).optional()
+});
+
+const manualCourseSchema = z.object({
+  title: z.string().min(5).max(200),
+  summary: z.string().min(10).max(500),
+  description: z.string().min(20).max(2000),
+  modality: z.string().min(2).max(60),
+  priceCents: z.coerce.number().min(0),
+  priceLabel: z.string().min(1).max(60),
+  seats: z.coerce.number().min(0).optional(),
+  startDate: z.string().min(8),
+  endDate: z.string().min(8).optional(),
+  duration: z.string().min(2).max(120),
+  location: z.string().min(2).max(200),
+  instructor: z.string().min(2).max(120),
+  status: z.enum(['DRAFT', 'PUBLISHED', 'CLOSED']).optional()
 });
 
 // Simple in-memory rate limiting for admin login (per instance)
@@ -78,6 +133,137 @@ function getRateLimitKey(formData) {
   const ip = formData.get('ip') || '';
   const ua = formData.get('userAgent') || '';
   return `${ip}|${ua}`.trim() || 'unknown';
+}
+
+export async function registerParticipantAccount(formData) {
+  const raw = Object.fromEntries(formData.entries());
+  const parsed = participantRegisterSchema.safeParse({
+    email: normalizeEmail(raw.email),
+    password: String(raw.password || ''),
+    fullName: sanitizeText(raw.fullName || '')
+  });
+
+  if (!parsed.success) {
+    return { error: 'Completa un correo válido y una contraseña de al menos 8 caracteres.' };
+  }
+
+  const existing = await prisma.participant.findUnique({ where: { email: parsed.data.email } });
+  const now = Date.now();
+  const token = generateToken(24);
+  const tokenHash = hashToken(token);
+  const expiresAt = new Date(now + PARTICIPANT_VERIFICATION_TTL_MS);
+  const passwordHash = await hashParticipantPassword(parsed.data.password);
+
+  await prisma.participant.upsert({
+    where: { email: parsed.data.email },
+    update: {
+      fullName: parsed.data.fullName || existing?.fullName || parsed.data.email,
+      passwordHash,
+      emailVerified: false,
+      verificationToken: tokenHash,
+      verificationExpiresAt: expiresAt
+    },
+    create: {
+      fullName: parsed.data.fullName || parsed.data.email,
+      email: parsed.data.email,
+      phone: '',
+      passwordHash,
+      emailVerified: false,
+      verificationToken: tokenHash,
+      verificationExpiresAt: expiresAt
+    }
+  });
+
+  await sendParticipantVerificationEmail(parsed.data.email, token);
+  return { success: true, email: parsed.data.email };
+}
+
+export async function resendParticipantVerification(formData) {
+  const email = normalizeEmail(formData.get('email'));
+  if (!email) return { error: 'Introduce un correo válido.' };
+
+  const participant = await prisma.participant.findUnique({ where: { email } });
+  if (!participant) return { error: 'No encontramos una cuenta con ese correo.' };
+  if (participant.emailVerified) return { error: 'Esta cuenta ya está verificada.' };
+
+  const token = generateToken(24);
+  const tokenHash = hashToken(token);
+  const expiresAt = new Date(Date.now() + PARTICIPANT_VERIFICATION_TTL_MS);
+
+  await prisma.participant.update({
+    where: { email },
+    data: { verificationToken: tokenHash, verificationExpiresAt: expiresAt }
+  });
+
+  await sendParticipantVerificationEmail(email, token);
+  return { success: true };
+}
+
+export async function verifyParticipantAccount(searchParams) {
+  const parsed = participantVerifySchema.safeParse({
+    email: normalizeEmail(searchParams?.email),
+    token: String(searchParams?.token || '')
+  });
+
+  if (!parsed.success) {
+    redirect('/participantes?error=' + encodeURIComponent('Enlace de verificación inválido.'));
+  }
+
+  const participant = await prisma.participant.findUnique({ where: { email: parsed.data.email } });
+  if (!participant || !participant.verificationToken || !participant.verificationExpiresAt) {
+    redirect('/participantes?error=' + encodeURIComponent('Enlace de verificación no válido.'));
+  }
+
+  if (participant.verificationExpiresAt.getTime() < Date.now()) {
+    redirect('/participantes?error=' + encodeURIComponent('El enlace de verificación expiró. Solicita uno nuevo.'));
+  }
+
+  const hashed = hashToken(parsed.data.token);
+  if (participant.verificationToken !== hashed) {
+    redirect('/participantes?error=' + encodeURIComponent('El enlace no coincide.'));
+  }
+
+  await prisma.participant.update({
+    where: { email: parsed.data.email },
+    data: {
+      emailVerified: true,
+      verificationToken: null,
+      verificationExpiresAt: null
+    }
+  });
+
+  const referenceCode = await getLatestParticipantReferenceCode(participant.id);
+  await createParticipantSession({ participantId: participant.id, referenceCode });
+  redirect('/campus?verified=1');
+}
+
+export async function participantPasswordLogin(formData) {
+  const parsed = participantPasswordLoginSchema.safeParse({
+    email: normalizeEmail(formData.get('email')),
+    password: String(formData.get('password') || '')
+  });
+
+  if (!parsed.success) {
+    return { error: 'Revisa tu correo y contraseña.' };
+  }
+
+  const participant = await prisma.participant.findUnique({ where: { email: parsed.data.email } });
+  if (!participant || !participant.passwordHash) {
+    return { error: 'No encontramos una cuenta con este correo.' };
+  }
+
+  if (!participant.emailVerified) {
+    return { error: 'Debes verificar tu correo antes de entrar. Revisa tu bandeja o reenvía el enlace.' };
+  }
+
+  const ok = await verifyParticipantPassword(parsed.data.password, participant.passwordHash);
+  if (!ok) {
+    return { error: 'Correo o contraseña incorrectos.' };
+  }
+
+  const referenceCode = await getLatestParticipantReferenceCode(participant.id);
+  await createParticipantSession({ participantId: participant.id, referenceCode });
+  redirect('/campus');
 }
 
 function isRateLimited(key) {
@@ -105,6 +291,16 @@ function normalizeSlug(rawValue) {
     .slice(0, 70);
 }
 
+function sanitizeFileName(rawValue) {
+  return String(rawValue || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 120);
+}
+
 async function resolveUniqueCourseSlug(baseSlug) {
   let slug = baseSlug || `curso-${Date.now()}`;
   let index = 2;
@@ -116,13 +312,68 @@ async function resolveUniqueCourseSlug(baseSlug) {
 }
 
 function extractJsonObject(rawText) {
-  const raw = String(rawText || '').trim();
-  const start = raw.indexOf('{');
-  const end = raw.lastIndexOf('}');
-  if (start < 0 || end < 0 || end <= start) {
-    throw new Error('No se encontró un JSON válido en la respuesta.');
+  const raw = String(rawText || '');
+  const cleaned = raw.replace(/```json/gi, '```').replace(/```/g, '').trim();
+  if (!cleaned) {
+    throw new Error('La respuesta llegó vacía.');
   }
-  return JSON.parse(raw.slice(start, end + 1));
+
+  const directCandidates = [cleaned];
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start >= 0 && end > start) {
+    directCandidates.push(cleaned.slice(start, end + 1));
+  }
+
+  for (const candidate of directCandidates) {
+    try {
+      return JSON.parse(candidate);
+    } catch {}
+  }
+
+  for (let i = 0; i < cleaned.length; i += 1) {
+    if (cleaned[i] !== '{') continue;
+
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+
+    for (let j = i; j < cleaned.length; j += 1) {
+      const char = cleaned[j];
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+          continue;
+        }
+        if (char === '\\') {
+          escaped = true;
+          continue;
+        }
+        if (char === '"') {
+          inString = false;
+        }
+        continue;
+      }
+
+      if (char === '"') {
+        inString = true;
+        continue;
+      }
+      if (char === '{') depth += 1;
+      if (char === '}') depth -= 1;
+
+      if (depth === 0) {
+        const candidate = cleaned.slice(i, j + 1);
+        try {
+          return JSON.parse(candidate);
+        } catch {
+          break;
+        }
+      }
+    }
+  }
+
+  throw new Error('No se encontró un JSON válido en la respuesta.');
 }
 
 function readGeminiTextResponse(payload) {
@@ -140,6 +391,9 @@ const ADMIN_RESET_TTL_MS = 1000 * 60 * 20; // 20 minutos
 const ADMIN_RESET_MAX_ATTEMPTS = 3;
 const ADMIN_PASSWORD_HASH_KEY = 'admin_password_hash';
 const ADMIN_RESET_TOKEN_KEY = 'admin_reset_token';
+const PARTICIPANT_VERIFICATION_TTL_MS = 1000 * 60 * 60 * 72; // 72 horas
+
+const scryptAsync = promisify(scrypt);
 
 function logAssistantEvent(event) {
   // Placeholder for structured logging; replace with real logger/DB audit
@@ -148,6 +402,49 @@ function logAssistantEvent(event) {
 
 function generateToken(size = 32) {
   return randomBytes(size).toString('hex');
+}
+
+function hashToken(token) {
+  return createHmac('sha256', getPasswordSecret()).update(token).digest('hex');
+}
+
+async function hashParticipantPassword(rawPassword) {
+  const salt = randomBytes(16).toString('hex');
+  const derivedKey = await scryptAsync(rawPassword, salt, 64);
+  return `${salt}:${Buffer.from(derivedKey).toString('hex')}`;
+}
+
+async function verifyParticipantPassword(rawPassword, storedHash) {
+  if (!storedHash || !storedHash.includes(':')) return false;
+  const [salt, hash] = storedHash.split(':');
+  const derivedKey = await scryptAsync(rawPassword, salt, 64);
+  const candidate = Buffer.from(derivedKey).toString('hex');
+  return timingSafeEqual(Buffer.from(candidate), Buffer.from(hash));
+}
+
+async function sendParticipantVerificationEmail(email, token) {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const link = `${baseUrl}/participantes/validar?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+
+  await sendEmail({
+    to: email,
+    subject: 'Verifica tu cuenta en INTEVOPEDI',
+    html: `
+      <h2>Confirma tu correo</h2>
+      <p>Activa tu cuenta de participante haciendo clic en el enlace (expira en 72 horas):</p>
+      <p><a href="${link}">${link}</a></p>
+      <p>Si no solicitaste esta cuenta, ignora este mensaje.</p>
+    `
+  });
+}
+
+async function getLatestParticipantReferenceCode(participantId) {
+  const enrollment = await prisma.enrollment.findFirst({
+    where: { participantId },
+    orderBy: { createdAt: 'desc' },
+    select: { referenceCode: true }
+  });
+  return enrollment?.referenceCode || '';
 }
 
 function getPasswordSecret() {
@@ -239,28 +536,23 @@ export async function claimCourseCertificate(formData) {
     redirect('/campus?error=' + encodeURIComponent('No tienes permiso para esta acción.'));
   }
 
-  // Permitir generación automática SOLO para el curso específico ya impartido
-  if (enrollment.course.slug === 'ia-apoyo-discapacidad-visual') {
-    // Marcar como completado si no lo estaba
-    if (enrollment.status !== 'COMPLETED') {
-      await prisma.enrollment.update({
-        where: { id: enrollmentId },
-        data: {
-          status: 'COMPLETED',
-          progressPercent: 100,
-          completedAt: new Date()
-        }
-      });
-    }
-
-    // Generar el certificado
-    await ensureCertificate(enrollmentId);
-    
-    revalidatePath('/campus');
-    redirect('/campus?certificateIssued=1');
-  } else {
-    redirect('/campus?error=' + encodeURIComponent('Este curso requiere completar todos los módulos manualmente.'));
+  // Marcar como completado si no lo estaba
+  if (enrollment.status !== 'COMPLETED') {
+    await prisma.enrollment.update({
+      where: { id: enrollmentId },
+      data: {
+        status: 'COMPLETED',
+        progressPercent: 100,
+        completedAt: new Date()
+      }
+    });
   }
+
+  // Generar el certificado
+  await ensureCertificate(enrollmentId);
+  
+  revalidatePath('/campus');
+  redirect('/campus?certificateIssued=1');
 }
 
 export async function submitEnrollment(formData) {
@@ -650,7 +942,8 @@ export async function runAdminAssistantAction(formData) {
     return { ok: false, error: 'Configura tu API key de Gemini en Ajustes antes de usar el asistente.' };
   }
 
-  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const configuredModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const models = Array.from(new Set([configuredModel, 'gemini-2.0-flash', 'gemini-1.5-flash']));
   const selectedCourse = parsed.data.courseId
     ? await prisma.course.findUnique({
         where: { id: parsed.data.courseId },
@@ -694,6 +987,7 @@ Responde SOLO en JSON con esta estructura:
     "location": "",
     "instructor": "",
     "status": "DRAFT",
+    "resources": [{"title":"","description":"","url":"https://..."}],
     "modules": [{"title":"","description":"","durationMinutes":60}]
   },
   "courseContentDraft": null o {
@@ -708,36 +1002,68 @@ ${modeGuide}
 `;
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              {
-                text: `${systemPrompt}\n\nContexto actual:\n${courseContext}\n\nSolicitud del admin:\n${parsed.data.prompt}`
-              }
-            ]
+    let data = null;
+    let modelUsed = '';
+    let lastApiError = '';
+    for (const model of models) {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                {
+                  text: `${systemPrompt}\n\nContexto actual:\n${courseContext}\n\nSolicitud del admin:\n${parsed.data.prompt}`
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.5,
+            maxOutputTokens: 3000
           }
-        ],
-        generationConfig: {
-          temperature: 0.5,
-          maxOutputTokens: 3000
-        }
-      })
-    });
+        })
+      });
 
-    if (!response.ok) {
-      return { ok: false, error: 'Gemini no respondió correctamente. Verifica API key y modelo.' };
+      if (!response.ok) {
+        let apiMessage = `HTTP ${response.status}`;
+        try {
+          const errorPayload = await response.json();
+          apiMessage = String(errorPayload?.error?.message || apiMessage);
+        } catch {
+          try {
+            const errorText = await response.text();
+            if (errorText.trim()) apiMessage = errorText.trim().slice(0, 240);
+          } catch {}
+        }
+        lastApiError = `Modelo ${model}: ${apiMessage}`;
+        continue;
+      }
+
+      const payload = await response.json();
+      const text = readGeminiTextResponse(payload);
+      if (!text) {
+        lastApiError = `Modelo ${model}: respuesta vacía del proveedor.`;
+        continue;
+      }
+
+      try {
+        data = extractJsonObject(text);
+        modelUsed = model;
+        break;
+      } catch (parseError) {
+        lastApiError = `Modelo ${model}: ${String(parseError?.message || 'JSON inválido en respuesta.')}`;
+      }
     }
 
-    const payload = await response.json();
-    const text = readGeminiTextResponse(payload);
-    const data = extractJsonObject(text);
+    if (!data) {
+      const detail = lastApiError ? ` ${lastApiError}` : '';
+      return { ok: false, error: `Gemini no respondió correctamente.${detail}` };
+    }
 
     const sanitized = {
       summary: String(data.summary || ''),
@@ -752,6 +1078,7 @@ ${modeGuide}
       prompt: parsed.data.prompt.slice(0, 300),
       actionType: parsed.data.actionType,
       courseId: parsed.data.courseId || null,
+      modelUsed,
       hasCourseDraft: Boolean(sanitized.courseDraft),
       hasContentDraft: Boolean(sanitized.courseContentDraft)
     });
@@ -793,9 +1120,21 @@ export async function createCourseFromAssistantAction(formData) {
         duration: draft.duration,
         location: draft.location,
         instructor: draft.instructor,
-        status: 'DRAFT'
+        status: draft.status || 'PUBLISHED'
       }
     });
+
+    if (draft.resources?.length) {
+      await prisma.courseResource.createMany({
+        data: draft.resources.map((resource) => ({
+          courseId: course.id,
+          title: resource.title,
+          description: resource.description || null,
+          type: 'LINK',
+          url: resource.url
+        }))
+      });
+    }
 
     await prisma.module.createMany({
       data: draft.modules.map((moduleItem, index) => ({
@@ -809,13 +1148,111 @@ export async function createCourseFromAssistantAction(formData) {
 
     revalidatePath('/admin');
     revalidatePath('/admin/ajustes');
+    revalidatePath('/cursos');
+    revalidatePath(`/cursos/${slug}`);
+    revalidatePath('/campus');
 
     logAssistantEvent({ type: 'assistant.createCourse', courseId: course.id, title: draft.title });
-    return { ok: true, message: 'Curso creado como borrador.' };
+    return { ok: true, message: `Curso creado correctamente con estado ${draft.status || 'PUBLISHED'}.` };
   } catch (error) {
     logAssistantEvent({ type: 'assistant.createCourse.error', message: String(error?.message || error) });
     return { ok: false, error: 'No se pudo crear el curso.' };
   }
+}
+
+export async function addCourseResourceAdminAction(formData) {
+  await requireAdmin();
+
+  const rawValues = Object.fromEntries(formData.entries());
+  const linkInput = sanitizeText(rawValues.resourceUrl);
+  const fileInput = formData.get('resourceFile');
+  const hasFile = fileInput instanceof File && fileInput.size > 0;
+  const hasLink = Boolean(linkInput);
+
+  if (!hasFile && !hasLink) {
+    redirect('/admin?error=' + encodeURIComponent('Debes adjuntar un archivo o indicar una URL del recurso.'));
+  }
+
+  if (hasLink) {
+    const parsedLink = adminCourseResourceLinkSchema.safeParse({
+      courseId: sanitizeText(rawValues.courseId),
+      title: sanitizeText(rawValues.title),
+      description: sanitizeText(rawValues.description),
+      resourceUrl: linkInput
+    });
+
+    if (!parsedLink.success) {
+      redirect('/admin?error=' + encodeURIComponent('Revisa el título y el enlace del recurso.'));
+    }
+
+    const course = await prisma.course.findUnique({ where: { id: parsedLink.data.courseId }, select: { id: true, slug: true } });
+    if (!course) {
+      redirect('/admin?error=' + encodeURIComponent('El curso indicado no existe.'));
+    }
+
+    await prisma.courseResource.create({
+      data: {
+        courseId: parsedLink.data.courseId,
+        title: parsedLink.data.title,
+        description: parsedLink.data.description || null,
+        type: 'LINK',
+        url: parsedLink.data.resourceUrl
+      }
+    });
+
+    revalidatePath('/admin');
+    revalidatePath(`/cursos/${course.slug}`);
+    revalidatePath('/campus');
+    redirect('/admin?saved=' + encodeURIComponent('Recurso enlazado correctamente.'));
+  }
+
+  const parsedFile = adminCourseResourceFileSchema.safeParse({
+    courseId: sanitizeText(rawValues.courseId),
+    title: sanitizeText(rawValues.title),
+    description: sanitizeText(rawValues.description)
+  });
+
+  if (!parsedFile.success || !(fileInput instanceof File)) {
+    redirect('/admin?error=' + encodeURIComponent('Revisa los datos del recurso y vuelve a intentarlo.'));
+  }
+
+  const course = await prisma.course.findUnique({ where: { id: parsedFile.data.courseId }, select: { id: true, slug: true } });
+  if (!course) {
+    redirect('/admin?error=' + encodeURIComponent('El curso indicado no existe.'));
+  }
+
+  const maxBytes = 25 * 1024 * 1024;
+  if (fileInput.size > maxBytes) {
+    redirect('/admin?error=' + encodeURIComponent('El archivo supera el límite de 25MB.'));
+  }
+
+  const uploadsDirectory = path.join(process.cwd(), 'public', 'uploads', 'course-resources', course.id);
+  await mkdir(uploadsDirectory, { recursive: true });
+
+  const now = Date.now();
+  const baseName = sanitizeFileName(fileInput.name) || `recurso-${now}`;
+  const fileName = `${now}-${baseName}`;
+  const targetPath = path.join(uploadsDirectory, fileName);
+  const arrayBuffer = await fileInput.arrayBuffer();
+  await writeFile(targetPath, Buffer.from(arrayBuffer));
+
+  const publicPath = `/uploads/course-resources/${course.id}/${fileName}`;
+  await prisma.courseResource.create({
+    data: {
+      courseId: course.id,
+      title: parsedFile.data.title,
+      description: parsedFile.data.description || null,
+      type: 'FILE',
+      filePath: publicPath,
+      mimeType: fileInput.type || null,
+      sizeBytes: fileInput.size || null
+    }
+  });
+
+  revalidatePath('/admin');
+  revalidatePath(`/cursos/${course.slug}`);
+  revalidatePath('/campus');
+  redirect('/admin?saved=' + encodeURIComponent('Archivo adjuntado correctamente.'));
 }
 
 export async function appendModulesFromAssistantAction(formData) {
@@ -913,4 +1350,140 @@ export async function issueCertificateAction(formData) {
   }
 
   redirect('/admin');
+}
+
+export async function createCourseManualAction(formData) {
+  await requireAdmin();
+  const rawValues = Object.fromEntries(formData.entries());
+  const parsed = manualCourseSchema.safeParse({
+    title: sanitizeText(rawValues.title),
+    summary: sanitizeText(rawValues.summary),
+    description: sanitizeText(rawValues.description),
+    modality: sanitizeText(rawValues.modality),
+    priceCents: rawValues.priceCents,
+    priceLabel: sanitizeText(rawValues.priceLabel),
+    seats: rawValues.seats || undefined,
+    startDate: rawValues.startDate,
+    endDate: rawValues.endDate || undefined,
+    duration: sanitizeText(rawValues.duration),
+    location: sanitizeText(rawValues.location),
+    instructor: sanitizeText(rawValues.instructor),
+    status: rawValues.status || 'DRAFT'
+  });
+
+  if (!parsed.success) {
+    redirect('/admin?error=' + encodeURIComponent('Completa todos los campos obligatorios del curso.'));
+  }
+
+  const baseSlug = normalizeSlug(parsed.data.title);
+  const slug = await resolveUniqueCourseSlug(baseSlug);
+
+  await prisma.course.create({
+    data: {
+      slug,
+      title: parsed.data.title,
+      summary: parsed.data.summary,
+      description: parsed.data.description,
+      modality: parsed.data.modality,
+      priceCents: parsed.data.priceCents,
+      priceLabel: parsed.data.priceLabel,
+      seats: typeof parsed.data.seats === 'number' ? parsed.data.seats : null,
+      startDate: new Date(parsed.data.startDate),
+      endDate: parsed.data.endDate ? new Date(parsed.data.endDate) : new Date(parsed.data.startDate),
+      duration: parsed.data.duration,
+      location: parsed.data.location,
+      instructor: parsed.data.instructor,
+      status: parsed.data.status || 'DRAFT'
+    }
+  });
+
+  revalidatePath('/admin');
+  revalidatePath('/cursos');
+  redirect('/admin?saved=' + encodeURIComponent('Curso creado correctamente.'));
+}
+
+export async function updateCourseAction(formData) {
+  await requireAdmin();
+  const courseId = String(formData.get('courseId') || '');
+  if (!courseId) redirect('/admin?error=' + encodeURIComponent('Curso no identificado.'));
+
+  const rawValues = Object.fromEntries(formData.entries());
+  const data = {};
+
+  if (rawValues.title) data.title = sanitizeText(rawValues.title);
+  if (rawValues.summary) data.summary = sanitizeText(rawValues.summary);
+  if (rawValues.description) data.description = sanitizeText(rawValues.description);
+  if (rawValues.modality) data.modality = sanitizeText(rawValues.modality);
+  if (rawValues.priceCents !== undefined && rawValues.priceCents !== '') data.priceCents = Number(rawValues.priceCents);
+  if (rawValues.priceLabel) data.priceLabel = sanitizeText(rawValues.priceLabel);
+  if (rawValues.seats !== undefined && rawValues.seats !== '') data.seats = Number(rawValues.seats) || null;
+  if (rawValues.startDate) data.startDate = new Date(rawValues.startDate);
+  if (rawValues.endDate) data.endDate = new Date(rawValues.endDate);
+  if (rawValues.duration) data.duration = sanitizeText(rawValues.duration);
+  if (rawValues.location) data.location = sanitizeText(rawValues.location);
+  if (rawValues.instructor) data.instructor = sanitizeText(rawValues.instructor);
+  if (rawValues.status) data.status = rawValues.status;
+
+  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { slug: true } });
+  if (!course) redirect('/admin?error=' + encodeURIComponent('Curso no encontrado.'));
+
+  await prisma.course.update({ where: { id: courseId }, data });
+
+  revalidatePath('/admin');
+  revalidatePath('/cursos');
+  revalidatePath(`/cursos/${course.slug}`);
+  redirect('/admin?saved=' + encodeURIComponent('Curso actualizado correctamente.'));
+}
+
+export async function deleteCourseAction(formData) {
+  await requireAdmin();
+  const courseId = String(formData.get('courseId') || '');
+  if (!courseId) redirect('/admin?error=' + encodeURIComponent('Curso no identificado.'));
+
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    include: { enrollments: { select: { id: true } } }
+  });
+
+  if (!course) redirect('/admin?error=' + encodeURIComponent('Curso no encontrado.'));
+
+  if (course.enrollments.length > 0) {
+    redirect('/admin?error=' + encodeURIComponent(`No se puede eliminar: tiene ${course.enrollments.length} inscripción(es). Cambia el estado a CLOSED.`));
+  }
+
+  await prisma.course.delete({ where: { id: courseId } });
+
+  revalidatePath('/admin');
+  revalidatePath('/cursos');
+  redirect('/admin?saved=' + encodeURIComponent('Curso eliminado correctamente.'));
+}
+
+export async function exportEnrollmentsCsv() {
+  await requireAdmin();
+
+  const enrollments = await prisma.enrollment.findMany({
+    include: {
+      participant: true,
+      course: { select: { title: true } },
+      certificate: { select: { certificateCode: true } }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  const header = 'Nombre,Correo,Curso,Estado,Pago,Progreso,Código,Certificado,Fecha';
+  const rows = enrollments.map((e) => {
+    return [
+      `"${e.participant.fullName}"`,
+      e.participant.email,
+      `"${e.course.title}"`,
+      e.status,
+      e.paymentStatus,
+      `${e.progressPercent}%`,
+      e.referenceCode,
+      e.certificate?.certificateCode || '',
+      e.createdAt.toISOString().split('T')[0]
+    ].join(',');
+  });
+
+  return { ok: true, csv: [header, ...rows].join('\n') };
 }

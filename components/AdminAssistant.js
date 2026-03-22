@@ -396,7 +396,7 @@ export function AdminAssistant({ courses = [] }) {
                     />
                     <span>Entiendo que se creará un curso nuevo con estos datos.</span>
                   </label>
-                  <p className="helper">Acción segura: crea el curso como borrador con módulos.</p>
+                  <p className="helper">Acción segura: crea el curso con módulos y el estado definido en el JSON.</p>
                 </div>
               ) : null}
 
