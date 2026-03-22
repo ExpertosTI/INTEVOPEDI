@@ -1134,7 +1134,8 @@ input[type="checkbox"] {
   width: min(480px, 92vw);
   max-height: min(75vh, 800px);
   overflow: hidden;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 14px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow-xl);
@@ -1161,7 +1162,8 @@ input[type="checkbox"] {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: 300px;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   scroll-behavior: smooth;
 }
