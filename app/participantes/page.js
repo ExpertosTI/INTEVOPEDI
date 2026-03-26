@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ParticipantLoginForm } from '@/components/ParticipantLoginForm';
+import { ParticipantLoginFlow } from '@/components/ParticipantLoginFlow';
 import { participantAccessLogin } from '@/app/actions';
 import { getParticipantSession } from '@/lib/participant-auth';
 import { participantHubBenefits } from '@/lib/site';
@@ -23,7 +23,7 @@ export default async function ParticipantAccessPage({ searchParams }) {
           <span className="eyebrow">Acceso del participante</span>
           <h1>Entra a tu campus del curso</h1>
           <p>
-            Si ya te inscribiste, introduce tu correo y tu código para entrar a tu campus, revisar progreso, recursos y certificado.
+            Introduce tu cédula o número de teléfono registrado en tu inscripción para entrar a tu campus, revisar tu progreso, recursos y certificados.
           </p>
           
           {verified ? (
@@ -42,7 +42,7 @@ export default async function ParticipantAccessPage({ searchParams }) {
             </div>
           ) : null}
 
-          <ParticipantLoginForm defaultEmail={emailParam} defaultCode={code} />
+          <ParticipantLoginFlow defaultEmail={emailParam} defaultCode={code} />
           
           {session ? (
             <div className="inline-actions">

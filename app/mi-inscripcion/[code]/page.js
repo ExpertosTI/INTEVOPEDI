@@ -5,6 +5,7 @@ import { StatusPill } from '@/components/StatusPill';
 import { getEnrollmentByReference } from '@/lib/data';
 import { formatDateTime, formatPercent } from '@/lib/formatters';
 import { courseExperienceBySlug, getCourseResourceLibrary } from '@/lib/site';
+import { LearningPath } from '@/components/LearningPath';
 
 export const metadata = {
   title: 'Mi inscripción | INTEVOPEDI',
@@ -112,25 +113,11 @@ export default async function EnrollmentPage({ params, searchParams }) {
             </Link>
           </div>
 
-          <div className="modules-grid">
-            {enrollment.progress.map((item) => (
-              <article key={item.id} className="panel module-card stack">
-                <strong>Módulo {item.module.order}</strong>
-                <h3>{item.module.title}</h3>
-                <p>{item.module.description}</p>
-                <p className="helper">Estado actual: {item.completed ? 'Completado' : 'Pendiente'}</p>
-                <form action={toggleModuleProgress}>
-                  <input type="hidden" name="enrollmentId" value={enrollment.id} />
-                  <input type="hidden" name="moduleId" value={item.moduleId} />
-                  <input type="hidden" name="referenceCode" value={enrollment.referenceCode} />
-                  <input type="hidden" name="completed" value={item.completed ? 'false' : 'true'} />
-                  <button type="submit" className={`button ${item.completed ? 'button-secondary' : 'button-primary'}`}>
-                    {item.completed ? 'Marcar como pendiente' : 'Marcar como completado'}
-                  </button>
-                </form>
-              </article>
-            ))}
-          </div>
+          <LearningPath 
+            modulesProgress={enrollment.progress} 
+            enrollmentId={enrollment.id}
+            referenceCode={enrollment.referenceCode} 
+          />
         </article>
 
         {experience ? (

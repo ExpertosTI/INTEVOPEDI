@@ -7,7 +7,8 @@ import {
   updateCourseAction,
   deleteCourseAction,
   issueCertificateAction,
-  addCourseResourceAdminAction
+  addCourseResourceAdminAction,
+  adminEnrollStudentAction
 } from '@/app/actions';
 import { formatDateTime } from '@/lib/formatters';
 import { AdminFloatingAssistant } from '@/components/AdminFloatingAssistant';
@@ -146,8 +147,8 @@ export default async function AdminPage({ searchParams }) {
               <label>
                 Estado
                 <select name="status">
-                  <option value="DRAFT">Borrador</option>
                   <option value="PUBLISHED">Publicado</option>
+                  <option value="DRAFT">Borrador</option>
                   <option value="CLOSED">Cerrado</option>
                 </select>
               </label>
@@ -217,6 +218,49 @@ export default async function AdminPage({ searchParams }) {
           </div>
         </article>
 
+        {/* --- Inscribir Estudiante --- */}
+        <article className="panel stack">
+          <div className="section-heading">
+            <span className="eyebrow">Asignar estudiante a curso</span>
+            <h2>Inscribir estudiante</h2>
+            <p>Registra o busca a un estudiante por cédula o teléfono y asígnalo a un curso activo.</p>
+          </div>
+          <form action={adminEnrollStudentAction} className="admin-create-form">
+            <div className="form-row">
+              <label>
+                Identificador * (Cédula o Teléfono)
+                <input type="text" name="identifier" required placeholder="Ej. 40220649281 o 8092223333" />
+              </label>
+              <label>
+                Nombre completo
+                <input type="text" name="fullName" placeholder="Requerido si es estudiante nuevo" />
+              </label>
+            </div>
+            <div className="form-row">
+              <label>
+                Curso *
+                <select name="courseId" required>
+                  <option value="">-- Selecciona el curso --</option>
+                  {courses.filter(c => c.status === 'PUBLISHED').map(course => (
+                    <option key={course.id} value={course.id}>{course.title}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Estado de pago
+                <select name="paymentStatus" defaultValue="PENDING">
+                  <option value="PENDING">Pendiente</option>
+                  <option value="VERIFIED">Verificado</option>
+                  <option value="WAIVED">Exonerado</option>
+                </select>
+              </label>
+            </div>
+            <button type="submit" className="button button-primary">
+              Inscribir estudiante
+            </button>
+          </form>
+        </article>
+
         {/* --- Inscripciones --- */}
         <article className="panel stack">
           <div className="row-between">
@@ -236,6 +280,7 @@ export default async function AdminPage({ searchParams }) {
                   <th>Pago</th>
                   <th>Progreso</th>
                   <th>Código</th>
+                  <th>Origen</th>
                   <th>Certificado</th>
                   <th>Acciones</th>
                 </tr>
@@ -262,6 +307,11 @@ export default async function AdminPage({ searchParams }) {
                     <td>{enrollment.progressPercent}%</td>
                     <td><code>{enrollment.referenceCode}</code></td>
                     <td>
+                      <span className={`badge ${enrollment.enrolledByAdmin ? 'badge-confirmed' : 'badge-pending'}`}>
+                        {enrollment.enrolledByAdmin ? 'Admin' : 'Público'}
+                      </span>
+                    </td>
+                    <td>
                       {enrollment.certificate ? (
                         <Link href={`/certificados/${enrollment.certificate.certificateCode}`} className="badge badge-completed">
                           Ver
@@ -283,9 +333,10 @@ export default async function AdminPage({ searchParams }) {
                             <option value="CONFIRMED">Confirmado</option>
                             <option value="WAIVED">Exonerado</option>
                           </select>
-                          <select name="attended" defaultValue={String(enrollment.attended)}>
-                            <option value="false">No asistió</option>
-                            <option value="true">Asistió</option>
+                          <select name="attendancePercent" defaultValue={String(enrollment.attendancePercent)}>
+                            <option value="0">0% (No asistió)</option>
+                            <option value="50">50% (Parcial)</option>
+                            <option value="100">100% (Asistió)</option>
                           </select>
                           <button type="submit" className="button button-primary" style={{ height: '36px', fontSize: '0.8rem' }}>
                             Guardar

@@ -1335,6 +1335,101 @@ input[type="checkbox"] {
   gap: 12px;
 }
 
+/* ===== Learning Path (Timeline) ===== */
+.learning-path {
+  display: grid;
+  gap: 24px;
+}
+.learning-path-header {
+  padding: 16px;
+  background: var(--bg-muted);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+.learning-path-timeline {
+  display: grid;
+  gap: 0;
+  position: relative;
+  padding-left: 20px;
+}
+.learning-path-timeline::before {
+  content: '';
+  position: absolute;
+  left: 31px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: var(--border);
+  z-index: 1;
+}
+.learning-path-node {
+  position: relative;
+  padding-bottom: 32px;
+  padding-left: 40px;
+  display: flex;
+  flex-direction: column;
+}
+.learning-path-node:last-child {
+  padding-bottom: 0;
+}
+.learning-path-icon {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--bg-white);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  z-index: 2;
+  transition: all 0.3s var(--ease);
+}
+.learning-path-node.completed .learning-path-icon {
+  background: var(--accent-green);
+  border-color: var(--accent-green);
+  color: #fff;
+}
+.learning-path-node.active .learning-path-icon {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  box-shadow: 0 0 0 4px var(--primary-ring);
+}
+.learning-path-node.completed .learning-path-connector {
+  background: var(--accent-green);
+}
+.learning-path-node.active .learning-path-connector {
+  background: var(--primary);
+}
+.learning-path-node .panel {
+  width: 100%;
+  margin-top: -4px;
+}
+.module-completed {
+  opacity: 0.8;
+  border-style: dashed;
+}
+
+/* ===== Login Flow ===== */
+.login-flow-container {
+  max-width: 400px;
+  margin: 0 auto;
+  width: 100%;
+}
+.login-flow-container form {
+  animation: slideIn 0.4s var(--ease);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ===== Utilities ===== */
 .helper { font-size: 0.85rem; color: var(--text-muted); }
 .inline-form { display: inline-flex; }

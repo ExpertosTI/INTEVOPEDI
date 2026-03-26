@@ -15,7 +15,7 @@ import { createParticipantSession, destroyParticipantSession, getParticipantSess
 import { ensureCertificate, generateReferenceCode, syncEnrollmentProgress } from '@/lib/certificates';
 import { getGeminiApiKey, saveGeminiApiKey } from '@/lib/admin-settings';
 import { getParticipantAccessEnrollment } from '@/lib/data';
-import { isValidPhone, normalizeEmail, normalizePhone, sanitizeText } from '@/lib/validation';
+import { isValidPhone, normalizeEmail, normalizePhone, sanitizeText, normalizeLoginIdentifier, detectIdentifierType } from '@/lib/validation';
 import { sendEmail } from '@/lib/email';
 
 const enrollmentSchema = z.object({
@@ -55,6 +55,16 @@ const participantVerifySchema = z.object({
 
 const participantPasswordLoginSchema = z.object({
   email: z.string().email(),
+  password: z.string().min(8).max(128)
+});
+
+const studentIdentifierLoginSchema = z.object({
+  identifier: z.string().min(8),
+  password: z.string().min(8).max(128)
+});
+
+const studentFirstTimeSchema = z.object({
+  identifier: z.string().min(8),
   password: z.string().min(8).max(128)
 });
 
@@ -223,7 +233,7 @@ export async function verifyParticipantAccount(searchParams) {
     redirect('/participantes?error=' + encodeURIComponent('El enlace no coincide.'));
   }
 
-  await prisma.participant.update({
+  const updatedParticipant = await prisma.participant.update({
     where: { email: parsed.data.email },
     data: {
       emailVerified: true,
@@ -234,36 +244,101 @@ export async function verifyParticipantAccount(searchParams) {
 
   const referenceCode = await getLatestParticipantReferenceCode(participant.id);
   await createParticipantSession({ participantId: participant.id, referenceCode });
-  redirect('/campus?verified=1');
+  const destination = getParticipantPostLoginRedirect(updatedParticipant);
+  redirect(destination === '/campus' ? '/campus?verified=1' : `${destination}&verified=1`);
 }
 
-export async function participantPasswordLogin(formData) {
-  const parsed = participantPasswordLoginSchema.safeParse({
-    email: normalizeEmail(formData.get('email')),
+export async function studentIdentifierCheck(formData) {
+  const identifier = String(formData.get('identifier') || '');
+  if (!identifier || identifier.length < 8) {
+    return { error: 'Ingresa una cédula o teléfono válido.' };
+  }
+
+  const normalized = normalizeLoginIdentifier(identifier);
+  const participant = await prisma.participant.findUnique({
+    where: { loginIdentifier: normalized }
+  });
+
+  if (!participant) {
+    return { status: 'not_found' };
+  }
+
+  if (participant.mustSetPassword) {
+    return { status: 'first_time', participantName: participant.fullName };
+  }
+
+  return { status: 'login' };
+}
+
+export async function studentFirstTimeSetPassword(formData) {
+  const identifier = String(formData.get('identifier') || '');
+  const password = String(formData.get('password') || '');
+  const confirmPassword = String(formData.get('confirmPassword') || '');
+
+  if (password.length < 8) {
+    return { error: 'La contraseña debe tener al menos 8 caracteres.' };
+  }
+  if (password !== confirmPassword) {
+    return { error: 'Las contraseñas no coinciden.' };
+  }
+
+  const normalized = normalizeLoginIdentifier(identifier);
+  const participant = await prisma.participant.findUnique({
+    where: { loginIdentifier: normalized }
+  });
+
+  if (!participant) {
+    return { error: 'Participante no encontrado.' };
+  }
+
+  if (!participant.mustSetPassword) {
+    return { error: 'Este usuario ya tiene una contraseña configurada.' };
+  }
+
+  const passwordHash = await hashParticipantPassword(password);
+  
+  await prisma.participant.update({
+    where: { id: participant.id },
+    data: {
+      passwordHash,
+      mustSetPassword: false,
+      passwordSetAt: new Date(),
+      emailVerified: true
+    }
+  });
+
+  const referenceCode = await getLatestParticipantReferenceCode(participant.id);
+  await createParticipantSession({ participantId: participant.id, referenceCode });
+  redirect('/campus?profileUpdated=1');
+}
+
+export async function studentPasswordLogin(formData) {
+  const parsed = studentIdentifierLoginSchema.safeParse({
+    identifier: String(formData.get('identifier') || ''),
     password: String(formData.get('password') || '')
   });
 
   if (!parsed.success) {
-    return { error: 'Revisa tu correo y contraseña.' };
+    return { error: 'Revisa tu identificador y contraseña.' };
   }
 
-  const participant = await prisma.participant.findUnique({ where: { email: parsed.data.email } });
-  if (!participant || !participant.passwordHash) {
-    return { error: 'No encontramos una cuenta con este correo.' };
-  }
+  const normalized = normalizeLoginIdentifier(parsed.data.identifier);
+  const participant = await prisma.participant.findUnique({
+    where: { loginIdentifier: normalized }
+  });
 
-  if (!participant.emailVerified) {
-    return { error: 'Debes verificar tu correo antes de entrar. Revisa tu bandeja o reenvía el enlace.' };
+  if (!participant || !participant.passwordHash || participant.mustSetPassword) {
+    return { error: 'No encontramos una cuenta validada con este dato.' };
   }
 
   const ok = await verifyParticipantPassword(parsed.data.password, participant.passwordHash);
   if (!ok) {
-    return { error: 'Correo o contraseña incorrectos.' };
+    return { error: 'Contraseña incorrecta.' };
   }
 
   const referenceCode = await getLatestParticipantReferenceCode(participant.id);
   await createParticipantSession({ participantId: participant.id, referenceCode });
-  redirect('/campus');
+  redirect(getParticipantPostLoginRedirect(participant));
 }
 
 function isRateLimited(key) {
@@ -447,6 +522,17 @@ async function getLatestParticipantReferenceCode(participantId) {
   return enrollment?.referenceCode || '';
 }
 
+function isParticipantSetupRequired(participant) {
+  if (!participant) return true;
+  const fullName = String(participant.fullName || '').trim();
+  const phone = String(participant.phone || '').trim();
+  return fullName.length < 3 || phone.length < 7 || !participant.passwordHash;
+}
+
+function getParticipantPostLoginRedirect(participant) {
+  return isParticipantSetupRequired(participant) ? '/perfil?required=1' : '/campus';
+}
+
 function getPasswordSecret() {
   return process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_ACCESS_PASSWORD || 'intevopedi-local-admin';
 }
@@ -499,6 +585,15 @@ export async function updateParticipantProfile(formData) {
   if (!session) redirect('/participantes');
 
   const rawValues = Object.fromEntries(formData.entries());
+  const password = String(formData.get('password') || '');
+  const forceRequired = String(rawValues.required || '') === '1';
+  const participant = await prisma.participant.findUnique({
+    where: { id: session.participantId },
+    select: { id: true, passwordHash: true }
+  });
+  if (!participant) {
+    redirect('/participantes?error=' + encodeURIComponent('Tu sesión ya no está disponible.'));
+  }
   
   const data = {
     fullName: sanitizeText(rawValues.fullName || ''),
@@ -509,9 +604,26 @@ export async function updateParticipantProfile(formData) {
     notes: sanitizeText(rawValues.notes || '')
   };
 
+  if (data.fullName.length < 3 || !isValidPhone(data.phone)) {
+    redirect('/perfil?error=' + encodeURIComponent('Completa un nombre válido y un teléfono correcto.'));
+  }
+
+  const mustSetPassword = !participant.passwordHash || forceRequired;
+  if (mustSetPassword && !password) {
+    redirect('/perfil?required=1&error=' + encodeURIComponent('Debes crear una contraseña para entrar.'));
+  }
+  if (password && password.length < 8) {
+    redirect('/perfil?required=1&error=' + encodeURIComponent('La contraseña debe tener al menos 8 caracteres.'));
+  }
+
+  const nextData = {
+    ...data,
+    ...(password ? { passwordHash: await hashParticipantPassword(password), emailVerified: true } : {})
+  };
+
   await prisma.participant.update({
     where: { id: session.participantId },
-    data
+    data: nextData
   });
 
   revalidatePath('/campus');
@@ -778,7 +890,7 @@ export async function participantAccessLogin(formData) {
     referenceCode: enrollment.referenceCode
   });
 
-  redirect('/campus');
+  redirect(getParticipantPostLoginRedirect(enrollment.participant));
 }
 
 export async function participantLogout() {
@@ -1120,7 +1232,7 @@ export async function createCourseFromAssistantAction(formData) {
         duration: draft.duration,
         location: draft.location,
         instructor: draft.instructor,
-        status: draft.status || 'PUBLISHED'
+        status: draft.status && draft.status !== 'DRAFT' ? draft.status : 'PUBLISHED'
       }
     });
 
@@ -1486,4 +1598,93 @@ export async function exportEnrollmentsCsv() {
   });
 
   return { ok: true, csv: [header, ...rows].join('\n') };
+}
+
+export async function adminEnrollStudentAction(formData) {
+  await requireAdmin();
+  
+  const rawIdentifier = String(formData.get('identifier') || '');
+  const rawFullName = String(formData.get('fullName') || '');
+  const courseId = String(formData.get('courseId') || '');
+  const paymentStatus = String(formData.get('paymentStatus') || 'PENDING');
+  
+  if (!rawIdentifier || rawIdentifier.length < 8) {
+    return { error: 'Identificador (cédula o teléfono) inválido.' };
+  }
+  
+  if (!courseId) {
+    return { error: 'Debe seleccionar un curso.' };
+  }
+
+  const normalizedIdentifier = normalizeLoginIdentifier(rawIdentifier);
+  const type = detectIdentifierType(rawIdentifier);
+  
+  let participant = await prisma.participant.findUnique({
+    where: { loginIdentifier: normalizedIdentifier }
+  });
+  
+  if (!participant) {
+    if (!rawFullName || rawFullName.length < 3) {
+      return { error: 'El nombre completo es requerido para estudiantes nuevos.' };
+    }
+    
+    const isCedula = type === 'cedula';
+    participant = await prisma.participant.create({
+      data: {
+        loginIdentifier: normalizedIdentifier,
+        cedula: isCedula ? normalizedIdentifier : null,
+        phone: !isCedula ? normalizedIdentifier : '',
+        fullName: sanitizeText(rawFullName),
+        mustSetPassword: true
+      }
+    });
+  }
+
+  // Check if already enrolled
+  const existingEnrollment = await prisma.enrollment.findUnique({
+    where: {
+      courseId_participantId: {
+        courseId,
+        participantId: participant.id
+      }
+    }
+  });
+
+  if (existingEnrollment) {
+    return { error: 'El estudiante ya está inscrito en este curso.' };
+  }
+
+  let referenceCode = generateReferenceCode();
+  while (await prisma.enrollment.findUnique({ where: { referenceCode } })) {
+    referenceCode = generateReferenceCode();
+  }
+
+  const enrollment = await prisma.enrollment.create({
+    data: {
+      referenceCode,
+      courseId,
+      participantId: participant.id,
+      status: 'CONFIRMED',
+      paymentStatus,
+      enrolledByAdmin: true
+    }
+  });
+
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    include: { modules: true }
+  });
+
+  if (course && course.modules.length > 0) {
+    await prisma.progress.createMany({
+      data: course.modules.map((moduleData) => ({
+        enrollmentId: enrollment.id,
+        moduleId: moduleData.id
+      })),
+      skipDuplicates: true
+    });
+  }
+
+  revalidatePath('/admin');
+  return { success: true, message: `Estudiante ${participant.fullName} inscrito correctamente.` };
 }

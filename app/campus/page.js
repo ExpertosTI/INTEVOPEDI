@@ -5,7 +5,7 @@ import { StatusPill } from '@/components/StatusPill';
 import { ProgressRing } from '@/components/ProgressRing';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { getParticipantSession, requireParticipantAuth } from '@/lib/participant-auth';
-import { getParticipantCampusData } from '@/lib/data';
+import { getParticipantCampusData, getPublishedCourses } from '@/lib/data';
 import { courseExperienceBySlug, getCourseResourceLibrary, getCourseResourceStats, participantCampusSections } from '@/lib/site';
 
 export const metadata = {
@@ -23,6 +23,10 @@ export default async function CampusPage({ searchParams }) {
   if (!participant) {
     redirect('/participantes?error=' + encodeURIComponent('Tu sesión ya no está disponible. Vuelve a iniciar acceso.'));
   }
+  const setupRequired = !participant.passwordHash || !participant.fullName || participant.fullName.trim().length < 3 || !participant.phone || participant.phone.trim().length < 7;
+  if (setupRequired) {
+    redirect('/perfil?required=1');
+  }
 
   const totalEnrollments = participant.enrollments.length;
   const completedEnrollments = participant.enrollments.filter((item) => item.status === 'COMPLETED').length;
@@ -32,6 +36,7 @@ export default async function CampusPage({ searchParams }) {
   const created = searchParams?.created;
   const certificateIssued = searchParams?.certificateIssued;
   const latestSession = await getParticipantSession();
+  const publishedCourses = totalEnrollments === 0 ? await getPublishedCourses() : [];
 
   return (
     <section className="section spaced-page">
@@ -132,6 +137,16 @@ export default async function CampusPage({ searchParams }) {
             <span className="eyebrow">Mis cursos</span>
             <h2>Inscripciones activas y finalizadas</h2>
           </div>
+          {participant.enrollments.length === 0 ? (
+            <div className="stack">
+              <p>Aún no tienes cursos inscritos. Puedes entrar al catálogo y reservar tu cupo en minutos.</p>
+              <div className="inline-actions">
+                <Link href="/cursos" className="button button-primary">
+                  Ver catálogo de cursos
+                </Link>
+              </div>
+            </div>
+          ) : null}
           <div className="card-grid">
             {participant.enrollments.map((enrollment) => {
               const experience = courseExperienceBySlug[enrollment.course.slug];
@@ -191,6 +206,29 @@ export default async function CampusPage({ searchParams }) {
             })}
           </div>
         </article>
+
+        {participant.enrollments.length === 0 && publishedCourses.length > 0 ? (
+          <article className="panel stack">
+            <div className="section-heading">
+              <span className="eyebrow">Cursos disponibles</span>
+              <h2>Empieza hoy mismo</h2>
+            </div>
+            <div className="card-grid">
+              {publishedCourses.slice(0, 6).map((course) => (
+                <article key={course.id} className="panel stack stat-card">
+                  <h3>{course.title}</h3>
+                  <p>{course.summary}</p>
+                  <p className="helper">{course.duration} · {course.modality}</p>
+                  <div className="inline-actions">
+                    <Link href={`/cursos/${course.slug}`} className="button button-primary">
+                      Inscribirme
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </article>
+        ) : null}
       </div>
     </section>
   );

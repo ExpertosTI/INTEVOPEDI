@@ -4,6 +4,7 @@ import { getCourseBySlug } from '@/lib/data';
 import { formatDateTime } from '@/lib/formatters';
 import { courseExperienceBySlug, getCourseResourceLibrary, getCourseResourceStats } from '@/lib/site';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { LearningPath } from '@/components/LearningPath';
 
 export async function generateMetadata({ params }) {
   const course = await getCourseBySlug(params.slug);
@@ -117,16 +118,7 @@ export default async function CourseDetailPage({ params, searchParams }) {
           <article className="panel stack">
             <span className="eyebrow">Contenido</span>
             <h2>Ruta de aprendizaje</h2>
-            <div className="modules-grid">
-              {course.modules.map((moduleItem) => (
-                <article key={moduleItem.id} className="panel module-card stack">
-                  <strong>Módulo {moduleItem.order}</strong>
-                  <h3>{moduleItem.title}</h3>
-                  <p>{moduleItem.description}</p>
-                  <p className="helper">Duración estimada: {moduleItem.durationMinutes} min</p>
-                </article>
-              ))}
-            </div>
+            <LearningPath modulesProgress={course.modules} isPreview={true} />
           </article>
 
           <article className="panel stack">
