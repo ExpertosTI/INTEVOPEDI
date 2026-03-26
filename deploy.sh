@@ -52,8 +52,24 @@ required_vars=(
 
 for var_name in "${required_vars[@]}"; do
   if [[ -z "${!var_name:-}" ]]; then
-    echo "Falta la variable $var_name en .env"
+    echo "Falta la variable CRÍTICA $var_name en .env"
     exit 1
+  fi
+done
+
+optional_vars=(
+  SMTP_HOST
+  SMTP_PORT
+  SMTP_USER
+  SMTP_PASS
+  EMAIL_FROM
+)
+
+echo "Verificando variables opcionales de correo..."
+for var_name in "${optional_vars[@]}"; do
+  if [[ -z "${!var_name:-}" ]]; then
+    echo "AVISO: La variable de correo $var_name NO está definida en .env."
+    echo "       Si ya funciona en el servidor, asegúrate de que no se sobrescriba con vacío."
   fi
 done
 
