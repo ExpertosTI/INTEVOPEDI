@@ -7,6 +7,8 @@ import { courseExperienceBySlug, getCourseResourceLibrary, getCourseResourceStat
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { LearningPath } from '@/components/LearningPath';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({ params }) {
   const course = await getCourseBySlug(params.slug);
 
@@ -22,6 +24,9 @@ export default async function CourseDetailPage({ params, searchParams }) {
 
   if (course && session?.participantId) {
     existingEnrollment = await getEnrollmentForParticipantAndCourse(session.participantId, course.id);
+    console.log(`[DEBUG] CourseDetailPage: session found for ${session.participantId}, enrollment: ${existingEnrollment ? 'FOUND' : 'NOT FOUND'} for course ${course.id}`);
+  } else {
+    console.log(`[DEBUG] CourseDetailPage: no session or course found. Session: ${!!session}, Course: ${!!course}`);
   }
 
   if (!course) {
