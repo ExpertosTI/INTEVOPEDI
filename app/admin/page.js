@@ -186,13 +186,16 @@ export default async function AdminPage({ searchParams }) {
                       <span className="helper">{course.slug}</span>
                     </td>
                     <td>
-                      <form action={updateCourseAction} className="inline-form">
+                      <form action={updateCourseAction} className="inline-form" style={{ display: 'flex', gap: '4px' }}>
                         <input type="hidden" name="courseId" value={course.id} />
-                        <select name="status" defaultValue={course.status} onChange={(e) => e.target.form.requestSubmit()}>
+                        <select name="status" defaultValue={course.status} style={{ padding: '0 8px', height: '32px', fontSize: '0.78rem' }}>
                           <option value="DRAFT">Borrador</option>
                           <option value="PUBLISHED">Publicado</option>
                           <option value="CLOSED">Cerrado</option>
                         </select>
+                        <button type="submit" className="button button-secondary" style={{ padding: '0 8px', height: '32px' }}>
+                          ✓
+                        </button>
                       </form>
                     </td>
                     <td>{course.enrollments?.length || 0}{course.seats ? ` / ${course.seats}` : ''}</td>
