@@ -241,8 +241,10 @@ export default async function AdminPage({ searchParams }) {
                 Curso *
                 <select name="courseId" required>
                   <option value="">-- Selecciona el curso --</option>
-                  {courses.filter(c => c.status === 'PUBLISHED').map(course => (
-                    <option key={course.id} value={course.id}>{course.title}</option>
+                  {courses.filter(c => c.status !== 'CLOSED').map(course => (
+                    <option key={course.id} value={course.id}>
+                      {course.title} {course.status === 'DRAFT' ? '(Borrador)' : ''}
+                    </option>
                   ))}
                 </select>
               </label>
