@@ -26,16 +26,6 @@ export default async function ParticipantAccessPage({ searchParams }) {
             Introduce tu cédula o número de teléfono registrado en tu inscripción para entrar a tu campus, revisar tu progreso, recursos y certificados.
           </p>
           
-          {verified ? (
-            <div className="banner banner-success" role="status">
-              Tu correo quedó verificado. Ya puedes entrar con tu contraseña.
-            </div>
-          ) : null}
-          {registered ? (
-            <div className="banner banner-success" role="status">
-              Cuenta creada. Revisa tu correo ({emailParam}) para verificar tu acceso (vigente 72h).
-            </div>
-          ) : null}
           {error ? (
             <div className="banner banner-error" role="alert">
               {error}

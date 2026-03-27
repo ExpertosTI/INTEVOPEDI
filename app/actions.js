@@ -249,21 +249,44 @@ export async function verifyParticipantAccount(searchParams) {
 }
 
 export async function studentIdentifierCheck(formData) {
-  const identifier = String(formData.get('identifier') || '');
+  const identifier = String(formData.get('identifier') || '').trim();
   if (!identifier || identifier.length < 8) {
-    return { error: 'Ingresa una cédula o teléfono válido.' };
+    return { error: 'Ingresa una cédula o teléfono válido (mínimo 8 dígitos).' };
   }
 
   const normalized = normalizeLoginIdentifier(identifier);
-  const participant = await prisma.participant.findUnique({
+  
+  // 1. Intentar buscar por loginIdentifier ya normalizado
+  let participant = await prisma.participant.findUnique({
     where: { loginIdentifier: normalized }
   });
+
+  // 2. Si no se encuentra, buscar por cédula o teléfono normalizados (Migración)
+  if (!participant) {
+    participant = await prisma.participant.findFirst({
+      where: {
+        OR: [
+          { cedula: normalized },
+          { phone: normalized },
+          { email: identifier.toLowerCase() }
+        ]
+      }
+    });
+
+    // Si lo encontramos por otro medio, le asignamos el loginIdentifier para el futuro
+    if (participant) {
+      await prisma.participant.update({
+        where: { id: participant.id },
+        data: { loginIdentifier: normalized }
+      });
+    }
+  }
 
   if (!participant) {
     return { status: 'not_found' };
   }
 
-  if (participant.mustSetPassword) {
+  if (participant.mustSetPassword || !participant.passwordHash) {
     return { status: 'first_time', participantName: participant.fullName };
   }
 

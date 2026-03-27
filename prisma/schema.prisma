@@ -74,7 +74,7 @@ model Participant {
   email                 String?      @unique
   phone                 String       @default("")
   cedula                String?      @unique
-  loginIdentifier       String       @unique  // normalized cedula or phone used for login
+  loginIdentifier       String?      @unique  // normalized cedula or phone used for login
   city                  String?
   organization          String?
   visualProfile         String?
