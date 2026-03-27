@@ -11,10 +11,9 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { bootstrapAppData } from '@/lib/bootstrap';
 import { createAdminSession, destroyAdminSession, requireAdmin } from '@/lib/admin-auth';
-import { createParticipantSession, destroyParticipantSession, getParticipantSession } from '@/lib/participant-auth';
+import { createParticipantSession, getParticipantSession } from '@/lib/participant-auth';
 import { ensureCertificate, generateReferenceCode, syncEnrollmentProgress } from '@/lib/certificates';
 import { getGeminiApiKey, saveGeminiApiKey } from '@/lib/admin-settings';
-import { getParticipantAccessEnrollment } from '@/lib/data';
 import { isValidPhone, normalizeEmail, normalizePhone, sanitizeText, normalizeLoginIdentifier, detectIdentifierType } from '@/lib/validation';
 import { sendEmail } from '@/lib/email';
 
@@ -70,7 +69,7 @@ const studentFirstTimeSchema = z.object({
 
 const assistantRequestSchema = z.object({
   prompt: z.string().min(12).max(6000),
-  actionType: z.enum(['general', 'create-course', 'create-content']),
+  actionType: z.enum(['general', 'enroll-student', 'create-course', 'create-content']),
   courseId: z.string().optional()
 });
 
@@ -164,6 +163,8 @@ export async function registerParticipantAccount(formData) {
   const expiresAt = new Date(now + PARTICIPANT_VERIFICATION_TTL_MS);
   const passwordHash = await hashParticipantPassword(parsed.data.password);
 
+  const normalizedIdentifier = normalizeLoginIdentifier(parsed.data.email);
+
   await prisma.participant.upsert({
     where: { email: parsed.data.email },
     update: {
@@ -171,7 +172,8 @@ export async function registerParticipantAccount(formData) {
       passwordHash,
       emailVerified: false,
       verificationToken: tokenHash,
-      verificationExpiresAt: expiresAt
+      verificationExpiresAt: expiresAt,
+      loginIdentifier: normalizedIdentifier
     },
     create: {
       fullName: parsed.data.fullName || parsed.data.email,
@@ -180,7 +182,9 @@ export async function registerParticipantAccount(formData) {
       passwordHash,
       emailVerified: false,
       verificationToken: tokenHash,
-      verificationExpiresAt: expiresAt
+      verificationExpiresAt: expiresAt,
+      loginIdentifier: normalizedIdentifier,
+      mustSetPassword: false // Since they set it during registration
     }
   });
 
@@ -393,7 +397,7 @@ function sanitizeFileName(rawValue) {
   return String(rawValue || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/[^a-zA-Z0-9._-]+/g, '')
     .replace(/-+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 120);
@@ -726,6 +730,8 @@ export async function submitEnrollment(formData) {
     if (!course) {
       destination = `/cursos/${courseSlug}?error=${encodeURIComponent('El curso solicitado no está disponible.')}`;
     } else {
+      const normalizedIdentifier = normalizeLoginIdentifier(parsed.data.phone || parsed.data.email);
+
       const participant = await prisma.participant.upsert({
         where: { email: parsed.data.email },
         update: {
@@ -734,7 +740,8 @@ export async function submitEnrollment(formData) {
           city: parsed.data.city,
           organization: parsed.data.organization,
           visualProfile: parsed.data.visualProfile,
-          notes: parsed.data.notes
+          notes: parsed.data.notes,
+          loginIdentifier: normalizedIdentifier
         },
         create: {
           fullName: parsed.data.fullName,
@@ -743,7 +750,9 @@ export async function submitEnrollment(formData) {
           city: parsed.data.city,
           organization: parsed.data.organization,
           visualProfile: parsed.data.visualProfile,
-          notes: parsed.data.notes
+          notes: parsed.data.notes,
+          loginIdentifier: normalizedIdentifier,
+          mustSetPassword: true
         }
       });
 
@@ -854,66 +863,6 @@ export async function toggleModuleProgress(formData) {
   revalidatePath(`/mi-inscripcion/${referenceCode}`);
   revalidatePath('/campus');
   redirect(`/mi-inscripcion/${referenceCode}`);
-}
-
-export async function requestParticipantAccessCode(formData) {
-  const email = normalizeEmail(formData.get('email'));
-  
-  if (!email) {
-    return { error: 'Introduce un correo electrónico válido.' };
-  }
-
-  // Find any active enrollment for this email
-  const enrollment = await prisma.enrollment.findFirst({
-    where: { participant: { email } },
-    orderBy: { createdAt: 'desc' },
-    select: { referenceCode: true }
-  });
-
-  if (!enrollment) {
-    return { error: 'No encontramos ninguna inscripción con este correo.' };
-  }
-
-  // Send Access Code Email
-  await sendEmail({
-    to: email,
-    subject: 'Tu Código de Acceso - INTEVOPEDI',
-    html: `
-      <h2>Aquí tienes tu código de acceso</h2>
-      <p>Has solicitado tu código de acceso para entrar a los cursos de INTEVOPEDI.</p>
-      <p>Tu código es: <strong>${enrollment.referenceCode}</strong></p>
-      <p>Puedes acceder a tu campus ingresando a este enlace:</p>
-      <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/participantes?code=${enrollment.referenceCode}">Acceder al Campus</a>
-    `
-  });
-
-  return { success: true };
-}
-
-export async function participantAccessLogin(formData) {
-  const normalizedValues = {
-    email: normalizeEmail(formData.get('email')),
-    referenceCode: sanitizeText(formData.get('referenceCode')).toUpperCase()
-  };
-
-  const parsed = participantAccessSchema.safeParse(normalizedValues);
-
-  if (!parsed.success) {
-    redirect(`/participantes?error=${encodeURIComponent('Introduce tu correo y tu código de inscripción correctamente.')}`);
-  }
-
-  const enrollment = await getParticipantAccessEnrollment(parsed.data.referenceCode, parsed.data.email);
-
-  if (!enrollment) {
-    redirect(`/participantes?error=${encodeURIComponent('No encontramos una inscripción que coincida con ese correo y código.')}`);
-  }
-
-  await createParticipantSession({
-    participantId: enrollment.participantId,
-    referenceCode: enrollment.referenceCode
-  });
-
-  redirect(getParticipantPostLoginRedirect(enrollment.participant));
 }
 
 export async function participantLogout() {
@@ -1105,35 +1054,27 @@ Eres un asistente experto en gestión académica inclusiva para discapacidad vis
 Responde SIEMPRE en español.
 Responde SOLO en JSON con esta estructura:
 {
-  "summary": "texto breve",
-  "audioBrief": "texto corto apto para lectura por voz",
-  "suggestedButtons": ["acción 1", "acción 2", "acción 3"],
+  "summary": "texto breve con lo que entendiste",
+  "audioBrief": "texto corto para lectura por voz",
+  "suggestedButtons": ["acción 1", "acción 2"],
   "courseDraft": null o {
-    "title": "",
-    "summary": "",
-    "description": "",
-    "modality": "",
-    "priceCents": 0,
-    "priceLabel": "",
-    "seats": 0,
-    "startDate": "2026-05-01T15:00:00.000Z",
-    "endDate": "2026-05-01T18:00:00.000Z",
-    "duration": "",
-    "location": "",
-    "instructor": "",
-    "status": "DRAFT",
-    "resources": [{"title":"","description":"","url":"https://..."}],
-    "modules": [{"title":"","description":"","durationMinutes":60}]
+    "title": "", "summary": "", "description": "", "modality": "", "priceCents": 0, "priceLabel": "", "seats": 80, 
+    "startDate": "2026-05-01T15:00:00.000Z", "endDate": "2026-05-01T18:00:00.000Z", "duration": "", "location": "", 
+    "instructor": "", "status": "DRAFT", "resources": [], "modules": []
   },
   "courseContentDraft": null o {
-    "courseObjective": "",
-    "accessibleMaterials": ["", ""],
-    "assessmentIdeas": ["", ""],
-    "newModules": [{"title":"","description":"","durationMinutes":60}]
+    "courseObjective": "", "accessibleMaterials": [], "assessmentIdeas": [], "newModules": []
+  },
+  "enrollmentDraft": null o {
+    "fullName": "nombre completo",
+    "identifier": "cédula o teléfono",
+    "email": "correo@ejemplo.com",
+    "courseId": "ID de curso si se identifica",
+    "paymentStatus": "PAID" o "PENDING"
   }
 }
-No uses markdown.
-${modeGuide}
+Cursos disponibles (ID):
+${courses.map(c => `- ${c.title} (ID: ${c.id})`).join('\n')}
 `;
 
   try {
@@ -1215,10 +1156,11 @@ ${modeGuide}
       courseId: parsed.data.courseId || null,
       modelUsed,
       hasCourseDraft: Boolean(sanitized.courseDraft),
-      hasContentDraft: Boolean(sanitized.courseContentDraft)
+      hasContentDraft: Boolean(sanitized.courseContentDraft),
+      hasEnrollmentDraft: Boolean(data.enrollmentDraft)
     });
 
-    return { ok: true, data: sanitized };
+    return { ok: true, data: { ...sanitized, enrollmentDraft: data.enrollmentDraft || null } };
   } catch (error) {
     logAssistantEvent({ type: 'assistant.error', message: String(error?.message || error) });
     return { ok: false, error: 'No se pudo procesar la respuesta del asistente.' };
@@ -1288,10 +1230,78 @@ export async function createCourseFromAssistantAction(formData) {
     revalidatePath('/campus');
 
     logAssistantEvent({ type: 'assistant.createCourse', courseId: course.id, title: draft.title });
-    return { ok: true, message: `Curso creado correctamente con estado ${draft.status || 'PUBLISHED'}.` };
+    return { ok: true, message: `Curso creado correctamente.` };
   } catch (error) {
-    logAssistantEvent({ type: 'assistant.createCourse.error', message: String(error?.message || error) });
     return { ok: false, error: 'No se pudo crear el curso.' };
+  }
+}
+
+export async function enrollStudentFromAssistantAction(formData) {
+  await requireAdmin();
+  const payload = String(formData.get('enrollmentDraft') || '');
+  if (!payload) return { ok: false, error: 'No se recibió borrador de inscripción.' };
+
+  try {
+    const draft = JSON.parse(payload);
+    if (!draft.fullName || !draft.identifier || !draft.courseId) {
+      return { ok: false, error: 'Datos de inscripción incompletos.' };
+    }
+
+    const normalizedIdentifier = normalizeLoginIdentifier(draft.identifier);
+    const email = draft.email || `${normalizedIdentifier}@intevopedi.org`;
+
+    const participant = await prisma.participant.upsert({
+      where: { loginIdentifier: normalizedIdentifier },
+      update: { fullName: draft.fullName, email },
+      create: {
+        fullName: draft.fullName,
+        email,
+        loginIdentifier: normalizedIdentifier,
+        mustSetPassword: true
+      }
+    });
+
+    let referenceCode = generateReferenceCode();
+    while (await prisma.enrollment.findUnique({ where: { referenceCode } })) {
+      referenceCode = generateReferenceCode();
+    }
+
+    const enrollment = await prisma.enrollment.upsert({
+      where: {
+        courseId_participantId: {
+          courseId: draft.courseId,
+          participantId: participant.id
+        }
+      },
+      update: { paymentStatus: draft.paymentStatus || 'PENDING' },
+      create: {
+        referenceCode,
+        courseId: draft.courseId,
+        participantId: participant.id,
+        paymentStatus: draft.paymentStatus || 'PENDING'
+      }
+    });
+
+    // Inicializar progreso
+    const course = await prisma.course.findUnique({
+      where: { id: draft.courseId },
+      include: { modules: true }
+    });
+
+    if (course?.modules.length) {
+      await prisma.progress.createMany({
+        data: course.modules.map(m => ({
+          enrollmentId: enrollment.id,
+          moduleId: m.id
+        })),
+        skipDuplicates: true
+      });
+    }
+
+    revalidatePath('/admin');
+    return { ok: true, message: `Alumno ${participant.fullName} inscrito correctamente.` };
+  } catch (error) {
+    return { ok: false, error: 'Error al procesar inscripción.' };
   }
 }
 

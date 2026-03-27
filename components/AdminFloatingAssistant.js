@@ -112,6 +112,7 @@ export function AdminFloatingAssistant({ courses = [] }) {
                 Acción
                 <select value={actionType} onChange={(e) => setActionType(e.target.value)}>
                   <option value="general">General</option>
+                  <option value="enroll-student">Inscribir estudiante</option>
                   <option value="create-course">Crear curso</option>
                   <option value="create-content">Contenido de curso</option>
                 </select>
@@ -150,6 +151,23 @@ export function AdminFloatingAssistant({ courses = [] }) {
                     >
                       📋 Copiar
                     </button>
+                    {lastResult?.enrollmentDraft && i === messages.length - 1 && (
+                      <form action={async (formData) => {
+                        const { enrollStudentFromAssistantAction } = await import('@/app/actions');
+                        formData.set('enrollmentDraft', JSON.stringify(lastResult.enrollmentDraft));
+                        const res = await enrollStudentFromAssistantAction(formData);
+                        if (res.ok) {
+                          alert(res.message);
+                          clearMessages();
+                        } else {
+                          alert(res.error);
+                        }
+                      }}>
+                        <button type="submit" className="button button-primary" style={{ fontSize: '0.75rem', padding: '4px 12px' }}>
+                          ✅ Confirmar Inscripción de {lastResult.enrollmentDraft.fullName}
+                        </button>
+                      </form>
+                    )}
                   </div>
                 ) : null}
               </div>

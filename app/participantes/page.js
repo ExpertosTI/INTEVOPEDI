@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { ParticipantLoginFlow } from '@/components/ParticipantLoginFlow';
-import { participantAccessLogin } from '@/app/actions';
 import { getParticipantSession } from '@/lib/participant-auth';
 import { participantHubBenefits } from '@/lib/site';
 
