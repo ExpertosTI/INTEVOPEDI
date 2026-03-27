@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { ModuleQuiz } from './ModuleQuiz';
 import { submitModuleQuizAction } from '@/app/actions';
+import * as Icons from './Icons';
 
 export function ModuleModal({ module, enrollmentId, referenceCode, onClose, onComplete }) {
   const [view, setView] = useState('lesson'); // 'lesson' or 'quiz'
@@ -40,80 +41,105 @@ export function ModuleModal({ module, enrollmentId, referenceCode, onClose, onCo
   return (
     <div className="modal-overlay" style={{
       position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0,0,0,0.8)',
+      inset: 0,
+      background: 'rgba(5, 10, 20, 0.8)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 1000,
       padding: '1rem',
-      backdropFilter: 'blur(8px)'
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)'
     }}>
-      <div className="panel panel-dark stack" style={{
+      <div className="panel stack" style={{
         maxWidth: '800px',
         width: '100%',
         maxHeight: '90vh',
         overflowY: 'auto',
         position: 'relative',
-        boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
-        border: '1px solid rgba(255,255,255,0.1)'
+        background: 'var(--glass-bg)',
+        border: '1px solid var(--glass-border)',
+        boxShadow: 'var(--glass-shadow)',
+        borderRadius: 'var(--radius-xl)',
+        padding: '2.5rem'
       }}>
         <button onClick={onClose} style={{
           position: 'absolute',
-          top: '1rem',
-          right: '1rem',
-          background: 'transparent',
-          color: 'rgba(255,255,255,0.5)',
-          fontSize: '1.5rem',
-          border: 'none',
-          cursor: 'pointer'
+          top: '1.5rem',
+          right: '1.5rem',
+          background: 'rgba(255,255,255,0.05)',
+          color: 'var(--text)',
+          width: '36px',
+          height: '36px',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: '1px solid var(--glass-border)',
+          cursor: 'pointer',
+          transition: 'all 0.2s'
         }}>×</button>
 
-        <div className="inline-actions" style={{ 
-          borderBottom: '1px solid rgba(255,255,255,0.1)', 
-          paddingBottom: '1rem',
-          marginBottom: '2rem'
+        <div className="stack" style={{ gap: '0.5rem', marginBottom: '2rem' }}>
+          <span className="eyebrow">Módulo en curso</span>
+          <h2 className="h2" style={{ margin: 0 }}>{module.title}</h2>
+        </div>
+
+        <div className="category-filters" style={{ 
+          marginBottom: '2rem',
+          borderBottom: '1px solid var(--glass-border)', 
+          paddingBottom: '1rem'
         }}>
           <button 
-            className={`button ${view === 'lesson' ? 'button-primary' : 'button-secondary'}`}
+            className={`category-chip ${view === 'lesson' ? 'active' : ''}`}
             onClick={() => { setView('lesson'); setResult(null); }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            Lección
+            <Icons.BookOpen size={16} /> Lección
           </button>
           <button 
-            className={`button ${view === 'quiz' ? 'button-primary' : 'button-secondary'}`}
-            onClick={() => setView('quiz')}
+            className={`category-chip ${view === 'quiz' ? 'active' : ''}`}
+            onClick={() => { setView('quiz'); setResult(null); }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            Evaluación
+            <Icons.TrendingUp size={16} /> Evaluación
           </button>
         </div>
 
         {view === 'lesson' ? (
-          <article className="stack lesson-content">
+          <article className="stack lesson-content" style={{ animation: 'fadeIn 0.4s var(--ease)' }}>
             <div dangerouslySetInnerHTML={{ __html: simulateMarkdown(module.content || module.description) }} />
-            <div className="inline-actions" style={{ marginTop: '2rem' }}>
+            <div style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'flex-end' }}>
               <button 
                 className="button button-primary"
                 onClick={() => setView('quiz')}
+                style={{ borderRadius: 'var(--radius-full)', padding: '0 32px' }}
               >
-                Comenzar evaluación
+                Comenzar evaluación <Icons.ArrowRight size={18} style={{ marginLeft: '8px' }} />
               </button>
             </div>
           </article>
         ) : (
-          <div className="stack">
+          <div className="stack" style={{ animation: 'fadeIn 0.4s var(--ease)' }}>
             {result ? (
-              <div className={`banner ${result.success ? 'banner-primary' : 'banner-error'} stack text-center`}>
-                <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{result.success ? '¡Excelente!' : 'Casi lo tienes'}</h3>
-                <p>{result.message}</p>
-                {result.success ? (
-                  <button className="button button-primary" style={{ marginTop: '1rem' }} onClick={onClose}>Continuar curso</button>
-                ) : (
-                  <button className="button button-secondary" style={{ marginTop: '1rem' }} onClick={() => setResult(null)}>Reintentar</button>
-                )}
+              <div className="stack text-center" style={{ padding: '3rem 1rem' }}>
+                <div style={{ 
+                  width: '80px', height: '80px', borderRadius: '50%', background: result.success ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', marginBottom: '1.5rem',
+                  color: result.success ? 'var(--level-beginner)' : 'var(--level-advanced)'
+                }}>
+                  {result.success ? <Icons.CheckCircle size={48} /> : <span>⚠️</span>}
+                </div>
+                <h3 className="h2">{result.success ? '¡Excelente Trabajo!' : 'Casi lo tienes'}</h3>
+                <p style={{ fontSize: '1.1rem', marginBottom: '2rem' }}>{result.message}</p>
+                
+                <div className="inline-actions" style={{ justifyContent: 'center' }}>
+                  {result.success ? (
+                    <button className="button button-primary" onClick={onClose}>Continuar curso</button>
+                  ) : (
+                    <button className="button button-secondary" onClick={() => setResult(null)}>Reintentar evaluación</button>
+                  )}
+                </div>
               </div>
             ) : (
               <ModuleQuiz 
@@ -127,19 +153,25 @@ export function ModuleModal({ module, enrollmentId, referenceCode, onClose, onCo
       </div>
 
       <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
         .lesson-content h1, .lesson-content h2, .lesson-content h3 {
           margin-top: 2rem;
           margin-bottom: 1rem;
-          color: var(--brand-primary);
+          color: var(--primary);
         }
         .lesson-content p {
           margin-bottom: 1rem;
-          line-height: 1.6;
-          color: rgba(255,255,255,0.9);
+          line-height: 1.8;
+          color: var(--text-secondary);
+          font-size: 1.05rem;
         }
         .lesson-content li {
           margin-left: 1.5rem;
-          margin-bottom: 0.5rem;
+          margin-bottom: 0.75rem;
+          color: var(--text-secondary);
         }
       `}</style>
     </div>
