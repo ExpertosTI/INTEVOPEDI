@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { submitEnrollment } from '@/app/actions';
-import { getCourseBySlug } from '@/lib/data';
+import { getCourseBySlug, getEnrollmentForParticipantAndCourse } from '@/lib/data';
+import { getParticipantSession } from '@/lib/participant-auth';
 import { formatDateTime } from '@/lib/formatters';
 import { courseExperienceBySlug, getCourseResourceLibrary, getCourseResourceStats } from '@/lib/site';
 import { Breadcrumb } from '@/components/Breadcrumb';
@@ -16,6 +17,12 @@ export async function generateMetadata({ params }) {
 
 export default async function CourseDetailPage({ params, searchParams }) {
   const course = await getCourseBySlug(params.slug);
+  const session = await getParticipantSession();
+  let existingEnrollment = null;
+
+  if (course && session?.participantId) {
+    existingEnrollment = await getEnrollmentForParticipantAndCourse(session.participantId, course.id);
+  }
 
   if (!course) {
     notFound();
@@ -81,35 +88,73 @@ export default async function CourseDetailPage({ params, searchParams }) {
           </article>
 
           <aside className="panel form-card stack" style={{ position: 'sticky', top: '84px', alignSelf: 'start' }}>
-            <span className="eyebrow">Inscripción inmediata</span>
-            <h2>Reserva tu participación</h2>
-            <p>
-              Completa el formulario y recibirás un código de inscripción para entrar a tu campus, revisar avance, materiales y descargar tu certificado cuando corresponda.
-            </p>
-            {error ? <div className="banner banner-error">{error}</div> : null}
-            {isFull ? (
-              <div className="banner banner-error">Los cupos están agotados para este curso.</div>
-            ) : (
-              <form action={submitEnrollment}>
-                <input type="hidden" name="courseSlug" value={course.slug} />
-                <div className="form-grid">
-                  <label>
-                    Nombre completo
-                    <input type="text" name="fullName" required placeholder="Tu nombre y apellido" />
-                  </label>
-                  <label>
-                    Correo electrónico
-                    <input type="email" name="email" required placeholder="nombre@correo.com" />
-                  </label>
-                  <label>
-                    Teléfono
-                    <input type="tel" name="phone" required placeholder="829 954 8273" />
-                  </label>
+            {existingEnrollment ? (
+              <div className="stack" style={{ gap: '1.5rem' }}>
+                <div className="section-heading">
+                  <span className="eyebrow" style={{ color: 'var(--accent-green)' }}>✓ Ya estás inscrito</span>
+                  <h2>¡Bienvenido de vuelta!</h2>
+                  <p>
+                    Tienes todo listo para continuar tu formación en <strong>{course.title}</strong>.
+                  </p>
                 </div>
-                <button type="submit" className="button button-primary" style={{ marginTop: '1rem' }}>
-                  Inscribirme y recibir código
-                </button>
-              </form>
+                
+                <div className="panel panel-dark stack" style={{ padding: '20px', backgroundColor: 'rgba(255,255,255,0.03)' }}>
+                  <div className="row-between">
+                    <span className="helper">Tu progreso actual</span>
+                    <strong style={{ color: 'var(--accent-green)' }}>{existingEnrollment.progressPercent}%</strong>
+                  </div>
+                  <div className="progress-line" style={{ margin: '8px 0' }}>
+                    <span style={{ width: `${existingEnrollment.progressPercent}%`, backgroundColor: 'var(--accent-green)' }} />
+                  </div>
+                  <p className="helper">Sigue avanzando para obtener tu certificado.</p>
+                </div>
+
+                <div className="stack" style={{ gap: '12px' }}>
+                  <a href={`/mi-inscripcion/${existingEnrollment.referenceCode}`} className="button button-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                    Ir a mi campus personal
+                  </a>
+                  <p className="helper text-center">
+                    Accede a tus módulos, recursos y descarga tu certificado cuando finalices.
+                  </p>
+                </div>
+
+                <div className="banner banner-info" style={{ fontSize: '0.85rem' }}>
+                  💡 <strong>Tip:</strong> Revisa la pestaña de "Recursos" en tu campus para descargar materiales exclusivos de este curso.
+                </div>
+              </div>
+            ) : (
+              <>
+                <span className="eyebrow">Inscripción inmediata</span>
+                <h2>Reserva tu participación</h2>
+                <p>
+                  Completa el formulario y recibirás un código de inscripción para entrar a tu campus, revisar avance, materiales y descargar tu certificado cuando corresponda.
+                </p>
+                {error ? <div className="banner banner-error">{error}</div> : null}
+                {isFull ? (
+                  <div className="banner banner-error">Los cupos están agotados para este curso.</div>
+                ) : (
+                  <form action={submitEnrollment}>
+                    <input type="hidden" name="courseSlug" value={course.slug} />
+                    <div className="form-grid">
+                      <label>
+                        Nombre completo
+                        <input type="text" name="fullName" required placeholder="Tu nombre y apellido" />
+                      </label>
+                      <label>
+                        Correo electrónico
+                        <input type="email" name="email" required placeholder="nombre@correo.com" />
+                      </label>
+                      <label>
+                        Teléfono
+                        <input type="tel" name="phone" required placeholder="829 954 8273" />
+                      </label>
+                    </div>
+                    <button type="submit" className="button button-primary" style={{ marginTop: '1rem' }}>
+                      Inscribirme y recibir código
+                    </button>
+                  </form>
+                )}
+              </>
             )}
           </aside>
         </div>
