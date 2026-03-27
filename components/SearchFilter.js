@@ -2,30 +2,34 @@
 
 import { useState } from 'react';
 
-export function SearchFilter({ courses = [], onFilter }) {
+export function SearchFilter({ courses = [], onFilter, onSearchChange }) {
   const [query, setQuery] = useState('');
-  const [category, setCategory] = useState('all');
+  const [modality, setModality] = useState('all');
 
-  const categories = ['all', ...new Set(courses.map((c) => c.modality).filter(Boolean))];
+  const modalities = ['all', ...new Set(courses.map((c) => c.modality).filter(Boolean))];
 
-  function handleSearch(newQuery, newCategory) {
-    const q = (newQuery ?? query).toLowerCase().trim();
-    const cat = newCategory ?? category;
+  function handleFilter(newQuery, newModality) {
+    const q = (newQuery !== undefined ? newQuery : query).toLowerCase().trim();
+    const mod = newModality !== undefined ? newModality : modality;
+
+    if (onSearchChange) {
+      onSearchChange(q);
+    }
 
     const filtered = courses.filter((course) => {
       const matchesQuery = !q ||
         course.title.toLowerCase().includes(q) ||
         course.summary.toLowerCase().includes(q) ||
         course.instructor.toLowerCase().includes(q);
-      const matchesCategory = cat === 'all' || course.modality === cat;
-      return matchesQuery && matchesCategory;
+      const matchesModality = mod === 'all' || course.modality === mod;
+      return matchesQuery && matchesModality;
     });
 
-    onFilter(filtered);
+    if (onFilter) onFilter(filtered);
   }
 
   return (
-    <div className="stack gap-sm">
+    <div className="stack" style={{ gap: '1rem' }}>
       <div className="search-bar">
         <span className="search-bar-icon" aria-hidden="true">🔍</span>
         <input
@@ -34,23 +38,23 @@ export function SearchFilter({ courses = [], onFilter }) {
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
-            handleSearch(e.target.value, category);
+            handleFilter(e.target.value, modality);
           }}
           aria-label="Buscar cursos"
         />
       </div>
       <div className="filter-pills" role="group" aria-label="Filtrar por modalidad">
-        {categories.map((cat) => (
+        {modalities.map((mod) => (
           <button
-            key={cat}
+            key={mod}
             type="button"
-            className={`filter-pill ${category === cat ? 'active' : ''}`}
+            className={`filter-pill ${modality === mod ? 'active' : ''}`}
             onClick={() => {
-              setCategory(cat);
-              handleSearch(query, cat);
+              setModality(mod);
+              handleFilter(query, mod);
             }}
           >
-            {cat === 'all' ? 'Todos' : cat}
+            {mod === 'all' ? 'Todas las modalidades' : mod}
           </button>
         ))}
       </div>

@@ -649,18 +649,168 @@ p { margin: 0; color: var(--text-secondary); line-height: 1.7; font-size: 0.95re
   background: var(--accent-green);
 }
 
-/* ===== Category Tags ===== */
-.category-tag {
-  display: inline-flex;
-  align-items: center;
-  height: 24px;
-  padding: 0 10px;
-  border-radius: var(--radius-full);
-  font-size: 0.7rem;
-  font-weight: 600;
+/* ===== Category & Level Tokens ===== */
+:root {
+  --level-beginner: #10b981;
+  --level-intermediate: #f59e0b;
+  --level-advanced: #ef4444;
+  --cat-tech: #3b82f6;
+  --cat-inclusion: #8b5cf6;
+  --cat-employ: #f97316;
+  --cat-comm: #ec4899;
+}
+
+/* ===== Course Card Premium ===== */
+.course-card-premium {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-white);
+  border-radius: var(--radius-xl);
   border: 1px solid var(--border);
+  overflow: hidden;
+  transition: all 0.4s var(--ease);
+  height: 100%;
+  box-shadow: var(--shadow-sm);
+}
+
+.course-card-premium:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--primary);
+}
+
+.course-card-hero {
+  height: 160px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-gradient);
+}
+
+.course-card-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.4));
+}
+
+.course-card-icon-large {
+  font-size: 4rem;
+  z-index: 1;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+  transition: transform 0.4s var(--ease);
+}
+
+.course-card-premium:hover .course-card-icon-large {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.course-card-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: 12px;
+}
+
+.course-card-category {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--primary);
+}
+
+.course-card-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--text);
+  margin: 0;
+}
+
+.course-card-description {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.5;
+}
+
+.course-card-footer {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.course-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.8rem;
   color: var(--text-muted);
-  background: var(--bg-muted);
+}
+
+.course-level-badge {
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.level-BEGINNER { background: rgba(16, 185, 129, 0.1); color: var(--level-beginner); }
+.level-INTERMEDIATE { background: rgba(245, 158, 11, 0.1); color: var(--level-intermediate); }
+.level-ADVANCED { background: rgba(239, 68, 68, 0.1); color: var(--level-advanced); }
+
+/* Category specific colors */
+.cat-Tecnología { color: var(--cat-tech); }
+.cat-Inclusión { color: var(--cat-inclusion); }
+.cat-Empleabilidad { color: var(--cat-employ); }
+.cat-Comunidad { color: var(--cat-comm); }
+
+/* ===== Category Tabs ===== */
+.category-filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+.category-filters::-webkit-scrollbar { display: none; }
+
+.category-chip {
+  flex-shrink: 0;
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+}
+
+.category-chip:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.category-chip.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px var(--primary-ring);
 }
 
 /* ===== Lists ===== */

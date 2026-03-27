@@ -17,6 +17,8 @@ const courses = [
     duration: '4 horas en vivo',
     location: 'Zoom Premium',
     instructor: 'Equipo Técnico INTEVOPEDI',
+    category: 'Tecnología',
+    level: 'INTERMEDIATE',
     status: 'PUBLISHED'
   },
   {
@@ -33,6 +35,8 @@ const courses = [
     duration: '20 horas intensivas',
     location: 'Laboratorio INTEVOPEDI / Zoom',
     instructor: 'ExpertosTI Formación',
+    category: 'Empleabilidad',
+    level: 'INTERMEDIATE',
     status: 'PUBLISHED'
   },
   {
@@ -49,6 +53,8 @@ const courses = [
     duration: '40 horas (8 semanas)',
     location: 'Campus Virtual',
     instructor: 'Renace Tech Engineering',
+    category: 'Tecnología',
+    level: 'ADVANCED',
     status: 'PUBLISHED'
   },
   {
@@ -65,6 +71,8 @@ const courses = [
     duration: '12 horas',
     location: 'Sede INTEVOPEDI / Online',
     instructor: 'Formadores INTEVOPEDI',
+    category: 'Tecnología',
+    level: 'INTERMEDIATE',
     status: 'PUBLISHED'
   },
   {
@@ -80,22 +88,24 @@ const courses = [
     duration: '4 horas',
     location: 'Zoom',
     instructor: 'Equipo INTEVOPEDI',
+    category: 'Inclusión',
+    level: 'ADVANCED',
     status: 'PUBLISHED'
   },
-  { slug: 'accesibilidad-digital-basica', title: 'Accesibilidad Digital Básica', summary: 'Cimientos del diseño inclusivo.', description: 'Principios WCAG y buenas prácticas.', modality: 'Virtual', priceCents: 0, priceLabel: 'Gratuito', startDate: new Date(), duration: '2 horas', location: 'Online', instructor: 'INTEVOPEDI', status: 'PUBLISHED' },
-  { slug: 'inclusion-laboral-tecnologica', title: 'Inclusión Laboral Tecnológica', summary: 'Prepárate para el mercado de tecnología.', description: 'Habilidades técnicas y blandas para el empleo.', modality: 'Presencial', priceCents: 0, priceLabel: 'Becado', startDate: new Date(), duration: '40 horas', location: 'Sede Central', instructor: 'ExpertosTI', status: 'PUBLISHED' },
-  { slug: 'accesibilidad-digital-avanzada', title: 'Accesibilidad Digital Avanzada', summary: 'Dominio técnico de WAI-ARIA y auditorías.', description: 'Para desarrolladores y diseñadores UX.', modality: 'Virtual', priceCents: 200000, priceLabel: 'RD$ 2,000', startDate: new Date(), duration: '20 horas', location: 'Campus', instructor: 'Renace Tech', status: 'PUBLISHED' },
-  { slug: 'tecnologias-asistencia-educacion', title: 'Tecnologías de Asistencia en Educación', summary: 'Recursos para docentes inclusivos.', description: 'Uso de JAWS, NVDA y hardware especializado.', modality: 'Híbrido', priceCents: 80000, priceLabel: 'RD$ 800', startDate: new Date(), duration: '15 horas', location: 'Sede', instructor: 'INTEVOPEDI', status: 'PUBLISHED' },
-  { slug: 'contenido-inclusivo-rrss', title: 'Creación de Contenido Inclusivo para RRSS', summary: 'Marketing digital para todos.', description: 'Alt Text, subtitulación y diseño accesible.', modality: 'Virtual', priceCents: 30000, priceLabel: 'RD$ 300', startDate: new Date(), duration: '3 horas', location: 'Zoom', instructor: 'INTEVOPEDI', status: 'PUBLISHED' },
-  { slug: 'alfabetizacion-digital-mayores', title: 'Alfabetización Digital para Adultos Mayores', summary: 'Tecnología sin barreras de edad.', description: 'Uso de smartphones y seguridad básica.', modality: 'Presencial', priceCents: 0, priceLabel: 'Gratuito', startDate: new Date(), duration: '10 horas', location: 'Comunidad', instructor: 'Voluntarios INTEVOPEDI', status: 'PUBLISHED' },
-  { slug: 'neurodiversidad-entorno-digital', title: 'Neurodiversidad en el Entorno Digital', summary: 'Diseñando para la variabilidad cognitiva.', description: 'Estrategias para TDAH, Autismo y más.', modality: 'Virtual', priceCents: 45000, priceLabel: 'RD$ 450', startDate: new Date(), duration: '4 horas', location: 'Zoom', instructor: 'Psicopedagogos INTEVOPEDI', status: 'PUBLISHED' },
-  { slug: 'braille-digital-productividad', title: 'Braille Digital y Productividad', summary: 'Dominio de líneas Braille y toma de notas.', description: 'Herramientas de hardware para la autonomía.', modality: 'Presencial', priceCents: 100000, priceLabel: 'RD$ 1,000', startDate: new Date(), duration: '12 horas', location: 'Sede', instructor: 'Técnicos Tiflo', status: 'PUBLISHED' },
-  { slug: 'empleabilidad-ia', title: 'Empleabilidad con Apoyo de IA', summary: 'Tu carrera impulsada por inteligencia artificial.', description: 'CV, portafolio y entrevistas asistidas.', modality: 'Híbrido', priceCents: 50000, priceLabel: 'RD$ 500', startDate: new Date(), duration: '6 horas', location: 'Campus', instructor: 'Orientadores Laborales', status: 'PUBLISHED' },
-  { slug: 'emprendimiento-inclusivo', title: 'Emprendimiento Inclusivo', summary: 'Crea tu propio negocio accesible.', description: 'Modelos de negocio, finanzas y ventas.', modality: 'Virtual', priceCents: 60000, priceLabel: 'RD$ 600', startDate: new Date(), duration: '20 horas', location: 'Online', instructor: 'Consultores PyME', status: 'PUBLISHED' },
-  { slug: 'soporte-tecnico-accesible', title: 'Soporte Técnico y Atención Inclusiva', summary: 'Excelencia en el servicio para todos.', description: 'Protocolos de atención para discapacidad.', modality: 'Virtual', priceCents: 40000, priceLabel: 'RD$ 400', startDate: new Date(), duration: '5 horas', location: 'Zoom', instructor: 'Expertos Servicio', status: 'PUBLISHED' },
-  { slug: 'diseno-universal-productos', title: 'Diseño Universal de Productos', summary: 'Crea para el 100% de la población.', description: 'Metodologías de diseño centrado en el humano.', modality: 'Híbrido', priceCents: 120000, priceLabel: 'RD$ 1,200', startDate: new Date(), duration: '15 horas', location: 'Sede', instructor: 'Product Designers', status: 'PUBLISHED' },
-  { slug: 'productividad-ofimatica-accesible', title: 'Productividad y Ofimática Accesible', summary: 'Office y Google Workspace sin barreras.', description: 'Dominio de herramientas de oficina.', modality: 'Virtual', priceCents: 70000, priceLabel: 'RD$ 700', startDate: new Date(), duration: '10 horas', location: 'Campus', instructor: 'INTEVOPEDI', status: 'PUBLISHED' },
-  { slug: 'seguridad-digital-basica', title: 'Seguridad Digital Básica', summary: 'Protege tu identidad y tus datos.', description: 'Prevención de fraudes y privacidad.', modality: 'Virtual', priceCents: 0, priceLabel: 'Becado', startDate: new Date(), duration: '3 horas', location: 'Online', instructor: 'Cybersecurity Team', status: 'PUBLISHED' }
+  { slug: 'accesibilidad-digital-basica', title: 'Accesibilidad Digital Básica', summary: 'Cimientos del diseño inclusivo.', description: 'Principios WCAG y buenas prácticas.', modality: 'Virtual', priceCents: 0, priceLabel: 'Gratuito', startDate: new Date(), duration: '2 horas', location: 'Online', instructor: 'INTEVOPEDI', category: 'Inclusión', level: 'BEGINNER', status: 'PUBLISHED' },
+  { slug: 'inclusion-laboral-tecnologica', title: 'Inclusión Laboral Tecnológica', summary: 'Prepárate para el mercado de tecnología.', description: 'Habilidades técnicas y blandas para el empleo.', modality: 'Presencial', priceCents: 0, priceLabel: 'Becado', startDate: new Date(), duration: '40 horas', location: 'Sede Central', instructor: 'ExpertosTI', category: 'Empleabilidad', level: 'BEGINNER', status: 'PUBLISHED' },
+  { slug: 'accesibilidad-digital-avanzada', title: 'Accesibilidad Digital Avanzada', summary: 'Dominio técnico de WAI-ARIA y auditorías.', description: 'Para desarrolladores y diseñadores UX.', modality: 'Virtual', priceCents: 200000, priceLabel: 'RD$ 2,000', startDate: new Date(), duration: '20 horas', location: 'Campus', instructor: 'Renace Tech', category: 'Inclusión', level: 'ADVANCED', status: 'PUBLISHED' },
+  { slug: 'tecnologias-asistencia-educacion', title: 'Tecnologías de Asistencia en Educación', summary: 'Recursos para docentes inclusivos.', description: 'Uso de JAWS, NVDA y hardware especializado.', modality: 'Híbrido', priceCents: 80000, priceLabel: 'RD$ 800', startDate: new Date(), duration: '15 horas', location: 'Sede', instructor: 'INTEVOPEDI', category: 'Inclusión', level: 'INTERMEDIATE', status: 'PUBLISHED' },
+  { slug: 'contenido-inclusivo-rrss', title: 'Creación de Contenido Inclusivo para RRSS', summary: 'Marketing digital para todos.', description: 'Alt Text, subtitulación y diseño accesible.', modality: 'Virtual', priceCents: 30000, priceLabel: 'RD$ 300', startDate: new Date(), duration: '3 horas', location: 'Zoom', instructor: 'INTEVOPEDI', category: 'Comunidad', level: 'BEGINNER', status: 'PUBLISHED' },
+  { slug: 'alfabetizacion-digital-mayores', title: 'Alfabetización Digital para Adultos Mayores', summary: 'Tecnología sin barreras de edad.', description: 'Uso de smartphones y seguridad básica.', modality: 'Presencial', priceCents: 0, priceLabel: 'Gratuito', startDate: new Date(), duration: '10 horas', location: 'Comunidad', instructor: 'Voluntarios INTEVOPEDI', category: 'Comunidad', level: 'BEGINNER', status: 'PUBLISHED' },
+  { slug: 'neurodiversidad-entorno-digital', title: 'Neurodiversidad en el Entorno Digital', summary: 'Diseñando para la variabilidad cognitiva.', description: 'Estrategias para TDAH, Autismo y más.', modality: 'Virtual', priceCents: 45000, priceLabel: 'RD$ 450', startDate: new Date(), duration: '4 horas', location: 'Zoom', instructor: 'Psicopedagogos INTEVOPEDI', category: 'Comunidad', level: 'INTERMEDIATE', status: 'PUBLISHED' },
+  { slug: 'braille-digital-productividad', title: 'Braille Digital y Productividad', summary: 'Dominio de líneas Braille y toma de notas.', description: 'Herramientas de hardware para la autonomía.', modality: 'Presencial', priceCents: 100000, priceLabel: 'RD$ 1,000', startDate: new Date(), duration: '12 horas', location: 'Sede', instructor: 'Técnicos Tiflo', category: 'Inclusión', level: 'INTERMEDIATE', status: 'PUBLISHED' },
+  { slug: 'empleabilidad-ia', title: 'Empleabilidad con Apoyo de IA', summary: 'Tu carrera impulsada por inteligencia artificial.', description: 'CV, portafolio y entrevistas asistidas.', modality: 'Híbrido', priceCents: 50000, priceLabel: 'RD$ 500', startDate: new Date(), duration: '6 horas', location: 'Campus', instructor: 'Orientadores Laborales', category: 'Empleabilidad', level: 'INTERMEDIATE', status: 'PUBLISHED' },
+  { slug: 'emprendimiento-inclusivo', title: 'Emprendimiento Inclusivo', summary: 'Crea tu propio negocio accesible.', description: 'Modelos de negocio, finanzas y ventas.', modality: 'Virtual', priceCents: 60000, priceLabel: 'RD$ 600', startDate: new Date(), duration: '20 horas', location: 'Online', instructor: 'Consultores PyME', category: 'Empleabilidad', level: 'INTERMEDIATE', status: 'PUBLISHED' },
+  { slug: 'soporte-tecnico-accesible', title: 'Soporte Técnico y Atención Inclusiva', summary: 'Excelencia en el servicio para todos.', description: 'Protocolos de atención para discapacidad.', modality: 'Virtual', priceCents: 40000, priceLabel: 'RD$ 400', startDate: new Date(), duration: '5 horas', location: 'Zoom', instructor: 'Expertos Servicio', category: 'Empleabilidad', level: 'INTERMEDIATE', status: 'PUBLISHED' },
+  { slug: 'diseno-universal-productos', title: 'Diseño Universal de Productos', summary: 'Crea para el 100% de la población.', description: 'Metodologías de diseño centrado en el humano.', modality: 'Híbrido', priceCents: 120000, priceLabel: 'RD$ 1,200', startDate: new Date(), duration: '15 horas', location: 'Sede', instructor: 'Product Designers', category: 'Tecnología', level: 'INTERMEDIATE', status: 'PUBLISHED' },
+  { slug: 'productividad-ofimatica-accesible', title: 'Productividad y Ofimática Accesible', summary: 'Office y Google Workspace sin barreras.', description: 'Dominio de herramientas de oficina.', modality: 'Virtual', priceCents: 70000, priceLabel: 'RD$ 700', startDate: new Date(), duration: '10 horas', location: 'Campus', instructor: 'INTEVOPEDI', category: 'Tecnología', level: 'BEGINNER', status: 'PUBLISHED' },
+  { slug: 'seguridad-digital-basica', title: 'Seguridad Digital Básica', summary: 'Protege tu identidad y tus datos.', description: 'Prevención de fraudes y privacidad.', modality: 'Virtual', priceCents: 0, priceLabel: 'Becado', startDate: new Date(), duration: '3 horas', location: 'Online', instructor: 'Cybersecurity Team', category: 'Tecnología', level: 'BEGINNER', status: 'PUBLISHED' }
 ];
 
 const modulesMap = {
