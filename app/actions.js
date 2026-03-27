@@ -865,6 +865,88 @@ export async function toggleModuleProgress(formData) {
   redirect(`/mi-inscripcion/${referenceCode}`);
 }
 
+export async function submitModuleQuizAction(formData) {
+  const rawValues = Object.fromEntries(formData.entries());
+  const enrollmentId = String(rawValues.enrollmentId || '');
+  const moduleId = String(rawValues.moduleId || '');
+  const referenceCode = String(rawValues.referenceCode || '');
+  const userAnswers = JSON.parse(String(rawValues.answers || '[]'));
+
+  if (!enrollmentId || !moduleId || !referenceCode) {
+    return { success: false, message: 'Faltan datos de la evaluación.' };
+  }
+
+  const session = await getParticipantSession();
+  const enrollment = await prisma.enrollment.findUnique({
+    where: { id: enrollmentId },
+    include: { course: true }
+  });
+
+  if (!session || !enrollment || session.participantId !== enrollment.participantId) {
+    return { success: false, message: 'Sesión no válida.' };
+  }
+
+  const moduleItem = await prisma.module.findUnique({
+    where: { id: moduleId }
+  });
+
+  if (!moduleItem || !moduleItem.quizData) {
+    return { success: false, message: 'Este módulo no tiene una evaluación activa.' };
+  }
+
+  // Validar respuestas (quizData es un array de { question, options, answerIndex })
+  const quizQuestions = moduleItem.quizData;
+  let correctCount = 0;
+
+  userAnswers.forEach((ansIndex, qIndex) => {
+    if (ansIndex === quizQuestions[qIndex]?.answerIndex) {
+      correctCount++;
+    }
+  });
+
+  const score = Math.round((correctCount / quizQuestions.length) * 100);
+  const isPassed = score === 100; // Requiere perfección para motivar la revisión
+
+  if (isPassed) {
+    await prisma.progress.upsert({
+      where: {
+        enrollmentId_moduleId: {
+          enrollmentId,
+          moduleId
+        }
+      },
+      update: {
+        completed: true,
+        isPassed: true,
+        quizScore: score,
+        completedAt: new Date()
+      },
+      create: {
+        enrollmentId,
+        moduleId,
+        completed: true,
+        isPassed: true,
+        quizScore: score,
+        completedAt: new Date()
+      }
+    });
+
+    // Recalcular progreso total
+    await syncEnrollmentProgress(enrollmentId);
+
+    revalidatePath('/mi-inscripcion/' + referenceCode);
+    revalidatePath('/campus');
+    
+    return { success: true, message: '¡Felicidades! Has aprobado la evaluación del módulo.', score };
+  }
+
+  return { 
+    success: false, 
+    message: `Has acertado ${correctCount} de ${quizQuestions.length}. Debes obtener el 100% para completar el módulo. ¡Inténtalo de nuevo!`,
+    score 
+  };
+}
+
 export async function participantLogout() {
   await destroyParticipantSession();
   redirect('/participantes');

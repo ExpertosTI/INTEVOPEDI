@@ -1,23 +1,11 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { toggleModuleProgress } from '@/app/actions';
+import { ModuleModal } from './ModuleModal';
 
 export function LearningPath({ modulesProgress = [], enrollmentId, referenceCode, isPreview = false }) {
-  const [isPending, startTransition] = useTransition();
-
-  const handleToggle = (moduleId, currentStatus) => {
-    if (isPreview) return;
-    
-    startTransition(() => {
-      const formData = new FormData();
-      formData.append('enrollmentId', enrollmentId);
-      formData.append('moduleId', moduleId);
-      formData.append('referenceCode', referenceCode);
-      formData.append('completed', currentStatus ? 'false' : 'true');
-      toggleModuleProgress(formData);
-    });
-  };
+  const [selectedModule, setSelectedModule] = useState(null);
 
   const totalModules = modulesProgress.length;
   const completedModules = isPreview ? 0 : modulesProgress.filter(m => m.completed).length;
@@ -45,32 +33,33 @@ export function LearningPath({ modulesProgress = [], enrollmentId, referenceCode
           if (isCompleted) statusClass = 'completed';
           if (isNext) statusClass = 'active';
 
+          const moduleData = item.module || item;
+
           return (
-            <div key={item.id || item.module?.id || index} className={`learning-path-node ${statusClass}`}>
+            <div key={moduleData.id || index} className={`learning-path-node ${statusClass}`}>
               <div className="learning-path-connector" />
-              <div className="learning-path-icon">
+              <div className="learning-path-icon" onClick={() => !isPreview && setSelectedModule(moduleData)} style={{ cursor: isPreview ? 'default' : 'pointer' }}>
                 {isCompleted ? '✓' : isNext ? '▶' : '·'}
               </div>
               <article className={`panel stack ${isCompleted ? 'module-completed' : ''}`}>
                 <div className="row-between">
-                  <strong className="eyebrow">Módulo {item.module?.order || item.order || index + 1}</strong>
+                  <strong className="eyebrow">Módulo {moduleData.order || index + 1}</strong>
                   {isNext && !isPreview && <span className="badge badge-pending">Siguiente paso</span>}
                 </div>
-                <h3>{item.module?.title || item.title}</h3>
-                <p>{item.module?.description || item.description}</p>
+                <h3>{moduleData.title}</h3>
+                <p>{moduleData.description}</p>
                 
-                {item.module?.durationMinutes || item.durationMinutes ? (
-                  <p className="helper">Duración estimada: {item.module?.durationMinutes || item.durationMinutes} min</p>
-                ) : null}
+                {moduleData.durationMinutes && (
+                  <p className="helper">Duración estimada: {moduleData.durationMinutes} min</p>
+                )}
 
                 {!isPreview && (
                   <button 
-                    onClick={() => handleToggle(item.moduleId || item.id, item.completed)}
-                    className={`button ${item.completed ? 'button-ghost' : 'button-primary'}`}
-                    disabled={isPending}
+                    onClick={() => setSelectedModule(moduleData)}
+                    className={`button ${item.completed ? 'button-secondary' : 'button-primary'}`}
                     style={{ alignSelf: 'flex-start', marginTop: '0.5rem' }}
                   >
-                    {isPending ? 'Actualizando...' : item.completed ? 'Deshacer completado' : 'Marcar como completado'}
+                    {item.completed ? 'Ver lección de nuevo' : isNext ? 'Comenzar evaluación' : 'Ver detalles'}
                   </button>
                 )}
               </article>
@@ -78,6 +67,18 @@ export function LearningPath({ modulesProgress = [], enrollmentId, referenceCode
           );
         })}
       </div>
+
+      {selectedModule && (
+        <ModuleModal 
+          module={selectedModule} 
+          enrollmentId={enrollmentId}
+          referenceCode={referenceCode}
+          onClose={() => setSelectedModule(null)}
+          onComplete={() => {
+            // Se refresca por servidor mediante revalidatePath en la acción
+          }}
+        />
+      )}
     </div>
   );
 }

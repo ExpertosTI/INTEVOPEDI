@@ -62,6 +62,8 @@ model Module {
   order           Int
   durationMinutes Int?
   required        Boolean    @default(true)
+  content         String?    @default("")  // Markdown or HTML lesson content
+  quizData        Json?      // Array of questions [ { question: string, options: string[], answerIndex: number } ]
   course          Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
   progress        Progress[]
 
@@ -120,6 +122,8 @@ model Progress {
   moduleId     String
   completed    Boolean     @default(false)
   completedAt  DateTime?
+  quizScore    Int?        @default(0)
+  isPassed     Boolean     @default(false)
   enrollment   Enrollment  @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
   module       Module      @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
