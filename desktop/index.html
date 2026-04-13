@@ -13,174 +13,392 @@
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+      background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       color: white;
-      padding: 2rem;
+      overflow-x: hidden;
     }
     
-    .container {
-      max-width: 600px;
+    .app-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+    }
+    
+    /* Header */
+    .header {
       text-align: center;
+      margin-bottom: 3rem;
     }
     
     .logo {
-      margin-bottom: 1.5rem;
-      filter: drop-shadow(0 10px 30px rgba(37, 99, 235, 0.3));
-      animation: float 6s ease-in-out infinite;
-    }
-    
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-    
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    
-    .subtitle {
-      font-size: 1.1rem;
-      color: #94a3b8;
-      margin-bottom: 2rem;
-    }
-    
-    .card {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1.5rem;
+      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
       border-radius: 16px;
-      padding: 2rem;
-      margin-bottom: 1.5rem;
-    }
-    
-    .step {
-      display: flex;
-      align-items: flex-start;
-      margin-bottom: 1.5rem;
-      text-align: left;
-    }
-    
-    .step:last-child {
-      margin-bottom: 0;
-    }
-    
-    .step-number {
-      background: #2563eb;
-      color: white;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: bold;
-      margin-right: 1rem;
-      flex-shrink: 0;
+      font-size: 28px;
+      box-shadow: 0 10px 40px rgba(37, 99, 235, 0.3);
     }
     
-    .step-content h3 {
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #f8fafc;
+    }
+    
+    .subtitle {
       font-size: 1rem;
-      margin-bottom: 0.25rem;
-      color: #f1f5f9;
+      color: #94a3b8;
+      font-weight: 400;
     }
     
-    .step-content p {
-      font-size: 0.9rem;
+    /* Main Card */
+    .main-card {
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 0.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+    }
+    
+    .tab-btn {
+      flex: 1;
+      padding: 0.875rem 1.5rem;
+      background: transparent;
+      border: none;
       color: #94a3b8;
-      line-height: 1.5;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    
+    .tab-btn:hover {
+      color: #e2e8f0;
+      background: rgba(255, 255, 255, 0.03);
+    }
+    
+    .tab-btn.active {
+      background: #2563eb;
+      color: white;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #e2e8f0;
+      margin-bottom: 0.75rem;
+    }
+    
+    .form-hint {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 0.5rem;
     }
     
     .url-input {
       width: 100%;
-      padding: 1rem;
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem 1.25rem;
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
       color: white;
-      font-size: 1rem;
-      margin-bottom: 1rem;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+    
+    .url-input:focus {
+      outline: none;
+      border-color: #2563eb;
+      background: rgba(15, 23, 42, 0.7);
     }
     
     .url-input::placeholder {
+      color: #475569;
+    }
+    
+    /* File Upload */
+    .file-upload {
+      position: relative;
+    }
+    
+    .file-input {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    
+    .file-dropzone {
+      padding: 2.5rem;
+      background: rgba(15, 23, 42, 0.4);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    
+    .file-dropzone:hover {
+      border-color: #2563eb;
+      background: rgba(37, 99, 235, 0.05);
+    }
+    
+    .file-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      opacity: 0.6;
+    }
+    
+    .file-text {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+    
+    .file-formats {
+      font-size: 0.75rem;
       color: #64748b;
     }
     
-    .btn {
+    .file-selected {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      border-radius: 12px;
+      margin-top: 1rem;
+    }
+    
+    .file-selected-icon {
+      font-size: 1.25rem;
+    }
+    
+    .file-selected-name {
+      font-size: 0.9rem;
+      color: #22c55e;
+      font-weight: 500;
+    }
+    
+    /* Buttons */
+    .btn-primary {
+      width: 100%;
+      padding: 1rem 1.5rem;
       background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
       color: white;
       border: none;
-      padding: 1rem 2rem;
-      border-radius: 8px;
-      font-size: 1rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
     }
     
-    .btn:hover {
+    .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
     }
     
-    .btn:disabled {
+    .btn-primary:disabled {
       opacity: 0.5;
       cursor: not-allowed;
       transform: none;
     }
     
-    .status {
+    .btn-secondary {
+      padding: 0.875rem 1.5rem;
+      background: transparent;
+      color: #94a3b8;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #e2e8f0;
+    }
+    
+    /* Status */
+    .status-message {
       margin-top: 1.5rem;
-      padding: 1rem;
-      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
       font-size: 0.9rem;
       display: none;
+      text-align: center;
     }
     
-    .status.loading {
+    .status-message.loading {
       display: block;
       background: rgba(37, 99, 235, 0.1);
-      border: 1px solid rgba(37, 99, 235, 0.3);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      color: #60a5fa;
     }
     
-    .status.success {
+    .status-message.success {
       display: block;
       background: rgba(34, 197, 94, 0.1);
-      border: 1px solid rgba(34, 197, 94, 0.3);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      color: #4ade80;
     }
     
-    .status.error {
+    .status-message.error {
       display: block;
       background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #f87171;
+    }
+    
+    /* Progress */
+    .progress-container {
+      margin-top: 1.5rem;
+    }
+    
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
     }
     
     .progress-bar {
-      width: 100%;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 2px;
-      margin-top: 1rem;
-      overflow: hidden;
-      display: none;
-    }
-    
-    .progress-bar.active {
-      display: block;
-    }
-    
-    .progress-fill {
       height: 100%;
       background: linear-gradient(90deg, #2563eb, #7c3aed);
       width: 0%;
-      transition: width 0.3s;
+      transition: width 0.4s ease;
+      border-radius: 3px;
+    }
+    
+    .progress-text {
+      margin-top: 0.5rem;
+      font-size: 0.8rem;
+      color: #64748b;
+      text-align: center;
+    }
+    
+    /* Step Header */
+    .step-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .step-badge {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    
+    .step-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-bottom: 0.25rem;
+    }
+    
+    .step-desc {
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+    
+    /* Transcript */
+    .transcript-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1.5rem 0;
+      padding: 1rem;
+      background: rgba(15, 23, 42, 0.4);
+      border-radius: 12px;
+      min-height: 200px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .clip-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    
+    .clip-actions .btn-secondary {
+      flex: 1;
+    }
+    
+    /* Footer */
+    .app-footer {
+      text-align: center;
+      padding: 2rem;
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+    
+    .app-footer strong {
+      color: #94a3b8;
+    }
+    
+    .footer-sub {
+      margin-top: 0.25rem;
+      font-size: 0.8rem;
+      color: #475569;
     }
     
     .footer {
@@ -189,80 +407,114 @@
       font-size: 0.75rem;
       color: #64748b;
     }
+    
+    /* Word buttons in transcript */
+    .word-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #e2e8f0;
+      padding: 0.5rem 0.75rem;
+      margin: 0.25rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    .word-btn:hover {
+      background: rgba(37, 99, 235, 0.3);
+      border-color: #2563eb;
+    }
+    
+    .word-btn.selected {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: white;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="logo">
-      <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="80" height="80" rx="20" fill="url(#gradient)"/>
-        <path d="M25 55V25L55 40L25 55Z" fill="white"/>
-        <path d="M55 25H60V55H55V25Z" fill="white" opacity="0.6"/>
-        <defs>
-          <linearGradient id="gradient" x1="0" y1="0" x2="80" y2="80">
-            <stop offset="0%" stop-color="#2563eb"/>
-            <stop offset="100%" stop-color="#7c3aed"/>
-          </linearGradient>
-        </defs>
-      </svg>
+  <div class="app-container">
+    <div class="header">
+      <div class="logo">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+      </div>
+      <h1>Laboratorio de Contenido Inclusivo</h1>
+      <p class="subtitle">Crea videos verticales accesibles desde cualquier fuente</p>
     </div>
-    <h1>Laboratorio de Contenido Inclusivo</h1>
-    <p class="subtitle">Crea videos verticales accesibles desde cualquier fuente</p>
     
-    <div class="card">
+    <div class="main-card">
       <div class="tabs">
-        <button class="tab-btn active" data-tab="youtube">YouTube</button>
-        <button class="tab-btn" data-tab="local">Archivo Local</button>
+        <button class="tab-btn active" data-tab="youtube">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          YouTube
+        </button>
+        <button class="tab-btn" data-tab="local">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          Archivo Local
+        </button>
       </div>
       
       <div id="youtubeTab" class="tab-content active">
-        <div class="step">
-          <div class="step-number">1</div>
-          <div class="step-content">
-            <h3>URL de YouTube</h3>
-            <p>Copia el enlace del video de YouTube</p>
-          </div>
+        <div class="form-group">
+          <label class="form-label">URL de YouTube</label>
+          <input type="text" id="urlInput" class="url-input" placeholder="https://youtube.com/watch?v=...">
+          <p class="form-hint">Copia el enlace del video de YouTube</p>
         </div>
-        <input type="text" id="urlInput" class="url-input" placeholder="https://youtube.com/watch?v=...">
       </div>
       
       <div id="localTab" class="tab-content">
-        <div class="step">
-          <div class="step-number">1</div>
-          <div class="step-content">
-            <h3>Archivo de Video</h3>
-            <p>Selecciona un video de tu computadora (MP4, MOV, AVI, MKV)</p>
+        <div class="form-group file-upload">
+          <label class="form-label">Archivo de Video</label>
+          <input type="file" id="fileInput" class="file-input" accept="video/*">
+          <div class="file-dropzone" id="fileDropzone">
+            <div class="file-icon">📁</div>
+            <p class="file-text">Arrastra un video aquí o haz clic para seleccionar</p>
+            <p class="file-formats">MP4, MOV, AVI, MKV</p>
+          </div>
+          <div id="fileSelected" class="file-selected" style="display: none;">
+            <span class="file-selected-icon">✓</span>
+            <span class="file-selected-name" id="fileName"></span>
           </div>
         </div>
-        <input type="file" id="fileInput" class="file-input" accept="video/*">
-        <label for="fileInput" class="file-label">📁 Seleccionar video...</label>
-        <div id="fileName" class="file-name"></div>
       </div>
       
-      <button id="processBtn" class="btn">Procesar Video</button>
+      <button id="processBtn" class="btn-primary">Procesar Video</button>
       
-      <div id="status" class="status"></div>
+      <div id="status" class="status-message"></div>
       
-      <div id="progressBar" class="progress-bar">
-        <div id="progressFill" class="progress-fill"></div>
+      <div id="progressBar" class="progress-container" style="display: none;">
+        <div class="progress-track">
+          <div id="progressFill" class="progress-bar"></div>
+        </div>
+        <p id="progressText" class="progress-text">Iniciando...</p>
       </div>
     </div>
     
-    <div class="card" id="transcriptCard" style="display: none;">
-      <div class="step">
-        <div class="step-number">2</div>
-        <div class="step-content">
-          <h3>Selecciona el texto</h3>
-          <p>Haz clic en las palabras para definir inicio y fin del clip</p>
+    <div class="main-card" id="transcriptCard" style="display: none;">
+      <div class="step-header">
+        <div class="step-badge">2</div>
+        <div>
+          <h3 class="step-title">Selecciona el texto</h3>
+          <p class="step-desc">Haz clic en las palabras para definir inicio y fin del clip</p>
         </div>
       </div>
-      <div id="transcriptContainer"></div>
+      <div id="transcriptContainer" class="transcript-container"></div>
+      <div id="clipActions" class="clip-actions" style="display: none;">
+        <button id="generateClipBtn" class="btn-primary">Generar Clip Vertical</button>
+        <button id="resetSelectionBtn" class="btn-secondary">Reiniciar Selección</button>
+      </div>
     </div>
   </div>
   
-  <div class="footer">
-    Desarrollado por Adderly Marte para RENACE.TECH · Donado a INTEVOPEDI
-  </div>
+  <footer class="app-footer">
+    <p>Desarrollado por <strong>Adderly Marte</strong> para <strong>RENACE.TECH</strong></p>
+    <p class="footer-sub">Donado a INTEVOPEDI</p>
+  </footer>
   
   <script>
     const urlInput = document.getElementById('urlInput');
@@ -294,9 +546,18 @@
     });
     
     // File selection
+    const fileDropzone = document.getElementById('fileDropzone');
+    const fileSelected = document.getElementById('fileSelected');
+    
+    fileDropzone.addEventListener('click', () => {
+      fileInput.click();
+    });
+    
     fileInput.addEventListener('change', () => {
       if (fileInput.files.length > 0) {
         fileName.textContent = fileInput.files[0].name;
+        fileDropzone.style.display = 'none';
+        fileSelected.style.display = 'flex';
       }
     });
     
@@ -394,9 +655,23 @@
     }
     
     function showStatus(type, message) {
-      status.className = 'status ' + type;
+      status.className = 'status-message ' + type;
       status.textContent = message;
       status.style.display = 'block';
+    }
+    
+    function hideStatus() {
+      status.style.display = 'none';
+    }
+    
+    function showProgress(percent, text) {
+      progressBar.style.display = 'block';
+      progressFill.style.width = percent + '%';
+      progressText.textContent = text;
+    }
+    
+    function hideProgress() {
+      progressBar.style.display = 'none';
     }
     
     function renderTranscript() {
@@ -406,52 +681,10 @@
         const word = document.createElement('button');
         word.className = 'word-btn';
         word.textContent = item.word;
-        word.dataset.index = index;
-        word.dataset.start = item.start;
-        word.dataset.end = item.end;
-        
+        word.title = `${item.start.toFixed(1)}s - ${item.end.toFixed(1)}s`;
         word.addEventListener('click', () => selectWord(index));
-        
         transcriptContainer.appendChild(word);
       });
-      
-      // Add styles for words
-      const style = document.createElement('style');
-      style.textContent = `
-        .word-btn {
-          background: rgba(255, 255, 255, 0.1);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          color: #e2e8f0;
-          padding: 0.5rem 0.75rem;
-          margin: 0.25rem;
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 0.9rem;
-          transition: all 0.2s;
-        }
-        .word-btn:hover {
-          background: rgba(37, 99, 235, 0.3);
-          border-color: #2563eb;
-        }
-        
-        .tabs {
-          display: flex;
-          gap: 0.5rem;
-          margin-bottom: 1.5rem;
-        }
-        
-        .tab-btn {
-          flex: 1;
-          padding: 0.75rem;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: #94a3b8;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        
-        .tab-btn.active {
           background: #2563eb;
           border-color: #2563eb;
           color: white;
