@@ -99,6 +99,7 @@ model Participant {
   updatedAt             DateTime     @updatedAt
   enrollments           Enrollment[]
   certificates          Certificate[]
+  labActivities         LabActivity[]
 }
 
 model Enrollment {
@@ -173,4 +174,17 @@ model CourseResource {
   course      Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@index([courseId, createdAt])
+}
+
+model LabActivity {
+  id              String   @id @default(cuid())
+  participantId   String?  // Opcional, si el usuario está logueado
+  videoSourceUrl  String
+  clipDurationSec Int
+  platform        String   // Ej: TikTok, Instagram, YouTube
+  actionType      String   // Ej: GENERATED, PUBLISHED
+  metadata        Json?    // Datos extra opcionales
+  createdAt       DateTime @default(now())
+
+  participant     Participant? @relation(fields: [participantId], references: [id], onDelete: SetNull)
 }

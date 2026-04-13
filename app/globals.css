@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&display=swap');
 
 /* ===== Design Tokens (2026 Premium) ===== */
 :root {
@@ -16,12 +16,12 @@
   --primary-hover: #1d4ed8;
   --primary-light: #dbeafe;
   --primary-ring: rgba(37, 99, 235, 0.2);
-  --primary-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  --primary-gradient: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
   
-  /* Glassmorphism & Depth */
-  --glass-bg: rgba(255, 255, 255, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.5);
-  --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
+  /* Surface & Depth */
+  --surface-raised: var(--bg-white);
+  --surface-border: var(--border);
+  --shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.06);
   
   --shadow-premium: 0 10px 40px -10px rgba(0,0,0,0.1);
   --shadow-inner: inset 0 2px 4px rgba(0,0,0,0.02);
@@ -31,7 +31,7 @@
   --radius-lg: 18px;
   --radius-md: 12px;
   --radius-sm: 8px;
-  --font: 'Inter', system-ui, -apple-system, sans-serif;
+  --font: 'Source Sans 3', system-ui, -apple-system, sans-serif;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -528,6 +528,12 @@ p { margin: 0; color: var(--text-secondary); line-height: 1.7; font-size: 0.95re
 .course-card, .stat-card, .module-card, .improvement-card,
 .faq-item, .quote-card, .verify-card { height: 100%; }
 
+.stat-card .stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
 .course-card-top, .row-between {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
@@ -659,6 +665,31 @@ p { margin: 0; color: var(--text-secondary); line-height: 1.7; font-size: 0.95re
   --cat-inclusion: #8b5cf6;
   --cat-employ: #f97316;
   --cat-comm: #ec4899;
+  --level-beginner-bg: rgba(16, 185, 129, 0.1);
+  --level-intermediate-bg: rgba(245, 158, 11, 0.1);
+  --level-advanced-bg: rgba(239, 68, 68, 0.1);
+}
+
+/* ===== Visual Identities (v2026 Themes) ===== */
+.theme-tech {
+  --primary: #8b5cf6;
+  --primary-gradient: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+  --accent-soft: rgba(139, 92, 246, 0.1);
+}
+.theme-social {
+  --primary: #f97316;
+  --primary-gradient: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+  --accent-soft: rgba(249, 115, 22, 0.1);
+}
+.theme-business {
+  --primary: #0f172a;
+  --primary-gradient: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  --accent-soft: rgba(15, 23, 42, 0.1);
+}
+.theme-access {
+  --primary: #10b981;
+  --primary-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --accent-soft: rgba(16, 185, 129, 0.1);
 }
 
 /* ===== Course Card Premium ===== */
@@ -666,13 +697,13 @@ p { margin: 0; color: var(--text-secondary); line-height: 1.7; font-size: 0.95re
   position: relative;
   display: flex;
   flex-direction: column;
-  background: var(--bg-white);
+  background: var(--surface-raised);
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--shadow-raised);
   border-radius: var(--radius-xl);
-  border: 1px solid var(--border);
   overflow: hidden;
   transition: all 0.4s var(--ease);
   height: 100%;
-  box-shadow: var(--shadow-sm);
 }
 
 .course-card-premium:hover {
@@ -739,6 +770,7 @@ p { margin: 0; color: var(--text-secondary); line-height: 1.7; font-size: 0.95re
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  line-clamp: 2;
   overflow: hidden;
   line-height: 1.5;
 }
@@ -758,6 +790,26 @@ p { margin: 0; color: var(--text-secondary); line-height: 1.7; font-size: 0.95re
   gap: 12px;
   font-size: 0.8rem;
   color: var(--text-muted);
+}
+
+.course-card-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.course-card-badge-full {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  background: var(--accent-red);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
 }
 
 .course-level-badge {

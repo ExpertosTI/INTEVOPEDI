@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@prisma/client": "5.19.1",
+    "dompurify": "^3.3.3",
+    "isomorphic-dompurify": "^3.8.0",
     "next": "14.2.13",
     "nodemailer": "^8.0.2",
     "pdf-lib": "1.17.1",

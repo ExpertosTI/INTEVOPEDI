@@ -104,49 +104,34 @@ docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build
 echo "Desplegando stack $STACK_NAME"
 docker stack deploy -c "$COMPOSE_FILE" "$STACK_NAME"
 
+# Forzar actualización del servicio para tomar nueva imagen
 echo "Forzando actualización del servicio para tomar nueva imagen..."
 docker service update --force --image intevopedi-app:latest "$APP_SERVICE"
 
+# --- Automatización de Sincronización de DB y Seed ---
+echo "Esperando contenedor app para sincronización de base de datos..."
+APP_CONTAINER_ID=""
+for _ in {1..30}; do
+  APP_CONTAINER_ID="$(docker ps --filter "label=com.docker.swarm.service.name=${APP_SERVICE}" --format '{{.ID}}' | head -n 1)"
+  if [[ -n "$APP_CONTAINER_ID" ]]; then
+    break
+  fi
+  sleep 2
+done
+
+if [[ -n "$APP_CONTAINER_ID" ]]; then
+  echo "Ejecutando npx prisma db push internamente..."
+  docker exec -i "$APP_CONTAINER_ID" npx prisma db push --skip-generate || echo "Aviso: Prisma db push falló (posiblemente por falta de cambios)"
+  
+  echo "Ejecutando node prisma/seed.js internamente..."
+  docker exec -i "$APP_CONTAINER_ID" node prisma/seed.js || echo "Aviso: Prisma seed falló"
+else
+  echo "ADVERTENCIA: No se encontró el contenedor tras actualización. No se pudo sincronizar la DB."
+fi
+# ---------------------------------------------------
+
 echo "Servicios actuales"
 docker service ls
-
-echo "Tareas del servicio app"
-docker service ps "$APP_SERVICE" || true
-
-if [[ "$BOOTSTRAP" -eq 1 ]]; then
-  echo "Esperando contenedor app para bootstrap"
-  APP_CONTAINER_ID=""
-  for _ in {1..30}; do
-    APP_CONTAINER_ID="$(docker ps --filter "label=com.docker.swarm.service.name=${APP_SERVICE}" --format '{{.ID}}' | head -n 1)"
-    if [[ -n "$APP_CONTAINER_ID" ]]; then
-      break
-    fi
-    sleep 2
-  done
-
-  if [[ -z "$APP_CONTAINER_ID" ]]; then
-    echo "No se encontró un contenedor en ejecución para $APP_SERVICE"
-    exit 1
-  fi
-
-  echo "Ejecutando prisma db push"
-  PRISMA_PUSH_OK=0
-  for _ in {1..15}; do
-    if docker exec -i "$APP_CONTAINER_ID" npx prisma db push --skip-generate; then
-      PRISMA_PUSH_OK=1
-      break
-    fi
-    sleep 3
-  done
-
-  if [[ "$PRISMA_PUSH_OK" -ne 1 ]]; then
-    echo "No se pudo ejecutar prisma db push correctamente"
-    exit 1
-  fi
-
-  echo "Ejecutando seed"
-  docker exec -i "$APP_CONTAINER_ID" npm run prisma:seed
-fi
 
 echo "Despliegue completado"
 echo "URL esperada: https://$APP_HOST"

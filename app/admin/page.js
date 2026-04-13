@@ -56,22 +56,22 @@ export default async function AdminPage({ searchParams }) {
         <div className="admin-stats">
           <div className="panel stat-card stack">
             <span className="eyebrow">Cursos</span>
-            <strong style={{ fontSize: '2rem', fontWeight: 800 }}>{courses.length}</strong>
+            <strong className="stat-value">{courses.length}</strong>
             <p className="helper">Cursos creados</p>
           </div>
           <div className="panel stat-card stack">
             <span className="eyebrow">Inscripciones</span>
-            <strong style={{ fontSize: '2rem', fontWeight: 800 }}>{totalEnrollments}</strong>
+            <strong className="stat-value">{totalEnrollments}</strong>
             <p className="helper">{pendingPayments} pendientes de pago</p>
           </div>
           <div className="panel stat-card stack">
             <span className="eyebrow">Certificados</span>
-            <strong style={{ fontSize: '2rem', fontWeight: 800 }}>{totalCertificates}</strong>
+            <strong className="stat-value">{totalCertificates}</strong>
             <p className="helper">Emitidos</p>
           </div>
           <div className="panel stat-card stack">
             <span className="eyebrow">Progreso</span>
-            <strong style={{ fontSize: '2rem', fontWeight: 800 }}>{avgProgress}%</strong>
+            <strong className="stat-value">{avgProgress}%</strong>
             <p className="helper">Promedio general</p>
           </div>
         </div>

@@ -2,15 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAssistant } from '@/lib/useAssistant';
+import { formatAndSanitizeExtendedMarkdown } from '@/lib/sanitize';
 
 function formatMarkdown(text) {
-  if (!text) return '';
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*?<\/li>)+/gs, '<ul>$&</ul>')
-    .replace(/\n/g, '<br />');
+  return formatAndSanitizeExtendedMarkdown(text);
 }
 
 export function AdminFloatingAssistant({ courses = [] }) {

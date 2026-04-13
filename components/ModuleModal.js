@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { ModuleQuiz } from './ModuleQuiz';
 import { submitModuleQuizAction } from '@/app/actions';
+import { sanitizeAssistantHtml } from '@/lib/sanitize';
 import * as Icons from './Icons';
 
 export function ModuleModal({ module, enrollmentId, referenceCode, onClose, onComplete }) {
@@ -12,7 +13,7 @@ export function ModuleModal({ module, enrollmentId, referenceCode, onClose, onCo
 
   const simulateMarkdown = (text) => {
     if (!text) return '';
-    return text
+    const rawHtml = text
       .replace(/^# (.*$)/gm, '<h1 class="h2">$1</h1>')
       .replace(/^## (.*$)/gm, '<h2 class="h3">$1</h2>')
       .replace(/^### (.*$)/gm, '<h3 class="h4">$1</h3>')
@@ -20,6 +21,7 @@ export function ModuleModal({ module, enrollmentId, referenceCode, onClose, onCo
       .replace(/^\- (.*$)/gm, '<li>$1</li>')
       .replace(/\n\n/g, '</p><p>')
       .replace(/\n/g, '<br />');
+    return sanitizeAssistantHtml(rawHtml);
   };
 
   const handleSubmitQuiz = (answers) => {

@@ -1,7 +1,8 @@
 'use client';
 
-import { useId, useMemo, useRef, useState, useTransition } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, useTransition } from 'react';
 import { appendModulesFromAssistantAction, createCourseFromAssistantAction, runAdminAssistantAction } from '@/app/actions';
+import { formatAndSanitizeMarkdown } from '@/lib/sanitize';
 
 const PROMPT_HISTORY_KEY = 'admin_assistant_history';
 const MAX_HISTORY = 5;
@@ -44,6 +45,15 @@ export function AdminAssistant({ courses = [] }) {
   const timerRef = useRef(null);
 
   const selectedCourse = useMemo(() => courses.find((course) => course.id === courseId) || null, [courses, courseId]);
+
+  // Cleanup timer on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
 
   function startTimer() {
     setElapsed(0);
@@ -167,11 +177,7 @@ export function AdminAssistant({ courses = [] }) {
   }
 
   function formatSummary(text) {
-    if (!text) return '';
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/\n/g, '<br />');
+    return formatAndSanitizeMarkdown(text);
   }
 
   const suggestedButtons = normalizeArray(result?.suggestedButtons);

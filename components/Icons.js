@@ -122,3 +122,49 @@ export const Moon = (props) => (
     <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
   </IconBase>
 );
+
+export const Brain = (props) => (
+  <IconBase {...props}>
+    <path d="M9.5 2A5 5 0 0 1 12 10a5 5 0 0 1 2.5-8" />
+    <path d="M12 10a5 5 0 0 1-5 5" />
+    <path d="M12 10a5 5 0 0 0 5 5" />
+    <path d="M7 15a5 5 0 0 1-5-5 5 5 0 0 1 5-5" />
+    <path d="M17 15a5 5 0 0 0 5-5 5 5 0 0 0-5-5" />
+    <path d="M12 10v12" />
+  </IconBase>
+);
+
+export const Heart = (props) => (
+  <IconBase {...props}>
+    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+  </IconBase>
+);
+
+export const Briefcase = (props) => (
+  <IconBase {...props}>
+    <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
+    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+  </IconBase>
+);
+
+export const Zap = (props) => (
+  <IconBase {...props}>
+    <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+  </IconBase>
+);
+
+export const Globe = (props) => (
+  <IconBase {...props}>
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 2a14.5 14.5 0 0 0 0 20" />
+    <path d="M12 2a14.5 14.5 0 0 1 0 20" />
+    <path d="M2 12h20" />
+  </IconBase>
+);
+
+export const Code = (props) => (
+  <IconBase {...props}>
+    <polyline points="16 18 22 12 16 6" />
+    <polyline points="8 6 2 12 8 18" />
+  </IconBase>
+);
