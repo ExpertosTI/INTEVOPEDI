@@ -19,8 +19,7 @@ const fs = require('fs');
 // Protocol for local video serving
 const VIDEO_PROTOCOL = 'lci-video';
 
-// Configuración de APIs - cargar desde variables de entorno
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+// Configuración de APIs - solo Google Gemini
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 function createWindow() {
@@ -141,38 +140,56 @@ ipcMain.handle('video:transcribe', async (event, videoPath) => {
       extractAudio.on('close', (code) => code === 0 ? resolve() : reject());
     });
 
-    // 2. Transcripción con OpenAI Whisper
-    if (!OPENAI_API_KEY) {
-      return { success: false, error: 'API key no configurada. Configure OPENAI_API_KEY.' };
+    // 2. Transcripción con Google Gemini (multimodal audio)
+    if (!GEMINI_API_KEY) {
+      return { success: false, error: 'API key no configurada. Configure GEMINI_API_KEY.' };
     }
     
     try {
-      const formData = new FormData();
-      formData.append('file', fs.createReadStream(audioPath));
-      formData.append('model', 'whisper-1');
-      formData.append('response_format', 'verbose_json');
-      formData.append('timestamp_granularities', ['word']);
+      const audioData = fs.readFileSync(audioPath, { encoding: 'base64' });
       
-      const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
         },
-        body: formData
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: 'Transcribe este audio en español. Devuelve la transcripción como un array JSON de objetos con: word (palabra), start (tiempo inicio en segundos), end (tiempo fin en segundos). Ejemplo: [{"word":"hola","start":0.0,"end":0.5}]' },
+              { inline_data: { mime_type: 'audio/mpeg', data: audioData } }
+            ]
+          }]
+        })
       });
       
       if (!response.ok) {
-        throw new Error(`Whisper API error: ${response.status}`);
+        throw new Error(`Gemini API error: ${response.status}`);
       }
       
       const data = await response.json();
+      const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
       
-      // Convertir formato de Whisper al formato esperado
-      const transcript = data.words ? data.words.map(w => ({
-        word: w.word.trim(),
-        start: w.start,
-        end: w.end
-      })) : [];
+      // Extraer JSON de la respuesta
+      let transcript = [];
+      try {
+        const jsonMatch = textResponse.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          transcript = JSON.parse(jsonMatch[0]);
+        } else {
+          // Fallback: crear transcripción simple palabra por palabra
+          const words = textResponse.replace(/[^\w\sáéíóúñ]/gi, '').split(/\s+/).filter(w => w.length > 0);
+          const timePerWord = 0.5;
+          transcript = words.map((word, i) => ({
+            word: word,
+            start: i * timePerWord,
+            end: (i + 1) * timePerWord
+          }));
+        }
+      } catch (parseError) {
+        console.error('Error parsing transcript:', parseError);
+        transcript = [];
+      }
       
       return { success: true, transcript };
     } catch (error) {
