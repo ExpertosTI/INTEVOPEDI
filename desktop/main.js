@@ -7,6 +7,8 @@
  * contenido vertical accesible a partir de videos de YouTube.
  */
 
+require('dotenv').config();
+
 const { app, BrowserWindow, ipcMain, protocol } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
