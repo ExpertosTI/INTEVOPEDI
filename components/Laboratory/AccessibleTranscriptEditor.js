@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 
 /**
  * AccessibleTranscriptEditor
@@ -10,16 +10,25 @@ const AccessibleTranscriptEditor = ({ transcript = [], videoPath, onClipGenerate
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const videoRef = useRef(null);
+  const audioContextRef = useRef(null);
+
+  // Singleton AudioContext para evitar churn
+  const getAudioContext = useCallback(() => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioContextRef.current;
+  }, []);
 
   // Anunciar cambios de estado para lectores de pantalla
-  const announceToScreenReader = (message) => {
+  const announceToScreenReader = useCallback((message) => {
     const announcement = document.getElementById('lci-announcer');
     if (announcement) {
       announcement.textContent = message;
     }
-  };
+  }, []);
 
-  const handleWordClick = async (word) => {
+  const handleWordClick = useCallback(async (word) => {
     if (selectedRange.start === null) {
       setSelectedRange({ start: word.start, end: word.end });
       playFeedbackSound('high');
@@ -38,10 +47,10 @@ const AccessibleTranscriptEditor = ({ transcript = [], videoPath, onClipGenerate
         announceToScreenReader(`Descripción visual: ${description.description}`);
       }
     }
-  };
+  }, [selectedRange, playFeedbackSound, announceToScreenReader, videoPath]);
 
-  const playFeedbackSound = (type) => {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const playFeedbackSound = useCallback((type) => {
+    const audioCtx = getAudioContext();
     const oscillator = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
 
@@ -54,9 +63,21 @@ const AccessibleTranscriptEditor = ({ transcript = [], videoPath, onClipGenerate
 
     oscillator.start();
     oscillator.stop(audioCtx.currentTime + 0.1);
-  };
+  }, [getAudioContext]);
 
-  const handleGenerateClip = async () => {
+  // Memoizar cálculo de palabras seleccionadas para evitar O(n) en cada render
+  const selectedWordIndices = useMemo(() => {
+    if (selectedRange.start === null || selectedRange.end === null) return new Set();
+    const indices = new Set();
+    transcript.forEach((item, index) => {
+      if (item.start >= selectedRange.start && item.end <= selectedRange.end) {
+        indices.add(index);
+      }
+    });
+    return indices;
+  }, [selectedRange, transcript]);
+
+  const handleGenerateClip = useCallback(async () => {
     if (selectedRange.start !== null && selectedRange.end !== null) {
       playFeedbackSound('low');
       announceToScreenReader("Generando clip vertical... Por favor espere.");
@@ -72,7 +93,7 @@ const AccessibleTranscriptEditor = ({ transcript = [], videoPath, onClipGenerate
         onClipGenerated(result.outputPath);
       }
     }
-  };
+  }, [selectedRange, playFeedbackSound, announceToScreenReader, videoPath, onClipGenerated]);
 
   return (
     <div className="transcript-editor-container stack">
@@ -89,8 +110,26 @@ const AccessibleTranscriptEditor = ({ transcript = [], videoPath, onClipGenerate
           {transcript.map((item, index) => (
             <button
               key={`${item.word}-${index}`}
-              className={`transcript-word ${selectedRange.start <= item.start && selectedRange.end >= item.end ? 'is-selected' : ''}`}
+              className={`transcript-word ${selectedWordIndices.has(index) ? 'is-selected' : ''}`}
               onClick={() => handleWordClick(item)}
+              onKeyDown={(e) => {
+                const buttons = e.currentTarget.parentElement.querySelectorAll('.transcript-word');
+                const currentIndex = Array.from(buttons).indexOf(e.currentTarget);
+                
+                if (e.key === 'ArrowRight' && currentIndex < buttons.length - 1) {
+                  e.preventDefault();
+                  buttons[currentIndex + 1].focus();
+                } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                  e.preventDefault();
+                  buttons[currentIndex - 1].focus();
+                } else if (e.key === 'Home') {
+                  e.preventDefault();
+                  buttons[0].focus();
+                } else if (e.key === 'End') {
+                  e.preventDefault();
+                  buttons[buttons.length - 1].focus();
+                }
+              }}
               aria-label={`Palabra: ${item.word} en tiempo ${Math.round(item.start)} segundos`}
             >
               {item.word}
@@ -122,7 +161,8 @@ const AccessibleTranscriptEditor = ({ transcript = [], videoPath, onClipGenerate
           display: flex;
           flex-wrap: wrap;
           gap: 0.5rem;
-          max-height: 400px;
+          max-height: 60vh;
+          max-height: min(60vh, 500px);
           overflow-y: auto;
           padding: 1rem;
         }
@@ -131,9 +171,14 @@ const AccessibleTranscriptEditor = ({ transcript = [], videoPath, onClipGenerate
           border: 1px solid transparent;
           cursor: pointer;
           font-size: 1.1rem;
-          padding: 0.2rem 0.4rem;
+          padding: 0.5rem 0.6rem;
           border-radius: 4px;
           transition: all 0.2s;
+          min-height: 44px;
+          min-width: 44px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
         }
         .transcript-word:hover, .transcript-word:focus {
           background: var(--primary-light);
@@ -142,7 +187,7 @@ const AccessibleTranscriptEditor = ({ transcript = [], videoPath, onClipGenerate
         }
         .transcript-word.is-selected {
           background: var(--primary);
-          color: white;
+          color: var(--text-on-primary);
           border-color: var(--primary-dark);
         }
         .sr-only {

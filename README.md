@@ -169,3 +169,12 @@ Si prefieres Portainer UI:
 - No subas secretos reales a Git.
 - Usa variables de entorno seguras en Portainer.
 - Si alguna credencial ya fue expuesta, rótala antes de producción.
+
+---
+
+## Créditos
+
+**Desarrollado por:** Adderly Marte  
+**Para:** RENACE.TECH  
+**Donado a:** INTEVOPEDI - Instituto de Tecnología Inclusiva para Ciegos  
+**Repositorio:** https://github.com/ExpertosTI/INTEVOPEDI

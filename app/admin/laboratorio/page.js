@@ -77,7 +77,7 @@ export default function LaboratorioPage() {
         {status === 'IDLE' && (
           <article className="panel stack">
             <label htmlFor="yt-url">Enlace de YouTube:</label>
-            <div className="row">
+            <div className="row row-responsive">
               <input 
                 id="yt-url"
                 type="text" 
@@ -94,7 +94,16 @@ export default function LaboratorioPage() {
                 Empezar Procesamiento
               </button>
             </div>
-            {error && <p className="text-error">{error}</p>}
+            {error && (
+  <p 
+    className="text-error" 
+    role="alert" 
+    aria-live="assertive"
+    aria-atomic="true"
+  >
+    Error: {error}
+  </p>
+)}
           </article>
         )}
 
@@ -149,9 +158,30 @@ export default function LaboratorioPage() {
           background: var(--surface-light);
           min-height: 80vh;
         }
+        .row-responsive {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+        .row-responsive .input {
+          flex: 1;
+          min-width: 250px;
+        }
+        .row-responsive .button {
+          white-space: nowrap;
+        }
+        @media (max-width: 640px) {
+          .row-responsive {
+            flex-direction: column;
+          }
+          .row-responsive .input,
+          .row-responsive .button {
+            width: 100%;
+          }
+        }
         .text-error { color: var(--error); margin-top: 1rem; }
         .spinner {
-          border: 4px solid rgba(0,0,0,0.1);
+          border: 4px solid var(--spinner-track);
           width: 50px;
           height: 50px;
           border-radius: 50%;

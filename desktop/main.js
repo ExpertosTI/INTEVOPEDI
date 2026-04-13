@@ -1,11 +1,25 @@
+/**
+ * Laboratorio de Contenido Inclusivo (LCI) - Desktop App
+ * Desarrollado por: Adderly Marte (RENACE.TECH)
+ * Donado a: INTEVOPEDI - Instituto de Tecnología Inclusiva para Ciegos
+ * 
+ * Esta aplicación permite a usuarios con discapacidad visual crear
+ * contenido vertical accesible a partir de videos de YouTube.
+ */
+
 const { app, BrowserWindow, ipcMain, protocol } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const ffmpeg = require('ffmpeg-static');
 const { create } = require('youtube-dl-exec');
+const fs = require('fs');
 
 // Protocol for local video serving
 const VIDEO_PROTOCOL = 'lci-video';
+
+// Configuración de APIs - cargar desde variables de entorno
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -125,17 +139,44 @@ ipcMain.handle('video:transcribe', async (event, videoPath) => {
       extractAudio.on('close', (code) => code === 0 ? resolve() : reject());
     });
 
-    // 2. Mock de respuesta (En el futuro esto llamará a OpenAI Whisper)
-    const mockTranscript = [
-      { word: "Bienvenidos", start: 0.5, end: 1.2 },
-      { word: "al", start: 1.3, end: 1.5 },
-      { word: "concierto", start: 1.6, end: 2.5 },
-      { word: "del", start: 2.6, end: 2.8 },
-      { word: "Grupo", start: 2.9, end: 3.5 },
-      { word: "Atrévete.", start: 3.6, end: 4.5 }
-    ];
-
-    return { success: true, transcript: mockTranscript };
+    // 2. Transcripción con OpenAI Whisper
+    if (!OPENAI_API_KEY) {
+      return { success: false, error: 'API key no configurada. Configure OPENAI_API_KEY.' };
+    }
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', fs.createReadStream(audioPath));
+      formData.append('model', 'whisper-1');
+      formData.append('response_format', 'verbose_json');
+      formData.append('timestamp_granularities', ['word']);
+      
+      const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Whisper API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Convertir formato de Whisper al formato esperado
+      const transcript = data.words ? data.words.map(w => ({
+        word: w.word.trim(),
+        start: w.start,
+        end: w.end
+      })) : [];
+      
+      return { success: true, transcript };
+    } catch (error) {
+      console.error('Transcription error:', error);
+      return { success: false, error: `Transcripción fallida: ${error.message}` };
+    }
 
   } catch (error) {
     return { success: false, error: error.message };
@@ -158,15 +199,45 @@ ipcMain.handle('video:describe', async (event, { videoPath, timestamp }) => {
       ]).on('close', resolve).on('error', reject);
     });
 
-    // 2. Mock de descripción por IA (En producción esto llamaría a Gemini Vision o GPT-4o)
-    // El sistema analizaría el framePath y devolvería una descripción.
-    const mockDescription = "En este momento del video, el cantante del Grupo Atrévete está sonriendo mientras toca la guitarra frente a un público animado. La iluminación es cálida y se ve mucho movimiento en el escenario.";
-
-    return { 
-      success: true, 
-      description: mockDescription,
-      framePath 
-    };
+    // 2. Análisis visual con Gemini Vision
+    if (!GEMINI_API_KEY) {
+      return { success: false, error: 'API key no configurada. Configure GEMINI_API_KEY.' };
+    }
+    
+    try {
+      const imageData = fs.readFileSync(framePath, { encoding: 'base64' });
+      
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: 'Describe esta imagen de un video para una persona con discapacidad visual. Sé conciso y enfócate en los elementos visuales principales.' },
+              { inline_data: { mime_type: 'image/jpeg', data: imageData } }
+            ]
+          }]
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Gemini API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const description = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No se pudo generar descripción';
+      
+      return { 
+        success: true, 
+        description,
+        framePath 
+      };
+    } catch (error) {
+      console.error('Description error:', error);
+      return { success: false, error: `Análisis visual fallido: ${error.message}` };
+    }
 
   } catch (error) {
     return { success: false, error: error.message };
