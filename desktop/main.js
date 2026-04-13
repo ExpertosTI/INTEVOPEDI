@@ -26,21 +26,28 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
+    minWidth: 800,
+    minHeight: 600,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      webSecurity: false
     },
-    title: 'Laboratorio de Contenido Inclusivo | INTEVOPEDI'
+    title: 'Laboratorio de Contenido Inclusivo | INTEVOPEDI',
+    backgroundColor: '#0f172a',
+    show: false,
+    titleBarStyle: 'default'
   });
 
-  // In production, we would load the exported Next.js files
-  // In development, we load the dev server
-  const startUrl = process.env.NODE_ENV === 'development' 
-    ? 'http://localhost:3000' 
-    : `file://${path.join(__dirname, '../out/index.html')}`;
+  // Mostrar ventana cuando esté lista
+  win.once('ready-to-show', () => {
+    win.show();
+    win.focus();
+  });
 
-  win.loadURL(startUrl);
+  // Load local HTML interface
+  win.loadFile(path.join(__dirname, 'index.html'));
 }
 
 // Register custom protocol to allow local video playback without webSecurity issues
@@ -59,6 +66,16 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+// Configurar metadatos de la aplicación
+app.setName('LCI - Laboratorio de Contenido Inclusivo');
+app.setAboutPanelOptions({
+  applicationName: 'LCI - Laboratorio de Contenido Inclusivo',
+  applicationVersion: '1.0.0',
+  copyright: '© 2024 Adderly Marte para RENACE.TECH · Donado a INTEVOPEDI',
+  website: 'https://intevopedi.org',
+  credits: 'Desarrollado con ♥ por RENACE.TECH'
 });
 
 // --- IPC Handlers for Video Processing ---

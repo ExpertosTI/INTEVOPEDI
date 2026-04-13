@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LCI - Laboratorio de Contenido Inclusivo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      padding: 2rem;
+    }
+    
+    .container {
+      max-width: 600px;
+      text-align: center;
+    }
+    
+    .logo {
+      margin-bottom: 1.5rem;
+      filter: drop-shadow(0 10px 30px rgba(37, 99, 235, 0.3));
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .subtitle {
+      font-size: 1.1rem;
+      color: #94a3b8;
+      margin-bottom: 2rem;
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .step {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+    
+    .step:last-child {
+      margin-bottom: 0;
+    }
+    
+    .step-number {
+      background: #2563eb;
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 1rem;
+      flex-shrink: 0;
+    }
+    
+    .step-content h3 {
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+      color: #f1f5f9;
+    }
+    
+    .step-content p {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+    
+    .url-input {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .url-input::placeholder {
+      color: #64748b;
+    }
+    
+    .btn {
+      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .status {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    
+    .status.loading {
+      display: block;
+      background: rgba(37, 99, 235, 0.1);
+      border: 1px solid rgba(37, 99, 235, 0.3);
+    }
+    
+    .status.success {
+      display: block;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    
+    .status.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      margin-top: 1rem;
+      overflow: hidden;
+      display: none;
+    }
+    
+    .progress-bar.active {
+      display: block;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #2563eb, #7c3aed);
+      width: 0%;
+      transition: width 0.3s;
+    }
+    
+    .footer {
+      position: fixed;
+      bottom: 1rem;
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="80" height="80" rx="20" fill="url(#gradient)"/>
+        <path d="M25 55V25L55 40L25 55Z" fill="white"/>
+        <path d="M55 25H60V55H55V25Z" fill="white" opacity="0.6"/>
+        <defs>
+          <linearGradient id="gradient" x1="0" y1="0" x2="80" y2="80">
+            <stop offset="0%" stop-color="#2563eb"/>
+            <stop offset="100%" stop-color="#7c3aed"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <h1>Laboratorio de Contenido Inclusivo</h1>
+    <p class="subtitle">Crea videos verticales accesibles desde cualquier fuente</p>
+    
+    <div class="card">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="youtube">YouTube</button>
+        <button class="tab-btn" data-tab="local">Archivo Local</button>
+      </div>
+      
+      <div id="youtubeTab" class="tab-content active">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>URL de YouTube</h3>
+            <p>Copia el enlace del video de YouTube</p>
+          </div>
+        </div>
+        <input type="text" id="urlInput" class="url-input" placeholder="https://youtube.com/watch?v=...">
+      </div>
+      
+      <div id="localTab" class="tab-content">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>Archivo de Video</h3>
+            <p>Selecciona un video de tu computadora (MP4, MOV, AVI, MKV)</p>
+          </div>
+        </div>
+        <input type="file" id="fileInput" class="file-input" accept="video/*">
+        <label for="fileInput" class="file-label">📁 Seleccionar video...</label>
+        <div id="fileName" class="file-name"></div>
+      </div>
+      
+      <button id="processBtn" class="btn">Procesar Video</button>
+      
+      <div id="status" class="status"></div>
+      
+      <div id="progressBar" class="progress-bar">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+    </div>
+    
+    <div class="card" id="transcriptCard" style="display: none;">
+      <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Selecciona el texto</h3>
+          <p>Haz clic en las palabras para definir inicio y fin del clip</p>
+        </div>
+      </div>
+      <div id="transcriptContainer"></div>
+    </div>
+  </div>
+  
+  <div class="footer">
+    Desarrollado por Adderly Marte para RENACE.TECH · Donado a INTEVOPEDI
+  </div>
+  
+  <script>
+    const urlInput = document.getElementById('urlInput');
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+    const processBtn = document.getElementById('processBtn');
+    const status = document.getElementById('status');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const transcriptCard = document.getElementById('transcriptCard');
+    const transcriptContainer = document.getElementById('transcriptContainer');
+    
+    let selectedStart = null;
+    let selectedEnd = null;
+    let transcript = [];
+    let videoPath = '';
+    let currentSource = 'youtube';
+    
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        btn.classList.add('active');
+        currentSource = btn.dataset.tab;
+        document.getElementById(currentSource + 'Tab').classList.add('active');
+      });
+    });
+    
+    // File selection
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        fileName.textContent = fileInput.files[0].name;
+      }
+    });
+    
+    processBtn.addEventListener('click', async () => {
+      processBtn.disabled = true;
+      showStatus('loading', 'Procesando video...');
+      progressBar.classList.add('active');
+      progressFill.style.width = '10%';
+      
+      try {
+        if (currentSource === 'youtube') {
+          await processYouTube();
+        } else {
+          await processLocalFile();
+        }
+      } catch (error) {
+        showStatus('error', 'Error: ' + error.message);
+        progressBar.classList.remove('active');
+        processBtn.disabled = false;
+      }
+    });
+    
+    async function processYouTube() {
+      const url = urlInput.value.trim();
+      
+      if (!url) {
+        throw new Error('Por favor ingresa una URL de YouTube');
+      }
+      
+      if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+        throw new Error('URL no válida. Debe ser de YouTube.');
+      }
+      
+      progressFill.style.width = '30%';
+      showStatus('loading', 'Descargando video de YouTube...');
+      
+      const downloadResult = await window.electronAPI.downloadVideo(url);
+      
+      if (!downloadResult.success) {
+        throw new Error(downloadResult.error);
+      }
+      
+      videoPath = downloadResult.filePath;
+      progressFill.style.width = '50%';
+      showStatus('loading', 'Extrayendo audio...');
+      
+      await continueProcessing();
+    }
+    
+    async function processLocalFile() {
+      if (fileInput.files.length === 0) {
+        throw new Error('Por favor selecciona un archivo de video');
+      }
+      
+      const file = fileInput.files[0];
+      progressFill.style.width = '40%';
+      showStatus('loading', 'Cargando archivo local...');
+      
+      const result = await window.electronAPI.loadLocalVideo(file.path);
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      
+      videoPath = result.filePath;
+      progressFill.style.width = '50%';
+      showStatus('loading', 'Extrayendo audio...');
+      
+      await continueProcessing();
+    }
+    
+    async function continueProcessing() {
+      try {
+        // Transcribe
+        const transcribeResult = await window.electronAPI.transcribeVideo(videoPath);
+        
+        if (!transcribeResult.success) {
+          throw new Error(transcribeResult.error);
+        }
+        
+        transcript = transcribeResult.transcript;
+        progressFill.style.width = '100%';
+        showStatus('success', `Video procesado. ${transcript.length} palabras detectadas.`);
+        
+        // Show transcript editor
+        renderTranscript();
+        transcriptCard.style.display = 'block';
+        
+      } catch (error) {
+        showStatus('error', 'Error: ' + error.message);
+        progressBar.classList.remove('active');
+      } finally {
+        processBtn.disabled = false;
+      }
+    }
+    
+    function showStatus(type, message) {
+      status.className = 'status ' + type;
+      status.textContent = message;
+      status.style.display = 'block';
+    }
+    
+    function renderTranscript() {
+      transcriptContainer.innerHTML = '';
+      
+      transcript.forEach((item, index) => {
+        const word = document.createElement('button');
+        word.className = 'word-btn';
+        word.textContent = item.word;
+        word.dataset.index = index;
+        word.dataset.start = item.start;
+        word.dataset.end = item.end;
+        
+        word.addEventListener('click', () => selectWord(index));
+        
+        transcriptContainer.appendChild(word);
+      });
+      
+      // Add styles for words
+      const style = document.createElement('style');
+      style.textContent = `
+        .word-btn {
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #e2e8f0;
+          padding: 0.5rem 0.75rem;
+          margin: 0.25rem;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          transition: all 0.2s;
+        }
+        .word-btn:hover {
+          background: rgba(37, 99, 235, 0.3);
+          border-color: #2563eb;
+        }
+        
+        .tabs {
+          display: flex;
+          gap: 0.5rem;
+          margin-bottom: 1.5rem;
+        }
+        
+        .tab-btn {
+          flex: 1;
+          padding: 0.75rem;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #94a3b8;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        
+        .tab-btn.active {
+          background: #2563eb;
+          border-color: #2563eb;
+          color: white;
+        }
+        
+        .tab-content {
+          display: none;
+        }
+        
+        .tab-content.active {
+          display: block;
+        }
+        
+        .file-input {
+          display: none;
+        }
+        
+        .file-label {
+          display: block;
+          padding: 1rem;
+          background: rgba(255, 255, 255, 0.05);
+          border: 2px dashed rgba(255, 255, 255, 0.2);
+          border-radius: 8px;
+          cursor: pointer;
+          text-align: center;
+          transition: all 0.2s;
+        }
+        
+        .file-label:hover {
+          border-color: #2563eb;
+          background: rgba(37, 99, 235, 0.1);
+        }
+        
+        .file-name {
+          margin-top: 0.75rem;
+          font-size: 0.85rem;
+          color: #60a5fa;
+        }
+        .word-btn.selected {
+          background: #2563eb;
+          border-color: #2563eb;
+        }
+        #transcriptContainer {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          margin-top: 1rem;
+          max-height: 300px;
+          overflow-y: auto;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    function selectWord(index) {
+      const words = document.querySelectorAll('.word-btn');
+      
+      if (selectedStart === null) {
+        selectedStart = index;
+        words[index].classList.add('selected');
+        showStatus('loading', 'Selecciona la última palabra del clip...');
+      } else if (selectedEnd === null) {
+        selectedEnd = index;
+        
+        // Select range
+        const start = Math.min(selectedStart, selectedEnd);
+        const end = Math.max(selectedStart, selectedEnd);
+        
+        for (let i = start; i <= end; i++) {
+          words[i].classList.add('selected');
+        }
+        
+        showStatus('success', 'Rango seleccionado. Generando clip...');
+        generateClip(start, end);
+      } else {
+        // Reset selection
+        words.forEach(w => w.classList.remove('selected'));
+        selectedStart = index;
+        selectedEnd = null;
+        words[index].classList.add('selected');
+        showStatus('loading', 'Selecciona la última palabra del clip...');
+      }
+    }
+    
+    async function generateClip(startIndex, endIndex) {
+      const startTime = transcript[startIndex].start;
+      const endTime = transcript[endIndex].end;
+      
+      try {
+        showStatus('loading', 'Generando clip vertical...');
+        
+        const result = await window.electronAPI.clipVideo(videoPath, startTime, endTime);
+        
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+        
+        showStatus('success', `Clip generado: ${result.clipPath}`);
+        
+      } catch (error) {
+        showStatus('error', 'Error generando clip: ' + error.message);
+      }
+    }
+  </script>
+</body>
+</html>
