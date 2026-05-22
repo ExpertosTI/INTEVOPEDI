@@ -3,7 +3,8 @@ set -euo pipefail
 
 # Configuración del proyecto
 STACK_NAME="intevopedi"
-PROJECT_DIR="/opt/intevopedi"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="${PROJECT_DIR:-$SCRIPT_DIR}"
 REPO_URL="https://github.com/ExpertosTI/INTEVOPEDI.git"
 SERVICE_NAME="${STACK_NAME}_app"
 
