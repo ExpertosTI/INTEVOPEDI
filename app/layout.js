@@ -4,6 +4,11 @@ import { ToastProvider } from '@/components/ToastProvider';
 import { siteConfig } from '@/lib/site';
 import '@/app/globals.css';
 
+// La escuela lee cursos, inscripciones y certificados de la base de datos.
+// Sin esto, Next.js pre-renderiza las páginas en el build y mostraría datos
+// congelados (o de respaldo) en lugar de lo que publica el panel admin.
+export const dynamic = 'force-dynamic';
+
 export const viewport = {
   width: 'device-width',
   initialScale: 1,

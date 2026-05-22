@@ -6,7 +6,6 @@ STACK_NAME="intevopedi"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="${PROJECT_DIR:-$SCRIPT_DIR}"
 REPO_URL="https://github.com/ExpertosTI/INTEVOPEDI.git"
-SERVICE_NAME="${STACK_NAME}_app"
 
 echo "Starting deploy for $STACK_NAME..."
 
@@ -58,9 +57,11 @@ docker network ls | grep RenaceNet > /dev/null || \
 echo "Deploying stack in Swarm..."
 docker stack deploy -c docker-compose.yml $STACK_NAME
 
-# 5. Forzar actualización para recoger la nueva imagen local
+# 5. Forzar actualización para recoger las nuevas imágenes locales
 echo "Forcing service update..."
-docker service update --force $SERVICE_NAME 2>/dev/null || true
+for svc in app web-static; do
+    docker service update --force "${STACK_NAME}_${svc}" 2>/dev/null || true
+done
 
 # 6. Limpieza
 echo "Pruning old images..."

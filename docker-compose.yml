@@ -1,11 +1,94 @@
-version: '3.8'
-
 services:
+  # ── Base de datos PostgreSQL ───────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - intevopedi_db_data:/var/lib/postgresql/data
+    networks:
+      - intevopedi_internal
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ── Plataforma Next.js: la escuela (intevopedi.org) ────────────────
   app:
     image: intevopedi-app:latest
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-https://intevopedi.org}
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL}
+      ADMIN_ACCESS_PASSWORD: ${ADMIN_ACCESS_PASSWORD}
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET}
+      PARTICIPANT_SESSION_SECRET: ${PARTICIPANT_SESSION_SECRET}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      NODE_ENV: production
+      PORT: 3000
+    networks:
+      - intevopedi_internal
+      - RenaceNet
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 1024M
+        reservations:
+          memory: 256M
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=RenaceNet"
+
+        # ── HTTP: redirigir a HTTPS ────────────────────────────────
+        - "traefik.http.routers.intevopedi-http.rule=Host(`intevopedi.org`) || Host(`www.intevopedi.org`)"
+        - "traefik.http.routers.intevopedi-http.entrypoints=web"
+        - "traefik.http.routers.intevopedi-http.middlewares=intevopedi-https-redirect"
+        - "traefik.http.middlewares.intevopedi-https-redirect.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.intevopedi-https-redirect.redirectscheme.permanent=true"
+
+        # ── HTTPS: dominio principal de la escuela ─────────────────
+        - "traefik.http.routers.intevopedi.rule=Host(`intevopedi.org`) || Host(`www.intevopedi.org`)"
+        - "traefik.http.routers.intevopedi.entrypoints=websecure"
+        - "traefik.http.routers.intevopedi.tls=true"
+        - "traefik.http.routers.intevopedi.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.intevopedi.priority=200"
+        - "traefik.http.services.intevopedi.loadbalancer.server.port=3000"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ── Sitio estático de resultados (resultados.intevopedi.org) ───────
+  web-static:
+    image: intevopedi-static:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.static
     networks:
       - RenaceNet
     deploy:
@@ -14,29 +97,26 @@ services:
         condition: on-failure
       resources:
         limits:
-          cpus: '0.20'
-          memory: 128M
+          cpus: '0.10'
+          memory: 64M
       labels:
         - "traefik.enable=true"
         - "traefik.docker.network=RenaceNet"
 
-        # ── HTTP: redirigir a HTTPS ────────────────────────────────────────
-        - "traefik.http.routers.intevopedi-http.rule=Host(`intevopedi.org`) || Host(`www.intevopedi.org`) || Host(`resultados.intevopedi.org`)"
-        - "traefik.http.routers.intevopedi-http.entrypoints=web"
-        - "traefik.http.routers.intevopedi-http.middlewares=intevopedi-https-redirect"
-        - "traefik.http.middlewares.intevopedi-https-redirect.redirectscheme.scheme=https"
-        - "traefik.http.middlewares.intevopedi-https-redirect.redirectscheme.permanent=true"
+        # ── HTTP: redirigir a HTTPS ────────────────────────────────
+        - "traefik.http.routers.intevopedi-static-http.rule=Host(`resultados.intevopedi.org`)"
+        - "traefik.http.routers.intevopedi-static-http.entrypoints=web"
+        - "traefik.http.routers.intevopedi-static-http.middlewares=intevopedi-static-redirect"
+        - "traefik.http.middlewares.intevopedi-static-redirect.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.intevopedi-static-redirect.redirectscheme.permanent=true"
 
-        # ── HTTPS: dominio principal + subdominio resultados ───────────────
-        - "traefik.http.routers.intevopedi.rule=Host(`intevopedi.org`) || Host(`www.intevopedi.org`) || Host(`resultados.intevopedi.org`)"
-        - "traefik.http.routers.intevopedi.entrypoints=websecure"
-        - "traefik.http.routers.intevopedi.tls=true"
-        - "traefik.http.routers.intevopedi.tls.certresolver=letsencryptresolver"
-        - "traefik.http.routers.intevopedi.priority=200"
-
-        # ── Service ────────────────────────────────────────────────────────
-        - "traefik.http.services.intevopedi.loadbalancer.server.port=80"
-
+        # ── HTTPS: subdominio de resultados ────────────────────────
+        - "traefik.http.routers.intevopedi-static.rule=Host(`resultados.intevopedi.org`)"
+        - "traefik.http.routers.intevopedi-static.entrypoints=websecure"
+        - "traefik.http.routers.intevopedi-static.tls=true"
+        - "traefik.http.routers.intevopedi-static.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.intevopedi-static.priority=200"
+        - "traefik.http.services.intevopedi-static.loadbalancer.server.port=80"
     logging:
       driver: "json-file"
       options:
@@ -44,5 +124,10 @@ services:
         max-file: "3"
 
 networks:
+  intevopedi_internal:
+    driver: overlay
   RenaceNet:
     external: true
+
+volumes:
+  intevopedi_db_data:

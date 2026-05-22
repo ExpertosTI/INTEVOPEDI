@@ -111,7 +111,7 @@ docker run --env-file .env -p 3000:3000 intevopedi-app:latest
 
 Archivo incluido:
 
-- `docker-compose.portainer.yml`
+- `docker-compose.yml`
 
 Pasos sugeridos en servidor:
 
@@ -132,8 +132,8 @@ PARTICIPANT_SESSION_SECRET=otra-cadena-larga-y-aleatoria
 ```
 
 ```bash
-docker compose -f docker-compose.portainer.yml build
-docker stack deploy -c docker-compose.portainer.yml intevopedi
+docker compose -f docker-compose.yml build
+docker stack deploy -c docker-compose.yml intevopedi
 ```
 
 El `stack` usa la imagen local `intevopedi-app:latest`, por lo que el paso de `build` debe ejecutarse en el mismo servidor antes de desplegar.
@@ -141,7 +141,7 @@ El `stack` usa la imagen local `intevopedi-app:latest`, por lo que el paso de `b
 Si prefieres Portainer UI:
 
 1. Crear stack nuevo.
-2. Subir el contenido de `docker-compose.portainer.yml`.
+2. Subir el contenido de `docker-compose.yml`.
 3. Definir las variables del archivo `.env` en Portainer.
 4. Desplegar.
 
