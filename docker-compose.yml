@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  app:
+    image: intevopedi-app:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - RenaceNet
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '0.20'
+          memory: 128M
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=RenaceNet"
+
+        # ── HTTP: redirigir a HTTPS ────────────────────────────────────────
+        - "traefik.http.routers.intevopedi-http.rule=Host(`intevopedi.org`) || Host(`www.intevopedi.org`) || Host(`resultados.intevopedi.org`)"
+        - "traefik.http.routers.intevopedi-http.entrypoints=web"
+        - "traefik.http.routers.intevopedi-http.middlewares=intevopedi-https-redirect"
+        - "traefik.http.middlewares.intevopedi-https-redirect.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.intevopedi-https-redirect.redirectscheme.permanent=true"
+
+        # ── HTTPS: dominio principal + subdominio resultados ───────────────
+        - "traefik.http.routers.intevopedi.rule=Host(`intevopedi.org`) || Host(`www.intevopedi.org`) || Host(`resultados.intevopedi.org`)"
+        - "traefik.http.routers.intevopedi.entrypoints=websecure"
+        - "traefik.http.routers.intevopedi.tls=true"
+        - "traefik.http.routers.intevopedi.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.intevopedi.priority=200"
+
+        # ── Service ────────────────────────────────────────────────────────
+        - "traefik.http.services.intevopedi.loadbalancer.server.port=80"
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  RenaceNet:
+    external: true
