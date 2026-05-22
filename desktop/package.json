@@ -1,0 +1,45 @@
+{
+  "name": "lci-desktop",
+  "version": "1.0.0",
+  "description": "Laboratorio de Contenido Inclusivo - Desktop App",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "dist": "electron-builder --publish=never"
+  },
+  "build": {
+    "appId": "org.intevopedi.lci",
+    "productName": "LCI - Laboratorio de Contenido Inclusivo",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "icon.png",
+      "node_modules/**/*"
+    ],
+    "icon": "icon.png",
+    "mac": {
+      "target": "dmg",
+      "icon": "icon.icns"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    }
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "electron": "^27.0.0",
+    "ffmpeg-static": "^5.2.0",
+    "youtube-dl-exec": "^2.4.13"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.13.3"
+  }
+}

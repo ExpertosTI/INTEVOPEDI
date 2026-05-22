@@ -1,0 +1,21 @@
+{
+  "name": "INTEVOPEDI",
+  "short_name": "INTEVOPEDI",
+  "description": "Cursos accesibles y certificados verificables para la inclusión",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/Logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "accessibility"],
+  "lang": "es-DO",
+  "dir": "ltr"
+}
