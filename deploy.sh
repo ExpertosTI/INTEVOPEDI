@@ -4,7 +4,7 @@ set -e
 # Configuración del proyecto
 STACK_NAME="intevopedi"
 PROJECT_DIR="/opt/intevopedi"
-REPO_URL="https://github.com/ExpertosTI/intevopedi.git"
+REPO_URL="https://github.com/ExpertosTI/INTEVOPEDI.git"
 SERVICE_NAME="${STACK_NAME}_app"
 
 echo "🚀 Iniciando despliegue de $STACK_NAME..."
