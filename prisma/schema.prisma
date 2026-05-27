@@ -188,3 +188,14 @@ model LabActivity {
 
   participant     Participant? @relation(fields: [participantId], references: [id], onDelete: SetNull)
 }
+
+model SelfDefenseRegistration {
+  id              String   @id @default(cuid())
+  fullName        String
+  email           String?
+  phone           String
+  disabilityType  String?
+  schedule        String   
+  wantsToReceive  Boolean  @default(true)
+  createdAt       DateTime @default(now())
+}

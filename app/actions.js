@@ -1803,3 +1803,28 @@ export async function adminEnrollStudentAction(formData) {
   revalidatePath('/admin');
   return { success: true, message: `Estudiante ${participant.fullName} inscrito correctamente.` };
 }
+
+export async function registerSelfDefense(formData) {
+  const rawValues = Object.fromEntries(formData.entries());
+  
+  const data = {
+    fullName: sanitizeText(rawValues.fullName || ''),
+    email: rawValues.email ? normalizeEmail(rawValues.email) : null,
+    phone: normalizePhone(rawValues.phone || ''),
+    disabilityType: sanitizeText(rawValues.disabilityType || ''),
+    schedule: String(rawValues.schedule || ''),
+    wantsToReceive: String(rawValues.wantsToReceive) === 'true' || String(rawValues.wantsToReceive) === 'on'
+  };
+
+  if (data.fullName.length < 3 || data.phone.length < 7 || !data.schedule) {
+    return { error: 'Por favor, completa tu nombre, un teléfono válido y tu horario preferido.' };
+  }
+
+  try {
+    await prisma.selfDefenseRegistration.create({ data });
+    return { success: true };
+  } catch (err) {
+    console.error(err);
+    return { error: 'Ocurrió un error guardando tu registro. Inténtalo de nuevo.' };
+  }
+}
