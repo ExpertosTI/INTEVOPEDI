@@ -5,6 +5,7 @@ STACK_NAME="intevopedi"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="${PROJECT_DIR:-$SCRIPT_DIR}"
 REPO_URL="https://github.com/ExpertosTI/INTEVOPEDI.git"
+DB_NETWORK="${STACK_NAME}_intevopedi_internal"
 
 echo "Starting deploy for $STACK_NAME..."
 
@@ -18,6 +19,11 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "ERROR: python3 is required to encode DATABASE_URL."
+  exit 1
+fi
+
 if docker compose version >/dev/null 2>&1; then
   COMPOSE_CMD="docker compose"
 elif command -v docker-compose >/dev/null 2>&1; then
@@ -27,25 +33,41 @@ else
   exit 1
 fi
 
+urlencode() {
+  python3 - <<'PY' "$1"
+import sys, urllib.parse
+print(urllib.parse.quote(sys.argv[1], safe=""))
+PY
+}
+
 load_env() {
   set -a
-  for env_file in "/root/.env" "$PROJECT_DIR/.env"; do
-    if [ -f "$env_file" ]; then
-      # shellcheck disable=SC1090
-      source "$env_file"
-      echo "Loaded env: $env_file"
-    fi
-  done
+  if [ -f /etc/intevopedi/intevopedi.env ]; then
+    # shellcheck disable=SC1091
+    source /etc/intevopedi/intevopedi.env
+    echo "Loaded env: /etc/intevopedi/intevopedi.env"
+  fi
+  if [ -f "$PROJECT_DIR/.env" ]; then
+    # shellcheck disable=SC1091
+    source "$PROJECT_DIR/.env"
+    echo "Loaded env: $PROJECT_DIR/.env"
+  fi
   set +a
 
   export NEXT_PUBLIC_BASE_URL="${NEXT_PUBLIC_BASE_URL:-https://intevopedi.org}"
   export APP_HOST="${APP_HOST:-intevopedi.org}"
 }
 
+sync_database_url() {
+  local encoded
+  encoded=$(urlencode "$POSTGRES_PASSWORD")
+  export DATABASE_URL="postgresql://${POSTGRES_USER}:${encoded}@db:5432/${POSTGRES_DB}?schema=public"
+}
+
 validate_env() {
   load_env
   local missing=()
-  for var in DATABASE_URL POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB ADMIN_ACCESS_PASSWORD ADMIN_SESSION_SECRET PARTICIPANT_SESSION_SECRET; do
+  for var in POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB ADMIN_ACCESS_PASSWORD ADMIN_SESSION_SECRET PARTICIPANT_SESSION_SECRET; do
     if [ -z "${!var:-}" ]; then
       missing+=("$var")
     fi
@@ -56,6 +78,52 @@ validate_env() {
     echo "Create $PROJECT_DIR/.env from .env.example before deploying."
     exit 1
   fi
+
+  sync_database_url
+  echo "DATABASE_URL synced from POSTGRES_* variables."
+}
+
+db_container_id() {
+  docker ps -q -f "name=${STACK_NAME}_db" | head -1
+}
+
+test_db_auth() {
+  docker run --rm --network "$DB_NETWORK" \
+    -e PGPASSWORD="$POSTGRES_PASSWORD" \
+    postgres:16-alpine \
+    psql -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c 'SELECT 1;' >/dev/null 2>&1
+}
+
+repair_db_auth() {
+  local container
+  container="$(db_container_id)"
+  if [ -z "$container" ]; then
+    echo "ERROR: Cannot repair DB auth because ${STACK_NAME}_db is not running."
+    return 1
+  fi
+
+  echo "Aligning PostgreSQL password with POSTGRES_PASSWORD from .env..."
+  docker exec "$container" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 \
+    -c "ALTER USER \"${POSTGRES_USER}\" WITH PASSWORD '${POSTGRES_PASSWORD}';"
+}
+
+ensure_db_auth() {
+  if test_db_auth; then
+    echo "Database authentication OK."
+    return 0
+  fi
+
+  echo "WARNING: Database credentials in .env do not match the persisted volume."
+  repair_db_auth
+
+  if test_db_auth; then
+    echo "Database authentication repaired."
+    return 0
+  fi
+
+  echo "ERROR: Could not authenticate to PostgreSQL."
+  echo "Run manually: bash scripts/repair-db-password.sh"
+  exit 1
 }
 
 service_replicas() {
@@ -118,15 +186,22 @@ update_service_image() {
 health_check() {
   local url="${NEXT_PUBLIC_BASE_URL:-https://intevopedi.org}"
   local code=""
+  local attempt=0
 
   echo "Health check: $url"
-  code=$(curl -sk -o /dev/null -w '%{http_code}' --max-time 20 "$url" || true)
-  if echo "$code" | grep -Eq '^(200|301|302|307|308)$'; then
-    echo "Health check OK (HTTP $code)"
-    return 0
-  fi
+  while [ "$attempt" -lt 12 ]; do
+    code=$(curl -sk -o /dev/null -w '%{http_code}' --max-time 20 "$url" || true)
+    if echo "$code" | grep -Eq '^(200|301|302|307|308)$'; then
+      echo "Health check OK (HTTP $code)"
+      return 0
+    fi
+    attempt=$((attempt + 1))
+    echo "Waiting for HTTP readiness (${code:-000}) attempt $attempt/12..."
+    sleep 10
+  done
 
-  echo "WARNING: $url returned HTTP ${code:-000}"
+  echo "ERROR: $url returned HTTP ${code:-000}"
+  print_service_diagnostics "${STACK_NAME}_app"
   return 1
 }
 
@@ -148,7 +223,7 @@ assert_stack_healthy() {
   fi
 }
 
-# 1. Sincronizar código via Git
+# 1. Sincronizar codigo via Git
 if [ -d "$PROJECT_DIR" ]; then
   echo "Updating repository..."
   cd "$PROJECT_DIR"
@@ -169,7 +244,7 @@ validate_env
 
 echo "Deploying commit: $(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 
-# 2. Construir imagen local (Swarm no recoge :latest sin update explícito)
+# 2. Construir imagen local
 echo "Building Docker images..."
 $COMPOSE_CMD build
 
@@ -185,20 +260,20 @@ docker stack deploy -c docker-compose.yml "$STACK_NAME"
 
 echo "Waiting for database..."
 wait_for_service "${STACK_NAME}_db" 180
+ensure_db_auth
 
-# 5. Actualizar imágenes de forma secuencial (evita carrera 0/1)
+# 5. Actualizar imagenes de forma secuencial
 update_service_image "${STACK_NAME}_app" "intevopedi-app:latest"
 wait_for_service "${STACK_NAME}_app" 300
 
 update_service_image "${STACK_NAME}_web-static" "intevopedi-static:latest"
 wait_for_service "${STACK_NAME}_web-static" 180
 
-# 6. Verificación final (después del rolling update real)
+# 6. Verificacion final
 sleep 5
 assert_stack_healthy
-health_check || true
+health_check
 
-# 7. Limpieza solo si el stack quedó sano
 echo "Pruning dangling images..."
 docker image prune -f
 
