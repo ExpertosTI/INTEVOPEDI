@@ -297,8 +297,16 @@ p { margin: 0; color: var(--text-secondary); line-height: 1.7; font-size: 0.95re
 .hero { padding: 96px 0 56px; }
 .hero-card {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 24px; align-items: start;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  align-items: start;
+  max-width: 720px;
+}
+#inicio,
+#curso,
+#sobre-nosotros,
+#mision {
+  scroll-margin-top: 88px;
 }
 .hero-actions, .inline-actions { display: flex; flex-wrap: wrap; gap: 12px; }
 

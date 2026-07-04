@@ -3,38 +3,41 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { siteConfig } from '@/lib/site';
 
-const navLinks = [
-  { label: 'Cursos', href: '/cursos' },
-  { label: 'Participantes', href: '/participantes' },
-  { label: 'Verificar', href: '/verificar' },
-  { label: 'Grupo Atrévete', href: '/grupo-atrevete' }
-];
-
-export function HeaderNav() {
+export function HeaderNav({ navigation = [] }) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+
+  const isActive = (href) => {
+    if (href === '/#inicio') return pathname === '/';
+    if (href.startsWith('/#')) return false;
+    return pathname === href;
+  };
 
   return (
     <>
       <div className={`nav-panel ${isOpen ? 'nav-panel-open' : ''}`}>
         <nav className="site-nav" aria-label="Navegación principal">
-          {navLinks.map((link) => (
+          {navigation.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`nav-link ${pathname === link.href ? 'active' : ''}`}
+              className={`nav-link ${isActive(link.href) ? 'active' : ''}`}
               onClick={() => setIsOpen(false)}
             >
               {link.label}
             </Link>
           ))}
         </nav>
-        <ThemeToggle />
-        <Link href="/participantes" className="button button-primary nav-cta" onClick={() => setIsOpen(false)}>
-          Acceder al campus
-        </Link>
+        <a
+          href={siteConfig.contactPhoneHref}
+          className="button button-primary nav-cta"
+          onClick={() => setIsOpen(false)}
+          aria-label={`Llamar o escribir al ${siteConfig.contactPhone}`}
+        >
+          {siteConfig.contactPhone}
+        </a>
       </div>
       <button
         type="button"

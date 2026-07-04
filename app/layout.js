@@ -18,10 +18,10 @@ export const viewport = {
 export const metadata = {
   metadataBase: new URL(siteConfig.baseUrl),
   title: {
-    default: 'INTEVOPEDI | Cursos accesibles y certificados verificables',
+    default: 'INTEVOPEDI | Formación inclusiva',
     template: '%s | INTEVOPEDI'
   },
-  description: 'App moderna de cursos accesibles para INTEVOPEDI con inscripciones, progreso, portafolios y certificados PDF verificables por QR.',
+  description: siteConfig.description,
   applicationName: 'INTEVOPEDI',
   category: 'education',
   referrer: 'strict-origin-when-cross-origin',
@@ -33,8 +33,8 @@ export const metadata = {
     canonical: '/'
   },
   openGraph: {
-    title: 'INTEVOPEDI | Cursos accesibles y certificados verificables',
-    description: 'Formación inclusiva con inscripciones persistentes, verificación pública y experiencia moderna para participantes.',
+    title: 'INTEVOPEDI | Formación inclusiva',
+    description: siteConfig.description,
     url: siteConfig.baseUrl,
     siteName: 'INTEVOPEDI',
     locale: 'es_DO',
@@ -50,8 +50,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'INTEVOPEDI | Cursos accesibles y certificados verificables',
-    description: 'Plataforma moderna de formación inclusiva con certificados validables por QR.',
+    title: 'INTEVOPEDI | Formación inclusiva',
+    description: siteConfig.description,
     images: ['/Logo.png']
   },
   icons: {

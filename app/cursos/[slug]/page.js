@@ -151,7 +151,7 @@ export default async function CourseDetailPage({ params, searchParams }) {
                       </label>
                       <label>
                         Teléfono
-                        <input type="tel" name="phone" required placeholder="829 954 8273" />
+                        <input type="tel" name="phone" required placeholder="829-954-8373" />
                       </label>
                     </div>
                     <button type="submit" className="button button-primary" style={{ marginTop: '1rem' }}>

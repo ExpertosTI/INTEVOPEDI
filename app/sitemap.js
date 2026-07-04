@@ -5,11 +5,11 @@ export default async function sitemap() {
   const courses = await getPublishedCourses();
   const baseUrl = siteConfig.baseUrl;
 
-  const staticRoutes = ['', '/cursos', '/participantes', '/grupo-atrevete', '/recursos', '/verificar'].map((path) => ({
+  const staticRoutes = [''].map((path) => ({
     url: `${baseUrl}${path}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
-    priority: path === '' ? 1 : 0.7
+    priority: 1
   }));
 
   const courseRoutes = courses.map((course) => ({
