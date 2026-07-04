@@ -90,7 +90,7 @@ export default function RootLayout({ children }) {
               (function() {
                 try {
                   var t = localStorage.getItem('intevopedi_theme');
-                  if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  if (t === 'dark') {
                     document.documentElement.setAttribute('data-theme', 'dark');
                   }
                 } catch(e) {}

@@ -1,51 +1,93 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { siteConfig } from '@/lib/site';
 
 export function HeaderNav({ navigation = [] }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('inicio');
   const pathname = usePathname();
 
+  useEffect(() => {
+    if (pathname !== '/') return undefined;
+
+    const sectionIds = navigation
+      .map((link) => link.href.replace('/#', ''))
+      .filter(Boolean);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+        if (visible[0]?.target.id) {
+          setActiveSection(visible[0].target.id);
+        }
+      },
+      { rootMargin: '-35% 0px -55% 0px', threshold: [0, 0.2, 0.45] }
+    );
+
+    sectionIds.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) observer.observe(element);
+    });
+
+    return () => observer.disconnect();
+  }, [pathname, navigation]);
+
   const isActive = (href) => {
-    if (href === '/#inicio') return pathname === '/';
-    if (href.startsWith('/#')) return false;
-    return pathname === href;
+    if (pathname !== '/') {
+      if (href === '/#inicio') return pathname === '/';
+      if (href.startsWith('/#')) return false;
+      return pathname === href;
+    }
+
+    return activeSection === href.replace('/#', '');
   };
 
   return (
     <>
       <div className={`nav-panel ${isOpen ? 'nav-panel-open' : ''}`}>
-        <nav className="site-nav" aria-label="Navegación principal">
-          {navigation.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`nav-link ${isActive(link.href) ? 'active' : ''}`}
-              onClick={() => setIsOpen(false)}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-        <Link href="/#curso" className="button button-secondary nav-cta-secondary" onClick={() => setIsOpen(false)}>
-          Inscribirme
-        </Link>
-        <a
-          href={siteConfig.contactPhoneHref}
-          className="button button-primary nav-cta"
-          onClick={() => setIsOpen(false)}
-          aria-label={`Escribir por WhatsApp al ${siteConfig.contactPhone}`}
-        >
-          {siteConfig.contactPhone}
-        </a>
+        <div className="nav-shell">
+          <nav className="site-nav" aria-label="Navegación principal">
+            {navigation.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`nav-link ${isActive(link.href) ? 'active' : ''}`}
+                onClick={() => setIsOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+
+        <div className="nav-actions">
+          <Link
+            href="/#curso"
+            className="button button-secondary button-sm nav-cta-secondary"
+            onClick={() => setIsOpen(false)}
+          >
+            Inscribirme
+          </Link>
+          <a
+            href={siteConfig.contactPhoneHref}
+            className="button button-whatsapp button-sm nav-cta"
+            onClick={() => setIsOpen(false)}
+            aria-label={`Escribir por WhatsApp al ${siteConfig.contactPhone}`}
+          >
+            {siteConfig.contactPhone}
+          </a>
+        </div>
       </div>
       <button
         type="button"
         className="nav-toggle"
-        onClick={() => setIsOpen((v) => !v)}
+        onClick={() => setIsOpen((value) => !value)}
         aria-expanded={isOpen}
         aria-label="Alternar menú de navegación"
       >

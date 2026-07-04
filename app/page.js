@@ -21,7 +21,7 @@ export default async function HomePage() {
     <>
       <section id="inicio" className="hero">
         <div className="shell hero-card hero-card-split">
-          <div className="panel panel-dark stack">
+          <div className="panel hero-main stack">
             <span className="eyebrow">Educación inclusiva en acción</span>
             <h1>Formación accesible con seguimiento académico y certificación verificable.</h1>
             <p>
@@ -31,7 +31,7 @@ export default async function HomePage() {
               <Link href={`/cursos/${featuredCourse.slug}`} className="button button-primary">
                 Inscribirme ahora
               </Link>
-              <Link href="/#curso" className="button button-secondary button-dark">
+              <Link href="/#curso" className="button button-secondary">
                 Ver curso
               </Link>
             </div>
@@ -45,11 +45,11 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="panel stack">
+          <div className="panel panel-contact stack">
             <span className="eyebrow">Contáctanos</span>
             <h2>¿Listo para empezar?</h2>
             <p>Escríbenos por WhatsApp para inscripciones, información del curso o apoyo del instituto.</p>
-            <a href={siteConfig.contactPhoneHref} className="button button-primary">
+            <a href={siteConfig.contactPhoneHref} className="button button-whatsapp">
               WhatsApp {siteConfig.contactPhone}
             </a>
             <p className="helper">{siteConfig.address}</p>
@@ -169,15 +169,15 @@ export default async function HomePage() {
               ))}
             </article>
 
-            <article className="panel panel-dark stack contact-cta">
+            <article className="panel panel-accent stack contact-cta">
               <span className="eyebrow">Hablemos</span>
               <h2>Da el siguiente paso hoy</h2>
               <p>Inscripciones abiertas. Contáctanos y te orientamos en minutos.</p>
               <div className="inline-actions">
-                <a href={siteConfig.contactPhoneHref} className="button button-primary">
+                <a href={siteConfig.contactPhoneHref} className="button button-whatsapp">
                   WhatsApp {siteConfig.contactPhone}
                 </a>
-                <Link href={`/cursos/${featuredCourse.slug}`} className="button button-secondary button-dark">
+                <Link href={`/cursos/${featuredCourse.slug}`} className="button button-secondary">
                   Inscribirme
                 </Link>
               </div>
