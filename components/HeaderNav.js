@@ -30,11 +30,14 @@ export function HeaderNav({ navigation = [] }) {
             </Link>
           ))}
         </nav>
+        <Link href="/#curso" className="button button-secondary nav-cta-secondary" onClick={() => setIsOpen(false)}>
+          Inscribirme
+        </Link>
         <a
           href={siteConfig.contactPhoneHref}
           className="button button-primary nav-cta"
           onClick={() => setIsOpen(false)}
-          aria-label={`Llamar o escribir al ${siteConfig.contactPhone}`}
+          aria-label={`Escribir por WhatsApp al ${siteConfig.contactPhone}`}
         >
           {siteConfig.contactPhone}
         </a>

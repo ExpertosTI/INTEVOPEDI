@@ -28,6 +28,28 @@ else
     exit 1
 fi
 
+wait_for_service() {
+    local svc=$1
+    local timeout=${2:-180}
+    local elapsed=0
+
+    while [ "$elapsed" -lt "$timeout" ]; do
+        local replicas
+        replicas=$(docker service ls --filter "name=${svc}" --format '{{.Replicas}}' | head -1 || true)
+        if echo "$replicas" | grep -Eq '^[0-9]+/[0-9]+$' && [ "${replicas%%/*}" = "${replicas##*/}" ]; then
+            echo "$svc converged ($replicas)"
+            return 0
+        fi
+        echo "Waiting for $svc (${replicas:-unknown})..."
+        sleep 5
+        elapsed=$((elapsed + 5))
+    done
+
+    echo "WARNING: $svc did not converge within ${timeout}s"
+    docker service ps "$svc" --no-trunc | tail -5 || true
+    return 1
+}
+
 # 1. Sincronizar código via Git
 if [ -d "$PROJECT_DIR" ]; then
     echo "Updating repository..."
@@ -60,8 +82,12 @@ docker stack deploy -c docker-compose.yml $STACK_NAME
 # 5. Forzar actualización para recoger las nuevas imágenes locales
 echo "Forcing service update..."
 for svc in app web-static; do
-    docker service update --force "${STACK_NAME}_${svc}" 2>/dev/null || true
+    docker service update --force --detach "${STACK_NAME}_${svc}" 2>/dev/null || true
 done
+
+echo "Waiting for services to converge..."
+wait_for_service "${STACK_NAME}_app" 240 || true
+wait_for_service "${STACK_NAME}_web-static" 240 || true
 
 # 6. Limpieza
 echo "Pruning old images..."

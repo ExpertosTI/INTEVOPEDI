@@ -33,6 +33,12 @@ export function Footer() {
               <Link href={link.href}>{link.label}</Link>
             </p>
           ))}
+          <p>
+            <Link href="/verificar">Verificar certificado</Link>
+          </p>
+          <p>
+            <Link href="/participantes">Acceso participantes</Link>
+          </p>
         </nav>
       </div>
       <div className="shell footer-bottom">
