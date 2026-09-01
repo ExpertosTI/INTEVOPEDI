@@ -489,6 +489,10 @@ function readGeminiTextResponse(payload) {
 
 const ASSISTANT_ENABLED = process.env.ADMIN_ASSISTANT_DISABLED !== '1';
 const ADMIN_RESET_EMAIL = process.env.ADMIN_RESET_EMAIL || process.env.ADMIN_EMAIL || 'expertostird@gmail.com';
+const ADMIN_ALLOWED_EMAILS = (process.env.ADMIN_ALLOWED_EMAILS || 'expertostird@gmail.com,jahazielgalciam@gmail.com')
+  .split(',')
+  .map((entry) => entry.trim().toLowerCase())
+  .filter(Boolean);
 const ADMIN_RESET_TTL_MS = 1000 * 60 * 20; // 20 minutos
 const ADMIN_RESET_MAX_ATTEMPTS = 3;
 const ADMIN_PASSWORD_HASH_KEY = 'admin_password_hash';
@@ -675,7 +679,7 @@ export async function requestAdminLoginCode(formData) {
 
   const email = normalizeEmail(formData.get('email'));
 
-  if (!email || email.toLowerCase() !== ADMIN_RESET_EMAIL.toLowerCase()) {
+  if (!email || !ADMIN_ALLOWED_EMAILS.includes(email.toLowerCase())) {
     redirect(`/admin/login?error=${encodeURIComponent('Ese correo no está autorizado como administrador.')}`);
   }
 
@@ -684,7 +688,7 @@ export async function requestAdminLoginCode(formData) {
   await saveLoginOtp(code, expiresAt);
 
   await sendEmail({
-    to: ADMIN_RESET_EMAIL,
+    to: email,
     subject: 'Tu código de acceso a INTEVOPEDI',
     html: `
       <p>Tu código de acceso al panel de administración es:</p>
@@ -730,7 +734,7 @@ export async function verifyAdminLoginCode(formData) {
   const storedBuffer = Buffer.from(stored.code);
   const matches = codeBuffer.length === storedBuffer.length && timingSafeEqual(codeBuffer, storedBuffer);
 
-  if (!email || email.toLowerCase() !== ADMIN_RESET_EMAIL.toLowerCase() || !matches) {
+  if (!email || !ADMIN_ALLOWED_EMAILS.includes(email.toLowerCase()) || !matches) {
     recordAttempt(key);
     await recordLoginOtpAttempt(stored);
     redirect(`/admin/login?${stepParams}&error=${encodeURIComponent('Código incorrecto.')}`);
