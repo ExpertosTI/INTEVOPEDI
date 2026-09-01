@@ -14,6 +14,7 @@ import { formatDateTime } from '@/lib/formatters';
 import { AdminFloatingAssistant } from '@/components/AdminFloatingAssistant';
 import { AdminExportButton } from '@/components/AdminExportButton';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { CourseBuilderWizard } from '@/components/CourseBuilderWizard';
 
 export const metadata = {
   title: 'Panel admin | INTEVOPEDI',
@@ -52,6 +53,9 @@ export default async function AdminPage({ searchParams }) {
 
         {searchParams?.error ? <div className="banner banner-error" role="alert">{searchParams.error}</div> : null}
         {searchParams?.saved ? <div className="banner banner-success" role="status">{searchParams.saved}</div> : null}
+
+        {/* Sección de Cursos con Wizard */}
+        <AdminCourseSection courses={courses} />
 
         <div className="admin-stats">
           <div className="panel stat-card stack">
