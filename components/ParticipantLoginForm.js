@@ -8,6 +8,7 @@ import {
   resendParticipantVerification,
   participantPasswordLogin
 } from '@/app/actions';
+import { Eye, EyeOff, Lock, Mail, Key } from '@/components/Icons';
 
 const MODES = {
   REGISTER: 'register',
@@ -199,8 +200,9 @@ export function ParticipantLoginForm({ defaultEmail = '', defaultCode = '' }) {
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 tabIndex={-1}
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                {showPassword ? '🙈' : '👁️'}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </label>
@@ -255,8 +257,9 @@ export function ParticipantLoginForm({ defaultEmail = '', defaultCode = '' }) {
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 tabIndex={-1}
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                {showPassword ? '🙈' : '👁️'}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </label>

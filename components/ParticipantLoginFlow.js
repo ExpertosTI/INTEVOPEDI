@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { studentIdentifierCheck, studentFirstTimeSetPassword, studentPasswordLogin } from '@/app/actions';
+import { User, Lock, ArrowRight, ArrowLeft, CheckCircle, AlertCircle } from '@/components/Icons';
 
 export function ParticipantLoginFlow({ defaultEmail, defaultCode }) {
   const [step, setStep] = useState('identifier'); // identifier | login | first_time
@@ -69,12 +70,20 @@ export function ParticipantLoginFlow({ defaultEmail, defaultCode }) {
 
   return (
     <div className="login-flow-container">
-      {error && <div className="banner banner-error">{error}</div>}
+      {error && (
+        <div className="banner banner-error" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <AlertCircle size={18} />
+          <span>{error}</span>
+        </div>
+      )}
       
       {step === 'identifier' && (
         <form onSubmit={handleIdentifierSubmit} className="stack">
           <label>
-            Ingresa tu cédula o número de teléfono
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <User size={16} />
+              <strong>Ingresa tu cédula o número de teléfono</strong>
+            </span>
             <input 
               type="text" 
               name="identifier" 
@@ -85,8 +94,9 @@ export function ParticipantLoginFlow({ defaultEmail, defaultCode }) {
               autoFocus
             />
           </label>
-          <button type="submit" className="button button-primary" disabled={loading}>
-            {loading ? 'Verificando...' : 'Continuar'}
+          <button type="submit" className="button button-primary" disabled={loading} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <span>{loading ? 'Verificando...' : 'Continuar'}</span>
+            <ArrowRight size={16} />
           </button>
         </form>
       )}
@@ -95,7 +105,10 @@ export function ParticipantLoginFlow({ defaultEmail, defaultCode }) {
         <form onSubmit={handlePasswordLogin} className="stack">
           <p className="helper">Ingresando como: <strong>{identifier}</strong></p>
           <label>
-            Contraseña
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Lock size={16} />
+              <strong>Contraseña</strong>
+            </span>
             <input 
               type="password" 
               name="password" 
@@ -105,8 +118,9 @@ export function ParticipantLoginFlow({ defaultEmail, defaultCode }) {
             />
           </label>
           <div className="row-between">
-            <button type="button" onClick={() => setStep('identifier')} className="button button-ghost">
-              Volver
+            <button type="button" onClick={() => setStep('identifier')} className="button button-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <ArrowLeft size={16} />
+              <span>Volver</span>
             </button>
             <button type="submit" className="button button-primary" disabled={loading}>
               {loading ? 'Entrando...' : 'Entrar a mi campus'}
@@ -117,12 +131,16 @@ export function ParticipantLoginFlow({ defaultEmail, defaultCode }) {
 
       {step === 'first_time' && (
         <form onSubmit={handleFirstTimeSetup} className="stack">
-          <div className="banner banner-success">
-            ¡Hola {participantName}! Es tu primera vez aquí. Por favor crea una contraseña para asegurar tu cuenta.
+          <div className="banner banner-success" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CheckCircle size={18} />
+            <span>¡Hola {participantName}! Es tu primera vez aquí. Por favor crea una contraseña para asegurar tu cuenta.</span>
           </div>
           <p className="helper">Ingresando como: <strong>{identifier}</strong></p>
           <label>
-            Crea una contraseña (mín. 8 caracteres)
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Lock size={16} />
+              <strong>Crea una contraseña (mín. 8 caracteres)</strong>
+            </span>
             <input 
               type="password" 
               name="password" 
@@ -133,7 +151,10 @@ export function ParticipantLoginFlow({ defaultEmail, defaultCode }) {
             />
           </label>
           <label>
-            Confirma tu contraseña
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Lock size={16} />
+              <strong>Confirma tu contraseña</strong>
+            </span>
             <input 
               type="password" 
               name="confirmPassword" 
@@ -143,8 +164,9 @@ export function ParticipantLoginFlow({ defaultEmail, defaultCode }) {
             />
           </label>
           <div className="row-between">
-            <button type="button" onClick={() => setStep('identifier')} className="button button-ghost">
-              Volver
+            <button type="button" onClick={() => setStep('identifier')} className="button button-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <ArrowLeft size={16} />
+              <span>Volver</span>
             </button>
             <button type="submit" className="button button-primary" disabled={loading}>
               {loading ? 'Guardando...' : 'Guardar y Entrar'}

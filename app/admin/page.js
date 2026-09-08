@@ -14,7 +14,8 @@ import { formatDateTime } from '@/lib/formatters';
 import { AdminFloatingAssistant } from '@/components/AdminFloatingAssistant';
 import { AdminExportButton } from '@/components/AdminExportButton';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { CourseBuilderWizard } from '@/components/CourseBuilderWizard';
+import { AdminCourseSection } from '@/components/AdminCourseSection';
+import { BookOpen, Users, Award, TrendingUp, Settings, Check, Eye } from '@/components/Icons';
 
 export const metadata = {
   title: 'Panel admin | INTEVOPEDI',
@@ -27,8 +28,8 @@ export default async function AdminPage({ searchParams }) {
 
   const totalEnrollments = enrollments.length;
   const totalCertificates = certificates.length;
-  const pendingPayments = enrollments.filter((e) => e.paymentStatus === 'PENDING_PAYMENT').length;
-  const confirmedPayments = enrollments.filter((e) => ['CONFIRMED', 'COMPLETED'].includes(e.paymentStatus)).length;
+  const pendingPayments = enrollments.filter((e) => e.paymentStatus === 'PENDING').length;
+  const confirmedPayments = enrollments.filter((e) => ['VERIFIED', 'WAIVED'].includes(e.paymentStatus)).length;
   const avgProgress = totalEnrollments > 0
     ? Math.round(enrollments.reduce((sum, e) => sum + e.progressPercent, 0) / totalEnrollments)
     : 0;
@@ -45,8 +46,9 @@ export default async function AdminPage({ searchParams }) {
             <p>Gestiona cursos, inscripciones, certificados y recursos.</p>
           </div>
           <div className="inline-actions">
-            <Link href="/admin/ajustes" className="button button-secondary">
-              IA y ajustes
+            <Link href="/admin/ajustes" className="button button-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <Settings size={16} />
+              <span>IA y ajustes</span>
             </Link>
           </div>
         </div>
@@ -59,22 +61,30 @@ export default async function AdminPage({ searchParams }) {
 
         <div className="admin-stats">
           <div className="panel stat-card stack">
-            <span className="eyebrow">Cursos</span>
+            <span className="eyebrow" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <BookOpen size={16} /> Cursos
+            </span>
             <strong className="stat-value">{courses.length}</strong>
             <p className="helper">Cursos creados</p>
           </div>
           <div className="panel stat-card stack">
-            <span className="eyebrow">Inscripciones</span>
+            <span className="eyebrow" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Users size={16} /> Inscripciones
+            </span>
             <strong className="stat-value">{totalEnrollments}</strong>
             <p className="helper">{pendingPayments} pendientes de pago</p>
           </div>
           <div className="panel stat-card stack">
-            <span className="eyebrow">Certificados</span>
+            <span className="eyebrow" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Award size={16} /> Certificados
+            </span>
             <strong className="stat-value">{totalCertificates}</strong>
             <p className="helper">Emitidos</p>
           </div>
           <div className="panel stat-card stack">
-            <span className="eyebrow">Progreso</span>
+            <span className="eyebrow" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <TrendingUp size={16} /> Progreso
+            </span>
             <strong className="stat-value">{avgProgress}%</strong>
             <p className="helper">Promedio general</p>
           </div>
@@ -332,14 +342,14 @@ export default async function AdminPage({ searchParams }) {
                         <input type="hidden" name="enrollmentId" value={enrollment.id} />
                         <div className="admin-row-fields">
                           <select name="status" defaultValue={enrollment.status}>
-                            <option value="PENDING">Pendiente</option>
+                            <option value="PENDING_PAYMENT">Pendiente de pago</option>
                             <option value="CONFIRMED">Confirmado</option>
                             <option value="IN_PROGRESS">En progreso</option>
                             <option value="COMPLETED">Completado</option>
                           </select>
                           <select name="paymentStatus" defaultValue={enrollment.paymentStatus}>
-                            <option value="PENDING_PAYMENT">Pendiente</option>
-                            <option value="CONFIRMED">Confirmado</option>
+                            <option value="PENDING">Pendiente</option>
+                            <option value="VERIFIED">Verificado</option>
                             <option value="WAIVED">Exonerado</option>
                           </select>
                           <select name="attendancePercent" defaultValue={String(enrollment.attendancePercent)}>

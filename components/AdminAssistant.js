@@ -3,6 +3,7 @@
 import { useEffect, useId, useMemo, useRef, useState, useTransition } from 'react';
 import { appendModulesFromAssistantAction, createCourseFromAssistantAction, runAdminAssistantAction } from '@/app/actions';
 import { formatAndSanitizeMarkdown } from '@/lib/sanitize';
+import { Sparkles, Volume2, Download, CheckCircle } from '@/components/Icons';
 
 const PROMPT_HISTORY_KEY = 'admin_assistant_history';
 const MAX_HISTORY = 5;
@@ -279,8 +280,10 @@ export function AdminAssistant({ courses = [] }) {
               disabled={isPending || prompt.trim().length < 12}
               onClick={runAssistant}
               aria-busy={isPending}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              {isPending ? 'Procesando…' : 'Ejecutar asistente'}
+              <Sparkles size={16} />
+              <span>{isPending ? 'Procesando…' : 'Ejecutar asistente'}</span>
             </button>
             <button
               type="button"
@@ -324,6 +327,7 @@ export function AdminAssistant({ courses = [] }) {
               type="button"
               className="button button-secondary"
               disabled={!audioBrief || isPending}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               onClick={() => {
                 if (!audioBrief || typeof window === 'undefined' || !('speechSynthesis' in window)) {
                   return;
@@ -335,7 +339,8 @@ export function AdminAssistant({ courses = [] }) {
                 window.speechSynthesis.speak(utterance);
               }}
             >
-              Escuchar resumen
+              <Volume2 size={16} />
+              <span>Escuchar resumen</span>
             </button>
           </div>
 
@@ -355,8 +360,10 @@ export function AdminAssistant({ courses = [] }) {
                   onClick={exportDraft}
                   disabled={isPending}
                   title="Exportar como JSON"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
-                  Exportar JSON
+                  <Download size={14} />
+                  <span>Exportar JSON</span>
                 </button>
               </div>
               <p

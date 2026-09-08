@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { mainNavigation, siteConfig } from '@/lib/site';
+import { Phone, Mail, Award, User, Globe } from '@/components/Icons';
 
 export function Footer() {
   return (
@@ -12,8 +13,12 @@ export function Footer() {
 
         <div>
           <h4>Contacto</h4>
-          <p>{siteConfig.address}</p>
-          <p>
+          <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Globe size={16} />
+            <span>{siteConfig.address}</span>
+          </p>
+          <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Phone size={16} />
             <a
               href={siteConfig.contactPhoneHref}
               aria-label={`Escribir por WhatsApp al ${siteConfig.contactPhone}`}
@@ -21,7 +26,8 @@ export function Footer() {
               {siteConfig.contactPhone}
             </a>
           </p>
-          <p>
+          <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Mail size={16} />
             <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
           </p>
         </div>
@@ -33,10 +39,12 @@ export function Footer() {
               <Link href={link.href}>{link.label}</Link>
             </p>
           ))}
-          <p>
+          <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Award size={16} />
             <Link href="/verificar">Verificar certificado</Link>
           </p>
-          <p>
+          <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <User size={16} />
             <Link href="/participantes">Acceso participantes</Link>
           </p>
         </nav>

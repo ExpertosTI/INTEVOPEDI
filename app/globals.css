@@ -1860,3 +1860,51 @@ input[type="checkbox"] {
 @media (max-width: 560px) {
   .site-nav { grid-template-columns: 1fr; }
 }
+
+/* ===== 2026 Modern Accessible Icons & Components ===== */
+.icon-svg {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.2s ease;
+}
+
+button:hover > .icon-svg,
+a:hover > .icon-svg {
+  transform: scale(1.08);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.status-published {
+  background: var(--accent-green-light);
+  color: var(--accent-green-hover);
+}
+
+.status-draft {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status-closed {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+

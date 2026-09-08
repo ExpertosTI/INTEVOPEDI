@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAssistant } from '@/lib/useAssistant';
 import { formatAndSanitizeExtendedMarkdown } from '@/lib/sanitize';
+import { Sparkles, X, Copy, Mic, Send, CheckCircle } from '@/components/Icons';
 
 function formatMarkdown(text) {
   return formatAndSanitizeExtendedMarkdown(text);
@@ -84,8 +85,19 @@ export function AdminFloatingAssistant({ courses = [] }) {
         className="assistant-toggle button button-primary"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
       >
-        {open ? '✕ Cerrar' : '🤖 Asistente IA'}
+        {open ? (
+          <>
+            <X size={18} />
+            <span>Cerrar</span>
+          </>
+        ) : (
+          <>
+            <Sparkles size={18} />
+            <span>Asistente IA</span>
+          </>
+        )}
       </button>
 
       {open ? (
@@ -143,8 +155,10 @@ export function AdminFloatingAssistant({ courses = [] }) {
                       className="msg-action-btn"
                       onClick={() => copyToClipboard(m.content)}
                       title="Copiar respuesta"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                     >
-                      📋 Copiar
+                      <Copy size={13} />
+                      <span>Copiar</span>
                     </button>
                     {lastResult?.enrollmentDraft && i === messages.length - 1 && (
                       <form action={async (formData) => {
@@ -158,8 +172,9 @@ export function AdminFloatingAssistant({ courses = [] }) {
                           alert(res.error);
                         }
                       }}>
-                        <button type="submit" className="button button-primary" style={{ fontSize: '0.75rem', padding: '4px 12px' }}>
-                          ✅ Confirmar Inscripción de {lastResult.enrollmentDraft.fullName}
+                        <button type="submit" className="button button-primary" style={{ fontSize: '0.75rem', padding: '4px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <CheckCircle size={14} />
+                          <span>Confirmar Inscripción de {lastResult.enrollmentDraft.fullName}</span>
                         </button>
                       </form>
                     )}
@@ -207,8 +222,10 @@ export function AdminFloatingAssistant({ courses = [] }) {
                 className="button button-secondary"
                 onClick={startListening}
                 disabled={isPending || listening}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
-                {listening ? '🎤 Escuchando…' : '🎤 Hablar'}
+                <Mic size={16} />
+                <span>{listening ? 'Escuchando…' : 'Hablar'}</span>
               </button>
             </div>
             <p className="helper">Enter envía · Shift+Enter salto · Esc cierra · Mic: {micStatus === 'listening' ? 'escuchando' : micStatus === 'denied' ? 'denegado' : micStatus === 'unsupported' ? 'no soportado' : 'listo'}.</p>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { siteConfig } from '@/lib/site';
+import { Menu, X, MessageCircle } from '@/components/Icons';
 
 export function HeaderNav({ navigation = [] }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -79,8 +80,10 @@ export function HeaderNav({ navigation = [] }) {
             className="button button-whatsapp button-sm nav-cta"
             onClick={() => setIsOpen(false)}
             aria-label={`Escribir por WhatsApp al ${siteConfig.contactPhone}`}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            {siteConfig.contactPhone}
+            <MessageCircle size={16} />
+            <span>{siteConfig.contactPhone}</span>
           </a>
         </div>
       </div>
@@ -91,7 +94,7 @@ export function HeaderNav({ navigation = [] }) {
         aria-expanded={isOpen}
         aria-label="Alternar menú de navegación"
       >
-        {isOpen ? '✕' : '☰'}
+        {isOpen ? <X size={22} /> : <Menu size={22} />}
       </button>
     </>
   );

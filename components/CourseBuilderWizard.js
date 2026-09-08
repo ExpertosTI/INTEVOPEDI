@@ -3,6 +3,19 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAssistant } from '@/lib/useAssistant';
 import { formatAndSanitizeExtendedMarkdown } from '@/lib/sanitize';
+import {
+  Sparkles,
+  X,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  FileText,
+  Video,
+  BookOpen,
+  Mic,
+  Clock,
+  Layers
+} from '@/components/Icons';
 
 /**
  * CourseBuilderWizard
@@ -100,8 +113,9 @@ export function CourseBuilderWizard({ onCourseCreated, onCancel }) {
             className="close-btn"
             onClick={onCancel}
             aria-label="Cancelar"
+            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            ✕
+            <X size={20} />
           </button>
         </div>
         
@@ -226,23 +240,23 @@ export function CourseBuilderWizard({ onCourseCreated, onCancel }) {
               <div className="material-types">
                 <label className="checkbox">
                   <input type="checkbox" defaultChecked />
-                  <span>📄 Apuntes PDF descargables</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><FileText size={16} /> Apuntes PDF estructurados</span>
                 </label>
                 <label className="checkbox">
                   <input type="checkbox" defaultChecked />
-                  <span>🎥 Grabaciones de sesiones</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Video size={16} /> Grabaciones y sesiones en video</span>
                 </label>
                 <label className="checkbox">
                   <input type="checkbox" defaultChecked />
-                  <span>📝 Ejercicios prácticos</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><BookOpen size={16} /> Ejercicios prácticos paso a paso</span>
                 </label>
                 <label className="checkbox">
                   <input type="checkbox" />
-                  <span>🎤 Entrevistas o testimonios</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Mic size={16} /> Audios y descripciones habladas</span>
                 </label>
                 <label className="checkbox">
                   <input type="checkbox" />
-                  <span>📚 Referencias bibliográficas</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Layers size={16} /> Guías y material complementario</span>
                 </label>
               </div>
             </fieldset>
@@ -321,16 +335,20 @@ export function CourseBuilderWizard({ onCourseCreated, onCancel }) {
             className="button button-secondary"
             onClick={handlePrevStep}
             disabled={step === 1}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            ← Atrás
+            <ArrowLeft size={16} />
+            <span>Atrás</span>
           </button>
           <button
             type="button"
             className="button button-secondary-outline"
             onClick={handleAiRequest}
             disabled={isPending}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            💡 Sugerir con IA
+            <Sparkles size={16} />
+            <span>Sugerir con IA</span>
           </button>
         </div>
 
@@ -344,8 +362,10 @@ export function CourseBuilderWizard({ onCourseCreated, onCancel }) {
                 (step === 1 && !formData.title) ||
                 (step === 2 && !formData.objective)
               }
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              Siguiente →
+              <span>Siguiente</span>
+              <ArrowRight size={16} />
             </button>
           ) : (
             <>
@@ -361,8 +381,10 @@ export function CourseBuilderWizard({ onCourseCreated, onCancel }) {
                 className="button button-primary"
                 onClick={handleCreateCourse}
                 disabled={isPending}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
-                ✓ Crear curso
+                <Check size={16} />
+                <span>Crear curso</span>
               </button>
             </>
           )}

@@ -2,6 +2,7 @@
 
 import { exportEnrollmentsCsv } from '@/app/actions';
 import { useState, useTransition } from 'react';
+import { Download } from '@/components/Icons';
 
 export function AdminExportButton() {
   const [isPending, startTransition] = useTransition();
@@ -36,8 +37,10 @@ export function AdminExportButton() {
         className="button button-secondary export-btn"
         onClick={handleExport}
         disabled={isPending}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
       >
-        {isPending ? 'Exportando…' : '📥 Exportar CSV'}
+        <Download size={16} />
+        <span>{isPending ? 'Exportando…' : 'Exportar CSV'}</span>
       </button>
       {error ? <span style={{ color: 'var(--accent-red)', fontSize: '0.8rem' }}>{error}</span> : null}
     </div>

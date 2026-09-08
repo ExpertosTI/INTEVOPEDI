@@ -1,6 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import {
+  BookOpen,
+  Layers,
+  HelpCircle,
+  FileText,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  CheckCircle,
+  Accessibility,
+  TrendingUp,
+  Video,
+  Zap,
+  Volume2
+} from '@/components/Icons';
 
 /**
  * SupportMaterialsPanel
@@ -22,7 +37,7 @@ export function SupportMaterialsPanel({ courseId, course }) {
           <span className="eyebrow">Centro de apoyo</span>
           <h3>Materiales y guías para {course?.title || 'este curso'}</h3>
           <p className="helper">
-            Todo está organizad en formatos accesibles. Descarga lo que necesites.
+            Todo está organizado en formatos accesibles. Descarga lo que necesites.
           </p>
         </div>
       </div>
@@ -33,29 +48,37 @@ export function SupportMaterialsPanel({ courseId, course }) {
           className={`tab-btn ${activeTab === 'guide' ? 'active' : ''}`}
           onClick={() => setActiveTab('guide')}
           aria-selected={activeTab === 'guide'}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
         >
-          📖 Guía de usuario
+          <BookOpen size={16} />
+          <span>Guía de usuario</span>
         </button>
         <button
           className={`tab-btn ${activeTab === 'resources' ? 'active' : ''}`}
           onClick={() => setActiveTab('resources')}
           aria-selected={activeTab === 'resources'}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
         >
-          📚 Recursos por módulo
+          <Layers size={16} />
+          <span>Recursos por módulo</span>
         </button>
         <button
           className={`tab-btn ${activeTab === 'faq' ? 'active' : ''}`}
           onClick={() => setActiveTab('faq')}
           aria-selected={activeTab === 'faq'}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
         >
-          ❓ Preguntas frecuentes
+          <HelpCircle size={16} />
+          <span>Preguntas frecuentes</span>
         </button>
         <button
           className={`tab-btn ${activeTab === 'templates' ? 'active' : ''}`}
           onClick={() => setActiveTab('templates')}
           aria-selected={activeTab === 'templates'}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
         >
-          📋 Templates
+          <FileText size={16} />
+          <span>Plantillas</span>
         </button>
       </div>
 
@@ -68,8 +91,13 @@ export function SupportMaterialsPanel({ courseId, course }) {
               onClick={() => toggleSection('getting-started')}
               aria-expanded={expandedSection === 'getting-started'}
             >
-              <span>🚀 Empezar — Primeros pasos</span>
-              <span className="icon">▼</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <Zap size={18} />
+                <strong>Primeros pasos en la plataforma</strong>
+              </span>
+              <span className="icon">
+                {expandedSection === 'getting-started' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              </span>
             </button>
             {expandedSection === 'getting-started' && (
               <div className="accordion-body stack">
@@ -111,35 +139,44 @@ export function SupportMaterialsPanel({ courseId, course }) {
               onClick={() => toggleSection('accessibility')}
               aria-expanded={expandedSection === 'accessibility'}
             >
-              <span>♿ Accesibilidad — Aprende con las herramientas que necesitas</span>
-              <span className="icon">▼</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <Accessibility size={18} />
+                <strong>Características de accesibilidad inclusiva</strong>
+              </span>
+              <span className="icon">
+                {expandedSection === 'accessibility' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              </span>
             </button>
             {expandedSection === 'accessibility' && (
               <div className="accordion-body stack">
                 <div className="feature-block">
-                  <strong>🔊 Lector de pantalla</strong>
+                  <strong style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Volume2 size={16} /> Lector de pantalla
+                  </strong>
                   <p>
                     Todos nuestros materiales son compatibles con lectores de pantalla. Usa NVDA (Windows), JAWS o
-                    VoiceOver (Mac).
+                    VoiceOver (Mac/iOS).
                   </p>
                 </div>
                 <div className="feature-block">
                   <strong>🎨 Alto contraste</strong>
                   <p>
-                    En Ajustes, activa el modo de alto contraste para mejorar la legibilidad en cualquier dispositivo.
+                    En el encabezado, activa el alternador de tema para mejorar la legibilidad y contraste en cualquier dispositivo.
                   </p>
                 </div>
                 <div className="feature-block">
-                  <strong>📱 Tamaño de texto ajustable</strong>
+                  <strong>📱 Tamaño de texto adaptable</strong>
                   <p>
                     Usa Ctrl + Plus para aumentar el tamaño del texto en tu navegador. Todos nuestros contenidos se
-                    adaptan automáticamente.
+                    adaptan automáticamente sin romper el diseño.
                   </p>
                 </div>
                 <div className="feature-block">
-                  <strong>📝 Transcripciones de video</strong>
+                  <strong style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <FileText size={16} /> Transcripciones de audio y video
+                  </strong>
                   <p>
-                    Todos los videos incluyen subtítulos y transcripciones descargables en PDF para sordera o
+                    Todos los videos incluyen subtítulos y transcripciones descargables en formato accesible para personas con sordera o
                     preferencia de lectura.
                   </p>
                 </div>
@@ -153,8 +190,13 @@ export function SupportMaterialsPanel({ courseId, course }) {
               onClick={() => toggleSection('progress')}
               aria-expanded={expandedSection === 'progress'}
             >
-              <span>📊 Seguimiento de progreso</span>
-              <span className="icon">▼</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <TrendingUp size={18} />
+                <strong>Seguimiento de progreso y certificación</strong>
+              </span>
+              <span className="icon">
+                {expandedSection === 'progress' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              </span>
             </button>
             {expandedSection === 'progress' && (
               <div className="accordion-body stack">
@@ -162,9 +204,9 @@ export function SupportMaterialsPanel({ courseId, course }) {
                   Tu progreso se actualiza automáticamente. Puedes ver:
                 </p>
                 <ul className="bullet-list">
-                  <li><strong>Módulos completados:</strong> marca verde cuando terminas cada módulo</li>
+                  <li><strong>Módulos completados:</strong> marca de verificación verde cuando terminas cada módulo</li>
                   <li><strong>Porcentaje general:</strong> avance total del curso</li>
-                  <li><strong>Certificado:</strong> al alcanzar 100%, tu certificado se genera automáticamente</li>
+                  <li><strong>Certificado:</strong> al alcanzar 100%, tu certificado se genera automáticamente con código QR verificable</li>
                   <li><strong>Historial:</strong> revisa cuándo completaste cada sección</li>
                 </ul>
               </div>
@@ -176,72 +218,83 @@ export function SupportMaterialsPanel({ courseId, course }) {
       {/* TAB: Recursos por módulo */}
       {activeTab === 'resources' && (
         <div className="tab-content stack">
-          {[1, 2, 3].map((moduleNum) => (
-            <article key={moduleNum} className="accordion">
-              <button
-                className={`accordion-header ${expandedSection === `module-${moduleNum}` ? 'expanded' : ''}`}
-                onClick={() => toggleSection(`module-${moduleNum}`)}
-                aria-expanded={expandedSection === `module-${moduleNum}`}
-              >
-                <span>📦 Módulo {moduleNum} — Título del módulo</span>
-                <span className="icon">▼</span>
-              </button>
-              {expandedSection === `module-${moduleNum}` && (
-                <div className="accordion-body stack">
-                  <div className="resource-group">
-                    <h5>📄 Apuntes y guías</h5>
-                    <ul className="resource-list">
-                      <li>
-                        <a href="#" className="resource-link">
-                          Apuntes completos módulo {moduleNum}.pdf
-                        </a>
-                        <span className="resource-meta">(2.4 MB) accesible</span>
-                      </li>
-                      <li>
-                        <a href="#" className="resource-link">
-                          Guía de lectura rápida (resumen).pdf
-                        </a>
-                        <span className="resource-meta">(400 KB)</span>
-                      </li>
-                    </ul>
-                  </div>
+          {(course?.modules && course.modules.length > 0 ? course.modules : [1, 2, 3]).map((moduleItem, index) => {
+            const moduleNum = typeof moduleItem === 'object' ? (moduleItem.order || index + 1) : moduleItem;
+            const moduleTitle = typeof moduleItem === 'object' ? moduleItem.title : `Módulo ${moduleNum}`;
 
-                  <div className="resource-group">
-                    <h5>🎥 Grabaciones y videos</h5>
-                    <ul className="resource-list">
-                      <li>
-                        <a href="#" className="resource-link">
-                          Sesión en vivo del {new Date().toLocaleDateString('es-ES')}
-                        </a>
-                        <span className="resource-meta">+ transcripción descargable</span>
-                      </li>
-                    </ul>
-                  </div>
+            return (
+              <article key={moduleNum} className="accordion">
+                <button
+                  className={`accordion-header ${expandedSection === `module-${moduleNum}` ? 'expanded' : ''}`}
+                  onClick={() => toggleSection(`module-${moduleNum}`)}
+                  aria-expanded={expandedSection === `module-${moduleNum}`}
+                >
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <Layers size={18} />
+                    <strong>Módulo {moduleNum}: {moduleTitle}</strong>
+                  </span>
+                  <span className="icon">
+                    {expandedSection === `module-${moduleNum}` ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                  </span>
+                </button>
+                {expandedSection === `module-${moduleNum}` && (
+                  <div className="accordion-body stack">
+                    <div className="resource-group">
+                      <h5 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <FileText size={16} /> Apuntes y guías
+                      </h5>
+                      <ul className="resource-list">
+                        <li>
+                          <a href="#" className="resource-link">
+                            Apuntes completos módulo {moduleNum}.pdf
+                          </a>
+                          <span className="resource-meta">(2.4 MB) accesible</span>
+                        </li>
+                        <li>
+                          <a href="#" className="resource-link">
+                            Guía de lectura rápida (resumen).pdf
+                          </a>
+                          <span className="resource-meta">(400 KB)</span>
+                        </li>
+                      </ul>
+                    </div>
 
-                  <div className="resource-group">
-                    <h5>📝 Ejercicios prácticos</h5>
-                    <ul className="resource-list">
-                      <li>
-                        <a href="#" className="resource-link">
-                          Ejercicio 1 — Aplicación práctica
-                        </a>
-                        <span className="resource-meta">+ solución comentada</span>
-                      </li>
-                      <li>
-                        <a href="#" className="resource-link">
-                          Ejercicio 2 — Caso de estudio
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
+                    <div className="resource-group">
+                      <h5 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Video size={16} /> Grabaciones y videos
+                      </h5>
+                      <ul className="resource-list">
+                        <li>
+                          <a href="#" className="resource-link">
+                            Sesión en vivo grabada
+                          </a>
+                          <span className="resource-meta">+ transcripción descargable</span>
+                        </li>
+                      </ul>
+                    </div>
 
-                  <button className="button button-secondary-outline full-width">
-                    ⬇️ Descargar todo como ZIP
-                  </button>
-                </div>
-              )}
-            </article>
-          ))}
+                    <div className="resource-group">
+                      <h5 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <BookOpen size={16} /> Ejercicios prácticos
+                      </h5>
+                      <ul className="resource-list">
+                        <li>
+                          <a href="#" className="resource-link">
+                            Ejercicio 1 — Aplicación práctica
+                          </a>
+                          <span className="resource-meta">+ solución comentada</span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <button className="button button-secondary-outline full-width" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <Download size={16} /> Descargar todo como ZIP
+                    </button>
+                  </div>
+                )}
+              </article>
+            );
+          })}
         </div>
       )}
 
@@ -254,14 +307,15 @@ export function SupportMaterialsPanel({ courseId, course }) {
               onClick={() => toggleSection('faq-1')}
               aria-expanded={expandedSection === 'faq-1'}
             >
-              <span>¿Puedo descargar los videos para verlos sin conexión?</span>
-              <span className="icon">▼</span>
+              <span>¿Puedo descargar los materiales para estudiar sin conexión?</span>
+              <span className="icon">
+                {expandedSection === 'faq-1' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              </span>
             </button>
             {expandedSection === 'faq-1' && (
               <div className="accordion-body">
                 <p>
-                  Sí, todos los videos están disponibles para descargar en formatos MP4 y WebM. Descárgalos en la
-                  sección "Recursos por módulo" usando el botón "Descargar todo como ZIP".
+                  Sí, todos los recursos y apuntes están disponibles para descargar en formatos estándar (PDF accesible, MP4, etc.). Puedes descargarlos en la sección "Recursos por módulo".
                 </p>
               </div>
             )}
@@ -274,13 +328,14 @@ export function SupportMaterialsPanel({ courseId, course }) {
               aria-expanded={expandedSection === 'faq-2'}
             >
               <span>¿Dónde está mi certificado después de completar el curso?</span>
-              <span className="icon">▼</span>
+              <span className="icon">
+                {expandedSection === 'faq-2' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              </span>
             </button>
             {expandedSection === 'faq-2' && (
               <div className="accordion-body">
                 <p>
-                  Al alcanzar 100% de progreso, tu certificado se genera automáticamente. Ve a la sección
-                  "Certificados" en tu panel para descargarlo, compartirlo o validarlo con el código QR.
+                  Al alcanzar el 100% de progreso y aprobación, tu certificado se genera automáticamente con código de validación único y código QR. Puedes descargarlo en PDF e imprimirlo con calidad profesional.
                 </p>
               </div>
             )}
@@ -292,14 +347,16 @@ export function SupportMaterialsPanel({ courseId, course }) {
               onClick={() => toggleSection('faq-3')}
               aria-expanded={expandedSection === 'faq-3'}
             >
-              <span>¿Los materiales son accesibles para personas con discapacidad visual?</span>
-              <span className="icon">▼</span>
+              <span>¿Los materiales son accesibles para personas con discapacidad visual y auditiva?</span>
+              <span className="icon">
+                {expandedSection === 'faq-3' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              </span>
             </button>
             {expandedSection === 'faq-3' && (
               <div className="accordion-body">
-                <p>
-                  ✅ Sí. Todos los PDFs contienen texto seleccionable (OCR), los videos incluyen subtítulos y
-                  transcripciones, y el sitio es totalmente navegable con teclado y lector de pantalla.
+                <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <CheckCircle size={18} color="var(--accent-teal)" />
+                  <span>Sí. Todos los documentos contienen texto seleccionable estructurado, los videos incluyen transcripciones y el sitio cumple con estándares internacionales WCAG.</span>
                 </p>
               </div>
             )}
@@ -311,33 +368,36 @@ export function SupportMaterialsPanel({ courseId, course }) {
       {activeTab === 'templates' && (
         <div className="tab-content stack">
           <div className="template-group">
-            <h4>📋 Templates para descargar</h4>
+            <h4>Plantillas para descargar</h4>
             <p className="helper">Usa estos archivos para organizar tus apuntes y entregas.</p>
 
             <div className="template-cards">
-              <div className="template-card panel">
-                <strong>📝 Plantilla de Apuntes</strong>
-                <p>Word (.docx) | Formato profesional con estilos predefinidos</p>
-                <a href="#" className="button button-secondary-outline button-sm">
-                  Descargar
+              <div className="template-card panel stack">
+                <strong style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FileText size={18} /> Plantilla de Apuntes Accesible
+                </strong>
+                <p>Documento formateado con títulos accesibles y contrastes adecuados.</p>
+                <a href="#" className="button button-secondary-outline button-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <Download size={14} /> Descargar Plantilla
                 </a>
               </div>
 
-              <div className="template-card panel">
-                <strong>📊 Matriz de Análisis</strong>
-                <p>Excel (.xlsx) | Para ejercicios de comparación y síntesis</p>
-                <a href="#" className="button button-secondary-outline button-sm">
-                  Descargar
+              <div className="template-card panel stack">
+                <strong style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <TrendingUp size={18} /> Matriz de Planificación y Tareas
+                </strong>
+                <p>Estructura paso a paso para organizar entregas y proyectos finales.</p>
+                <a href="#" className="button button-secondary-outline button-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <Download size={14} /> Descargar Matriz
                 </a>
               </div>
-
-              <div className="template-card panel">
-                <strong>🎯 Plan de Proyecto</strong>
-                <p>PDF (.pdf) | Estructura para proyectos finales</p>
-                <a href="#" className="button button-secondary-outline button-sm">
-                  Descargar
-                </a>
-              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
             </div>
           </div>
         </div>
