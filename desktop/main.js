@@ -9,7 +9,7 @@
 
 require('dotenv').config();
 
-const { app, BrowserWindow, ipcMain, protocol } = require('electron');
+const { app, BrowserWindow, ipcMain, protocol, net } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const ffmpeg = require('ffmpeg-static');
