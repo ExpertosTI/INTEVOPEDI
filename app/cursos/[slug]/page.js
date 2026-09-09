@@ -6,6 +6,7 @@ import { formatDateTime } from '@/lib/formatters';
 import { courseExperienceBySlug, getCourseResourceLibrary, getCourseResourceStats } from '@/lib/site';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { LearningPath } from '@/components/LearningPath';
+import { SupportMaterialsPanel } from '@/components/SupportMaterialsPanel';
 
 export const dynamic = 'force-dynamic';
 
@@ -281,6 +282,8 @@ export default async function CourseDetailPage({ params, searchParams }) {
             </div>
           </article>
         ) : null}
+
+        <SupportMaterialsPanel courseId={course.id} course={course} />
       </div>
     </section>
   );

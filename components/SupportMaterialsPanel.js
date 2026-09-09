@@ -30,6 +30,19 @@ export function SupportMaterialsPanel({ courseId, course }) {
     setExpandedSection(expandedSection === id ? null : id);
   };
 
+  const handleDownloadTemplate = (type) => {
+    const content = type === 'notes'
+      ? `# Plantilla de Apuntes Accesible - INTEVOPEDI\nCurso: ${course?.title || 'Formación Inclusiva'}\nFecha: ${new Date().toLocaleDateString('es-DO')}\n\n## 1. Ideas Principales\n- Punto 1:\n- Punto 2:\n\n## 2. Dudas y Consultas para el Facilitador\n- Pregunta:\n\n## 3. Próximas Tareas y Compromisos\n- [ ] Tarea 1:\n`
+      : `# Matriz de Planificación y Tareas - INTEVOPEDI\nCurso: ${course?.title || 'Formación Inclusiva'}\nFecha: ${new Date().toLocaleDateString('es-DO')}\n\n| Módulo / Fase | Tarea | Fecha Límite | Estado |\n|---|---|---|---|\n| Módulo 1 | Lectura y ejercicios iniciales | Por definir | Pendiente |\n| Módulo 2 | Práctica aplicada accesible | Por definir | Pendiente |\n| Final | Evaluación y emisión de certificado | Por definir | Pendiente |\n`;
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = type === 'notes' ? 'Plantilla_Apuntes_Accesible_INTEVOPEDI.md' : 'Matriz_Planificacion_INTEVOPEDI.md';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <section className="support-materials-panel stack">
       <div className="panel-header">
@@ -377,9 +390,14 @@ export function SupportMaterialsPanel({ courseId, course }) {
                   <FileText size={18} /> Plantilla de Apuntes Accesible
                 </strong>
                 <p>Documento formateado con títulos accesibles y contrastes adecuados.</p>
-                <a href="#" className="button button-secondary-outline button-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <Download size={14} /> Descargar Plantilla
-                </a>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadTemplate('notes')}
+                  className="button button-secondary-outline button-sm"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+                >
+                  <Download size={14} /> Descargar Plantilla (.md)
+                </button>
               </div>
 
               <div className="template-card panel stack">
@@ -387,17 +405,15 @@ export function SupportMaterialsPanel({ courseId, course }) {
                   <TrendingUp size={18} /> Matriz de Planificación y Tareas
                 </strong>
                 <p>Estructura paso a paso para organizar entregas y proyectos finales.</p>
-                <a href="#" className="button button-secondary-outline button-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <Download size={14} /> Descargar Matriz
-                </a>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadTemplate('tasks')}
+                  className="button button-secondary-outline button-sm"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+                >
+                  <Download size={14} /> Descargar Matriz (.md)
+                </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </section>
-  );
-}
             </div>
           </div>
         </div>
