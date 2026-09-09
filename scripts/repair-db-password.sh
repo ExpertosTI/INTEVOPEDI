@@ -48,11 +48,9 @@ fi
 docker exec "$container" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 \
   -c "ALTER USER \"${POSTGRES_USER}\" WITH PASSWORD '${POSTGRES_PASSWORD}';"
 
-echo "Testing network authentication..."
-docker run --rm --network "$NETWORK" \
-  -e PGPASSWORD="$POSTGRES_PASSWORD" \
-  postgres:16-alpine \
-  psql -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c 'SELECT 1 AS ok;'
+echo "Testing authentication..."
+docker exec -e PGPASSWORD="$POSTGRES_PASSWORD" "$container" \
+  psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c 'SELECT 1 AS ok;'
 
 echo ""
 echo "Password aligned. Ensure .env contains:"

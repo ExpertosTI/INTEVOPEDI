@@ -88,10 +88,13 @@ db_container_id() {
 }
 
 test_db_auth() {
-  docker run --rm --network "$DB_NETWORK" \
-    -e PGPASSWORD="$POSTGRES_PASSWORD" \
-    postgres:16-alpine \
-    psql -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c 'SELECT 1;' >/dev/null 2>&1
+  local container
+  container="$(db_container_id)"
+  if [ -z "$container" ]; then
+    return 1
+  fi
+  docker exec -e PGPASSWORD="$POSTGRES_PASSWORD" "$container" \
+    psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c 'SELECT 1;' >/dev/null 2>&1
 }
 
 repair_db_auth() {
