@@ -372,7 +372,7 @@ export default async function AdminPage({ searchParams }) {
 
         {/* --- Recursos --- */}
         {courses.map((course) => (
-          <article key={course.id} className="panel stack">
+          <article key={course.id} id={`recursos-${course.id}`} className="panel stack">
             <span className="eyebrow">Recursos de {course.title}</span>
             <h3>Agregar recurso</h3>
             <div className="dashboard-grid">

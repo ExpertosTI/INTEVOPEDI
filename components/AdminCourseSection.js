@@ -180,10 +180,13 @@ export function AdminCourseSection({ courses }) {
                   </div>
                 </div>
 
-                <div className="course-actions" style={{ display: 'flex', gap: '8px' }}>
+                <div className="course-actions" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '0.75rem' }}>
                   <Link href={`/cursos/${course.slug}`} className="button button-secondary button-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <Eye size={14} /> Ver
+                    <Eye size={14} /> Ver curso
                   </Link>
+                  <a href={`#recursos-${course.id}`} className="button button-primary button-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <FileText size={14} /> Adjuntar recursos
+                  </a>
                 </div>
               </div>
             ))}

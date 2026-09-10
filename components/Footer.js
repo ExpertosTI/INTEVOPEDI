@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { mainNavigation, siteConfig } from '@/lib/site';
-import { Phone, Mail, Award, User, Globe } from '@/components/Icons';
+import { Phone, Mail, Award, User, Globe, Lock } from '@/components/Icons';
 
 export function Footer() {
   return (
@@ -46,6 +46,10 @@ export function Footer() {
           <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <User size={16} />
             <Link href="/participantes">Acceso participantes</Link>
+          </p>
+          <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Lock size={16} />
+            <Link href="/admin/login">Administración</Link>
           </p>
         </nav>
       </div>

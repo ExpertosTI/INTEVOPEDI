@@ -98,6 +98,9 @@ export default async function HomePage() {
                 <Link href={`/cursos/${featuredCourse.slug}`} className="button button-primary">
                   Inscribirme al curso
                 </Link>
+                <Link href="/cursos" className="button button-secondary">
+                  Ver todos los cursos
+                </Link>
                 <Link href="/verificar" className="button button-secondary">
                   Verificar certificado
                 </Link>
