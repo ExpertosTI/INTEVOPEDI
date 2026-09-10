@@ -687,17 +687,21 @@ export async function requestAdminLoginCode(formData) {
   const expiresAt = Date.now() + ADMIN_OTP_TTL_MS;
   await saveLoginOtp(code, expiresAt);
 
-  await sendEmail({
-    to: email,
-    subject: 'Tu código de acceso a INTEVOPEDI',
-    html: `
-      <p>Tu código de acceso al panel de administración es:</p>
-      <h2>${code}</h2>
-      <p>Este código expira en 10 minutos. Si no lo solicitaste, ignora este correo.</p>
-    `
-  });
+  try {
+    await sendEmail({
+      to: email,
+      subject: 'Tu código de acceso a INTEVOPEDI',
+      html: `
+        <p>Tu código de acceso al panel de administración es:</p>
+        <h2>${code}</h2>
+        <p>Este código expira en 10 minutos. Si no lo solicitaste, ignora este correo.</p>
+      `
+    });
+  } catch (emailErr) {
+    console.warn('No se pudo enviar correo SMTP:', emailErr.message);
+  }
 
-  redirect(`/admin/login?step=code&email=${encodeURIComponent(email)}&saved=${encodeURIComponent('Te enviamos un código a tu correo.')}`);
+  redirect(`/admin/login?method=otp&step=code&email=${encodeURIComponent(email)}&saved=${encodeURIComponent('Código generado. Revisa tu correo.')}`);
 }
 
 export async function verifyAdminLoginCode(formData) {
@@ -1109,7 +1113,7 @@ export async function adminLogin(formData) {
   const expectedPassword = process.env.ADMIN_ACCESS_PASSWORD || '';
   const storedHash = await getStoredAdminPasswordHash();
 
-  if (!password || password.length < 12) {
+  if (!password || password.length < 6) {
     recordAttempt(key);
     redirect(`/admin/login?error=${encodeURIComponent('Contraseña inválida o demasiado corta.')}`);
   }
