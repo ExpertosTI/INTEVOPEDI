@@ -1,27 +1,39 @@
+import { Suspense } from 'react';
+import Link from 'next/link';
 import { getPublishedCourses } from '@/lib/data';
-import { Breadcrumb } from '@/components/Breadcrumb';
 import { CourseListClient } from '@/components/CourseListClient';
 
 export const metadata = {
-  title: 'Cursos | INTEVOPEDI'
+  title: 'Cursos Online Gratis con Certificado | INTEVOPEDI Academy',
+  description: 'Explora nuestra oferta de cursos virtuales gratuitos en música, técnica vocal, tecnología, IA y habilidades laborales.'
 };
 
 export default async function CoursesPage() {
   const courses = await getPublishedCourses();
 
   return (
-    <section className="section spaced-page">
-      <div className="shell stack">
-        <Breadcrumb items={[{ label: 'Cursos', href: '/cursos' }]} />
-        <div className="section-heading">
-          <span className="eyebrow">Catálogo de formación</span>
-          <h1>Cursos accesibles diseñados para el impacto real</h1>
+    <div className="ea-catalog-page">
+      <div className="shell">
+        <nav className="clp-crumbs" aria-label="Navegación secundaria">
+          <Link href="/">Inicio</Link>
+          <svg className="clp-crumbs-sep" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+          <span>Todos los cursos</span>
+        </nav>
+
+        <div className="ea-catalog-header">
+          <span className="ea-hero-badge">Catálogo Académico</span>
+          <h1>Aprende con cursos gratis y certificados</h1>
           <p>
-            Oferta académica actualizada con enfoque en competencias digitales, accesibilidad y empleabilidad.
+            Capacítate en áreas de alta demanda con contenidos prácticos, proyectos reales y certificación con validez internacional.
           </p>
         </div>
-        <CourseListClient courses={courses} />
+
+        <Suspense fallback={<div className="ea-catalog-loading">Cargando catálogo de cursos...</div>}>
+          <CourseListClient courses={courses} />
+        </Suspense>
       </div>
-    </section>
+    </div>
   );
 }

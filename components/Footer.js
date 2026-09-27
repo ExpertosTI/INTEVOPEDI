@@ -1,60 +1,69 @@
 import Link from 'next/link';
-import { mainNavigation, siteConfig } from '@/lib/site';
-import { Phone, Mail, Award, User, Globe, Lock } from '@/components/Icons';
+import { siteConfig } from '@/lib/site';
 
 export function Footer() {
   return (
-    <footer className="site-footer" role="contentinfo">
-      <div className="shell footer-grid">
-        <div>
-          <h3>{siteConfig.fullName}</h3>
-          <p>{siteConfig.description}</p>
-        </div>
-
-        <div>
-          <h4>Contacto</h4>
-          <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Globe size={16} />
-            <span>{siteConfig.address}</span>
+    <footer className="ea-footer" role="contentinfo">
+      <div className="shell ea-footer-grid">
+        <div className="ea-footer-brand">
+          <div className="ea-brand-text">
+            <span className="ea-footer-brand-title">INTEVOPEDI</span>
+            <span className="ea-footer-brand-sub">Academy</span>
+          </div>
+          <p className="ea-footer-desc">
+            Plataforma de formación técnica, artística y virtual inclusiva. Acceso 100% gratuito a cursos de alta calidad con opción a certificación de estudios internacional.
           </p>
-          <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Phone size={16} />
+          <div className="ea-footer-contact-row">
             <a
               href={siteConfig.contactPhoneHref}
-              aria-label={`Escribir por WhatsApp al ${siteConfig.contactPhone}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ea-footer-wa-btn"
             >
-              {siteConfig.contactPhone}
+              <span>💬 Asesoría por WhatsApp: {siteConfig.contactPhone}</span>
             </a>
-          </p>
-          <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Mail size={16} />
-            <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
-          </p>
+          </div>
         </div>
 
-        <nav aria-label="Secciones del sitio">
-          <h4>Sitio</h4>
-          {mainNavigation.map((link) => (
-            <p key={link.href}>
-              <Link href={link.href}>{link.label}</Link>
-            </p>
-          ))}
-          <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Award size={16} />
-            <Link href="/verificar">Verificar certificado</Link>
+        <div className="ea-footer-col">
+          <h4>Cursos populares</h4>
+          <ul>
+            <li><Link href="/cursos/curso-de-canto">Curso de canto</Link></li>
+            <li><Link href="/cursos/curso-de-bajo-1760">Curso de bajo</Link></li>
+            <li><Link href="/cursos/curso-de-musica">Curso de música</Link></li>
+            <li><Link href="/cursos/ia-accesibilidad-digital">IA y Accesibilidad</Link></li>
+            <li><Link href="/cursos/qa-tester-accesibilidad">QA Tester Especialista</Link></li>
+            <li><Link href="/cursos">Ver catálogo completo (+50)</Link></li>
+          </ul>
+        </div>
+
+        <div className="ea-footer-col">
+          <h4>Sobre nosotros</h4>
+          <ul>
+            <li><Link href="/#sobre-nosotros">Nuestra institución</Link></li>
+            <li><Link href="/verificar">Certificado de estudios</Link></li>
+            <li><Link href="/grupo-atrevete">Grupo Atrévete (Música)</Link></li>
+            <li><Link href="/participantes">Campus del estudiante</Link></li>
+            <li><Link href="/admin/login">Acceso administrativo</Link></li>
+          </ul>
+        </div>
+
+        <div className="ea-footer-col">
+          <h4>Ayuda y contacto</h4>
+          <p className="ea-footer-address">
+            📍 {siteConfig.address}
           </p>
-          <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <User size={16} />
-            <Link href="/participantes">Acceso participantes</Link>
+          <p className="ea-footer-email">
+            ✉ <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
           </p>
-          <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Lock size={16} />
-            <Link href="/admin/login">Administración</Link>
+          <p className="ea-footer-hours">
+            🕒 Campus abierto 24/7 · Soporte de Lunes a Viernes 8am - 6pm
           </p>
-        </nav>
+        </div>
       </div>
-      <div className="shell footer-bottom">
-        <span>© 2026 {siteConfig.name}. Todos los derechos reservados.</span>
+
+      <div className="shell ea-footer-bottom">
+        <p>© 2026 {siteConfig.name}. Todos los derechos reservados. Desarrollado con los más altos estándares de accesibilidad y diseño web moderno.</p>
       </div>
     </footer>
   );

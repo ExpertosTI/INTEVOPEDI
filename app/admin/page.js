@@ -14,11 +14,11 @@ import { formatDateTime } from '@/lib/formatters';
 import { AdminFloatingAssistant } from '@/components/AdminFloatingAssistant';
 import { AdminExportButton } from '@/components/AdminExportButton';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { AdminCourseSection } from '@/components/AdminCourseSection';
-import { BookOpen, Users, Award, TrendingUp, Settings, Check, Eye } from '@/components/Icons';
+import { AdminDashboardTabs } from '@/components/AdminDashboardTabs';
+import { BookOpen, Users, Award, TrendingUp, Settings } from '@/components/Icons';
 
 export const metadata = {
-  title: 'Panel admin | INTEVOPEDI',
+  title: 'Panel admin | INTEVOPEDI Academy',
   robots: { index: false, follow: false }
 };
 
@@ -29,22 +29,313 @@ export default async function AdminPage({ searchParams }) {
   const totalEnrollments = enrollments.length;
   const totalCertificates = certificates.length;
   const pendingPayments = enrollments.filter((e) => e.paymentStatus === 'PENDING').length;
-  const confirmedPayments = enrollments.filter((e) => ['VERIFIED', 'WAIVED'].includes(e.paymentStatus)).length;
   const avgProgress = totalEnrollments > 0
     ? Math.round(enrollments.reduce((sum, e) => sum + e.progressPercent, 0) / totalEnrollments)
     : 0;
 
+  // Enrollment content panel for tabs
+  const enrollmentsContent = (
+    <div className="stack" style={{ gap: '20px' }}>
+      {/* Inscribir Estudiante */}
+      <article className="panel stack">
+        <div className="section-heading">
+          <span className="eyebrow">Asignar estudiante a curso</span>
+          <h2>Inscribir estudiante manualmente</h2>
+          <p>Registra a un estudiante por teléfono o cédula y asígnalo a cualquier curso activo.</p>
+        </div>
+        <form action={adminEnrollStudentAction} className="admin-create-form">
+          <div className="form-row">
+            <label>
+              Identificador * (Teléfono o Cédula)
+              <input type="text" name="identifier" required placeholder="Ej. 8299548373 o 40220649281" />
+            </label>
+            <label>
+              Nombre completo
+              <input type="text" name="fullName" placeholder="Requerido si es estudiante nuevo" />
+            </label>
+          </div>
+          <div className="form-row">
+            <label>
+              Curso *
+              <select name="courseId" required>
+                <option value="">-- Selecciona el curso --</option>
+                {courses.map((course) => (
+                  <option key={course.id} value={course.id}>
+                    {course.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Estado de pago
+              <select name="paymentStatus" defaultValue="PENDING">
+                <option value="PENDING">Pendiente</option>
+                <option value="VERIFIED">Verificado / Beca</option>
+                <option value="WAIVED">Exonerado</option>
+              </select>
+            </label>
+          </div>
+          <button type="submit" className="button button-primary">
+            Inscribir estudiante
+          </button>
+        </form>
+      </article>
+
+      {/* Tabla de Inscripciones */}
+      <article className="panel stack">
+        <div className="row-between">
+          <div className="section-heading">
+            <span className="eyebrow">Inscripciones</span>
+            <h2>Todos los estudiantes inscritos ({enrollments.length})</h2>
+          </div>
+          <AdminExportButton />
+        </div>
+        <div className="table-wrapper">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Participante</th>
+                <th>Curso</th>
+                <th>Estado</th>
+                <th>Pago</th>
+                <th>Progreso</th>
+                <th>Código</th>
+                <th>Certificado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {enrollments.map((enrollment) => (
+                <tr key={enrollment.id}>
+                  <td>
+                    <strong>{enrollment.participant.fullName}</strong>
+                    <br />
+                    <span className="helper">{enrollment.participant.phone || enrollment.participant.email}</span>
+                  </td>
+                  <td>{enrollment.course.title}</td>
+                  <td>
+                    <span className={`badge badge-${enrollment.status.toLowerCase()}`}>
+                      {enrollment.status}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge badge-${enrollment.paymentStatus.toLowerCase()}`}>
+                      {enrollment.paymentStatus}
+                    </span>
+                  </td>
+                  <td>{enrollment.progressPercent}%</td>
+                  <td><code>{enrollment.referenceCode}</code></td>
+                  <td>
+                    {enrollment.certificate ? (
+                      <Link href={`/certificados/${enrollment.certificate.certificateCode}`} className="badge badge-completed">
+                        Ver Certificado
+                      </Link>
+                    ) : '—'}
+                  </td>
+                  <td>
+                    <form action={updateEnrollmentAdmin} className="admin-row-form">
+                      <input type="hidden" name="enrollmentId" value={enrollment.id} />
+                      <div className="admin-row-fields">
+                        <select name="status" defaultValue={enrollment.status}>
+                          <option value="PENDING_PAYMENT">Pendiente de pago</option>
+                          <option value="CONFIRMED">Confirmado</option>
+                          <option value="IN_PROGRESS">En progreso</option>
+                          <option value="COMPLETED">Completado</option>
+                        </select>
+                        <select name="paymentStatus" defaultValue={enrollment.paymentStatus}>
+                          <option value="PENDING">Pendiente</option>
+                          <option value="VERIFIED">Verificado</option>
+                          <option value="WAIVED">Exonerado</option>
+                        </select>
+                        <button type="submit" className="button button-primary" style={{ height: '36px', fontSize: '0.8rem' }}>
+                          Guardar
+                        </button>
+                      </div>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </div>
+  );
+
+  // Certificates content panel for tabs
+  const certificatesContent = (
+    <article className="panel stack">
+      <div className="section-heading">
+        <span className="eyebrow">Certificación Oficial</span>
+        <h2>Certificados Emitidos ({certificates.length})</h2>
+        <p>Certificados emitidos con código de verificación QR único y validez internacional.</p>
+      </div>
+      <div className="table-wrapper">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Estudiante</th>
+              <th>Fecha de Emisión</th>
+              <th>Estado</th>
+              <th>Verificación</th>
+            </tr>
+          </thead>
+          <tbody>
+            {certificates.map((cert) => (
+              <tr key={cert.id}>
+                <td><code>{cert.certificateCode}</code></td>
+                <td><strong>{cert.participant?.fullName}</strong></td>
+                <td>{formatDateTime(cert.issuedAt)}</td>
+                <td>
+                  <span className="status-badge" style={{ background: '#dcfce7', color: '#15803d' }}>
+                    ✓ Válido
+                  </span>
+                </td>
+                <td>
+                  <Link href={`/certificados/${cert.certificateCode}`} target="_blank" className="button button-secondary button-sm">
+                    Ver diploma online
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  );
+
+  // Manual course form panel for tabs
+  const manualFormContent = (
+    <div className="stack" style={{ gap: '20px' }}>
+      <article className="panel stack">
+        <div className="section-heading">
+          <span className="eyebrow">Crear curso</span>
+          <h2>Formulario de creación rápida</h2>
+          <p>Crea un nuevo curso en la base de datos.</p>
+        </div>
+        <form action={createCourseManualAction} className="admin-create-form">
+          <div className="form-row">
+            <label>
+              Título *
+              <input type="text" name="title" required placeholder="Ej. Curso de técnica vocal avanzada" />
+            </label>
+            <label>
+              Instructor *
+              <input type="text" name="instructor" required placeholder="Nombre del facilitador" />
+            </label>
+          </div>
+          <label>
+            Resumen *
+            <input type="text" name="summary" required placeholder="Descripción breve del curso" />
+          </label>
+          <label>
+            Descripción completa *
+            <textarea name="description" required rows={3} placeholder="Descripción detallada del curso" />
+          </label>
+          <div className="form-row">
+            <label>
+              Modalidad *
+              <select name="modality" required>
+                <option value="Virtual">100% Virtual (asíncrono)</option>
+                <option value="Zoom">Zoom en vivo</option>
+                <option value="Híbrido">Híbrido</option>
+                <option value="Presencial">Presencial</option>
+              </select>
+            </label>
+            <label>
+              Ubicación *
+              <input type="text" name="location" required defaultValue="Campus Virtual INTEVOPEDI" />
+            </label>
+            <label>
+              Duración *
+              <input type="text" name="duration" required placeholder="Ej. 80 horas certificables" />
+            </label>
+          </div>
+          <div className="form-row">
+            <label>
+              Etiqueta de precio *
+              <input type="text" name="priceLabel" required defaultValue="Gratis" />
+            </label>
+            <label>
+              Fecha de inicio *
+              <input type="datetime-local" name="startDate" required />
+            </label>
+            <label>
+              Estado
+              <select name="status">
+                <option value="PUBLISHED">Publicado</option>
+                <option value="DRAFT">Borrador</option>
+                <option value="CLOSED">Cerrado</option>
+              </select>
+            </label>
+          </div>
+          <button type="submit" className="button button-primary">
+            Crear curso
+          </button>
+        </form>
+      </article>
+
+      {/* Subida de recursos y archivos adjuntos */}
+      {courses.map((course) => (
+        <article key={course.id} id={`recursos-${course.id}`} className="panel stack">
+          <span className="eyebrow">Recursos y descargas de {course.title}</span>
+          <h3>Subir material o recurso</h3>
+          <div className="dashboard-grid">
+            <form action={addCourseResourceAdminAction} className="stack">
+              <input type="hidden" name="courseId" value={course.id} />
+              <label>
+                Título del recurso web
+                <input type="text" name="title" required placeholder="Nombre del recurso" />
+              </label>
+              <label>
+                URL
+                <input type="url" name="resourceUrl" required placeholder="https://..." />
+              </label>
+              <label>
+                Descripción
+                <input type="text" name="description" placeholder="Opcional" />
+              </label>
+              <button type="submit" className="button button-secondary">Agregar enlace</button>
+            </form>
+            <form action={addCourseResourceAdminAction} className="stack" encType="multipart/form-data">
+              <input type="hidden" name="courseId" value={course.id} />
+              <label>
+                Título del archivo
+                <input type="text" name="title" required placeholder="Ej. Guía de calentamiento vocal" />
+              </label>
+              <label>
+                Archivo descargable (PDF, MP3, ZIP)
+                <input type="file" name="resourceFile" required />
+              </label>
+              <label>
+                Descripción
+                <input type="text" name="description" placeholder="Opcional" />
+              </label>
+              <button type="submit" className="button button-secondary">Subir archivo</button>
+            </form>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+
   return (
     <section className="section spaced-page">
-      <div className="shell stack">
+      <div className="shell stack" style={{ gap: '24px' }}>
         <Breadcrumb items={[{ label: 'Panel admin', href: '/admin' }]} />
 
-        <div className="row-between">
-          <div className="stack">
-            <span className="eyebrow">Administración</span>
-            <h1>Panel admin INTEVOPEDI</h1>
-            <p>Gestiona cursos, inscripciones, certificados y recursos.</p>
+        <div className="row-between" style={{ alignItems: 'flex-start' }}>
+          <div className="stack" style={{ gap: '6px' }}>
+            <span className="eyebrow">Centro de Control Académico</span>
+            <h1 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#031b4e' }}>
+              Panel de Administración INTEVOPEDI Academy
+            </h1>
+            <p className="helper" style={{ maxWidth: '680px' }}>
+              Gestiona el catálogo de cursos, edita unidades y lecciones, vincula WhatsApp para notificaciones automáticas y administra inscripciones y certificados.
+            </p>
           </div>
+
           <div className="inline-actions">
             <Link href="/admin/ajustes" className="button button-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
               <Settings size={16} />
@@ -56,16 +347,14 @@ export default async function AdminPage({ searchParams }) {
         {searchParams?.error ? <div className="banner banner-error" role="alert">{searchParams.error}</div> : null}
         {searchParams?.saved ? <div className="banner banner-success" role="status">{searchParams.saved}</div> : null}
 
-        {/* Sección de Cursos con Wizard */}
-        <AdminCourseSection courses={courses} />
-
+        {/* METRICS ROW */}
         <div className="admin-stats">
           <div className="panel stat-card stack">
             <span className="eyebrow" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <BookOpen size={16} /> Cursos
             </span>
             <strong className="stat-value">{courses.length}</strong>
-            <p className="helper">Cursos creados</p>
+            <p className="helper">Cursos en catálogo</p>
           </div>
           <div className="panel stat-card stack">
             <span className="eyebrow" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -79,7 +368,7 @@ export default async function AdminPage({ searchParams }) {
               <Award size={16} /> Certificados
             </span>
             <strong className="stat-value">{totalCertificates}</strong>
-            <p className="helper">Emitidos</p>
+            <p className="helper">Emitidos con QR</p>
           </div>
           <div className="panel stat-card stack">
             <span className="eyebrow" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -90,338 +379,13 @@ export default async function AdminPage({ searchParams }) {
           </div>
         </div>
 
-        {/* --- Crear Curso Manual --- */}
-        <article className="panel stack">
-          <div className="section-heading">
-            <span className="eyebrow">Crear curso</span>
-            <h2>Formulario de creación manual</h2>
-            <p>Crea un nuevo curso sin necesidad del asistente IA. Todos los campos marcados son obligatorios.</p>
-          </div>
-          <form action={createCourseManualAction} className="admin-create-form">
-            <div className="form-row">
-              <label>
-                Título *
-                <input type="text" name="title" required placeholder="Ej. IA y Accesibilidad Visual" />
-              </label>
-              <label>
-                Instructor *
-                <input type="text" name="instructor" required placeholder="Nombre del facilitador" />
-              </label>
-            </div>
-            <label>
-              Resumen *
-              <input type="text" name="summary" required placeholder="Descripción breve del curso (máx 500 caracteres)" />
-            </label>
-            <label>
-              Descripción completa *
-              <textarea name="description" required rows={3} placeholder="Descripción detallada del curso (mín 20 caracteres)" />
-            </label>
-            <div className="form-row">
-              <label>
-                Modalidad *
-                <select name="modality" required>
-                  <option value="Zoom">Zoom</option>
-                  <option value="Presencial">Presencial</option>
-                  <option value="Híbrido">Híbrido</option>
-                  <option value="Virtual">Virtual (asíncrono)</option>
-                </select>
-              </label>
-              <label>
-                Ubicación *
-                <input type="text" name="location" required placeholder="Zoom / Dirección física" />
-              </label>
-              <label>
-                Duración *
-                <input type="text" name="duration" required placeholder="Ej. 4 horas en vivo" />
-              </label>
-            </div>
-            <div className="form-row">
-              <label>
-                Precio (centavos)
-                <input type="number" name="priceCents" defaultValue="0" min="0" />
-              </label>
-              <label>
-                Etiqueta de precio *
-                <input type="text" name="priceLabel" required placeholder="Ej. RD$ 500 o Gratis" />
-              </label>
-              <label>
-                Cupos
-                <input type="number" name="seats" placeholder="Dejar vacío = ilimitado" min="0" />
-              </label>
-            </div>
-            <div className="form-row">
-              <label>
-                Fecha de inicio *
-                <input type="datetime-local" name="startDate" required />
-              </label>
-              <label>
-                Fecha de fin
-                <input type="datetime-local" name="endDate" />
-              </label>
-              <label>
-                Estado
-                <select name="status">
-                  <option value="PUBLISHED">Publicado</option>
-                  <option value="DRAFT">Borrador</option>
-                  <option value="CLOSED">Cerrado</option>
-                </select>
-              </label>
-            </div>
-            <button type="submit" className="button button-primary">
-              Crear curso
-            </button>
-          </form>
-        </article>
-
-        {/* --- Salud de Cursos --- */}
-        <article className="panel stack">
-          <div className="section-heading">
-            <span className="eyebrow">Gestión</span>
-            <h2>Cursos registrados</h2>
-          </div>
-          <div className="table-wrapper">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Curso</th>
-                  <th>Estado</th>
-                  <th>Inscritos</th>
-                  <th>Módulos</th>
-                  <th>Recursos</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {courses.map((course) => (
-                  <tr key={course.id}>
-                    <td>
-                      <strong>{course.title}</strong>
-                      <br />
-                      <span className="helper">{course.slug}</span>
-                    </td>
-                    <td>
-                      <form action={updateCourseAction} className="inline-form" style={{ display: 'flex', gap: '4px' }}>
-                        <input type="hidden" name="courseId" value={course.id} />
-                        <select name="status" defaultValue={course.status} style={{ padding: '0 8px', height: '32px', fontSize: '0.78rem' }}>
-                          <option value="DRAFT">Borrador</option>
-                          <option value="PUBLISHED">Publicado</option>
-                          <option value="CLOSED">Cerrado</option>
-                        </select>
-                        <button type="submit" className="button button-secondary" style={{ padding: '0 8px', height: '32px' }}>
-                          ✓
-                        </button>
-                      </form>
-                    </td>
-                    <td>{course.enrollments?.length || 0}{course.seats ? ` / ${course.seats}` : ''}</td>
-                    <td>{course.modules?.length || 0}</td>
-                    <td>{course.resources?.length || 0}</td>
-                    <td>
-                      <div className="inline-actions" style={{ gap: '4px' }}>
-                        <Link href={`/cursos/${course.slug}`} className="button button-ghost" style={{ padding: '0 8px', height: '32px', fontSize: '0.78rem' }}>
-                          Ver
-                        </Link>
-                        <form action={deleteCourseAction} className="inline-form">
-                          <input type="hidden" name="courseId" value={course.id} />
-                          <button type="submit" className="button button-ghost" style={{ padding: '0 8px', height: '32px', fontSize: '0.78rem', color: 'var(--accent-red)' }}>
-                            Eliminar
-                          </button>
-                        </form>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </article>
-
-        {/* --- Inscribir Estudiante --- */}
-        <article className="panel stack">
-          <div className="section-heading">
-            <span className="eyebrow">Asignar estudiante a curso</span>
-            <h2>Inscribir estudiante</h2>
-            <p>Registra o busca a un estudiante por cédula o teléfono y asígnalo a un curso activo.</p>
-          </div>
-          <form action={adminEnrollStudentAction} className="admin-create-form">
-            <div className="form-row">
-              <label>
-                Identificador * (Cédula o Teléfono)
-                <input type="text" name="identifier" required placeholder="Ej. 40220649281 o 8092223333" />
-              </label>
-              <label>
-                Nombre completo
-                <input type="text" name="fullName" placeholder="Requerido si es estudiante nuevo" />
-              </label>
-            </div>
-            <div className="form-row">
-              <label>
-                Curso *
-                <select name="courseId" required>
-                  <option value="">-- Selecciona el curso --</option>
-                  {courses.filter(c => c.status !== 'CLOSED').map(course => (
-                    <option key={course.id} value={course.id}>
-                      {course.title} {course.status === 'DRAFT' ? '(Borrador)' : ''}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Estado de pago
-                <select name="paymentStatus" defaultValue="PENDING">
-                  <option value="PENDING">Pendiente</option>
-                  <option value="VERIFIED">Verificado</option>
-                  <option value="WAIVED">Exonerado</option>
-                </select>
-              </label>
-            </div>
-            <button type="submit" className="button button-primary">
-              Inscribir estudiante
-            </button>
-          </form>
-        </article>
-
-        {/* --- Inscripciones --- */}
-        <article className="panel stack">
-          <div className="row-between">
-            <div className="section-heading">
-              <span className="eyebrow">Inscripciones</span>
-              <h2>Todos los inscritos</h2>
-            </div>
-            <AdminExportButton />
-          </div>
-          <div className="table-wrapper">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Participante</th>
-                  <th>Curso</th>
-                  <th>Estado</th>
-                  <th>Pago</th>
-                  <th>Progreso</th>
-                  <th>Código</th>
-                  <th>Origen</th>
-                  <th>Certificado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {enrollments.map((enrollment) => (
-                  <tr key={enrollment.id}>
-                    <td>
-                      <strong>{enrollment.participant.fullName}</strong>
-                      <br />
-                      <span className="helper">{enrollment.participant.email}</span>
-                    </td>
-                    <td>{enrollment.course.title}</td>
-                    <td>
-                      <span className={`badge badge-${enrollment.status.toLowerCase()}`}>
-                        {enrollment.status}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`badge badge-${enrollment.paymentStatus.toLowerCase()}`}>
-                        {enrollment.paymentStatus}
-                      </span>
-                    </td>
-                    <td>{enrollment.progressPercent}%</td>
-                    <td><code>{enrollment.referenceCode}</code></td>
-                    <td>
-                      <span className={`badge ${enrollment.enrolledByAdmin ? 'badge-confirmed' : 'badge-pending'}`}>
-                        {enrollment.enrolledByAdmin ? 'Admin' : 'Público'}
-                      </span>
-                    </td>
-                    <td>
-                      {enrollment.certificate ? (
-                        <Link href={`/certificados/${enrollment.certificate.certificateCode}`} className="badge badge-completed">
-                          Ver
-                        </Link>
-                      ) : '—'}
-                    </td>
-                    <td>
-                      <form action={updateEnrollmentAdmin} className="admin-row-form">
-                        <input type="hidden" name="enrollmentId" value={enrollment.id} />
-                        <div className="admin-row-fields">
-                          <select name="status" defaultValue={enrollment.status}>
-                            <option value="PENDING_PAYMENT">Pendiente de pago</option>
-                            <option value="CONFIRMED">Confirmado</option>
-                            <option value="IN_PROGRESS">En progreso</option>
-                            <option value="COMPLETED">Completado</option>
-                          </select>
-                          <select name="paymentStatus" defaultValue={enrollment.paymentStatus}>
-                            <option value="PENDING">Pendiente</option>
-                            <option value="VERIFIED">Verificado</option>
-                            <option value="WAIVED">Exonerado</option>
-                          </select>
-                          <select name="attendancePercent" defaultValue={String(enrollment.attendancePercent)}>
-                            <option value="0">0% (No asistió)</option>
-                            <option value="50">50% (Parcial)</option>
-                            <option value="100">100% (Asistió)</option>
-                          </select>
-                          <button type="submit" className="button button-primary" style={{ height: '36px', fontSize: '0.8rem' }}>
-                            Guardar
-                          </button>
-                        </div>
-                      </form>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </article>
-
-        {/* --- Recursos --- */}
-        {courses.map((course) => (
-          <article key={course.id} id={`recursos-${course.id}`} className="panel stack">
-            <span className="eyebrow">Recursos de {course.title}</span>
-            <h3>Agregar recurso</h3>
-            <div className="dashboard-grid">
-              <form action={addCourseResourceAdminAction} className="stack">
-                <input type="hidden" name="courseId" value={course.id} />
-                <label>
-                  Título del enlace
-                  <input type="text" name="title" required placeholder="Nombre del recurso" />
-                </label>
-                <label>
-                  URL
-                  <input type="url" name="resourceUrl" required placeholder="https://..." />
-                </label>
-                <label>
-                  Descripción
-                  <input type="text" name="description" placeholder="Opcional" />
-                </label>
-                <button type="submit" className="button button-secondary">Agregar enlace</button>
-              </form>
-              <form action={addCourseResourceAdminAction} className="stack" encType="multipart/form-data">
-                <input type="hidden" name="courseId" value={course.id} />
-                <label>
-                  Título del archivo
-                  <input type="text" name="title" required placeholder="Nombre del archivo" />
-                </label>
-                <label>
-                  Archivo
-                  <input type="file" name="resourceFile" required />
-                </label>
-                <label>
-                  Descripción
-                  <input type="text" name="description" placeholder="Opcional" />
-                </label>
-                <button type="submit" className="button button-secondary">Subir archivo</button>
-              </form>
-            </div>
-            {course.resources?.length ? (
-              <ul className="list compact-list">
-                {course.resources.map((r) => (
-                  <li key={r.id}>
-                    <strong>{r.title}</strong> — {r.type === 'LINK' ? (
-                      <a href={r.url} target="_blank" rel="noreferrer">{r.url}</a>
-                    ) : r.filePath || 'Archivo adjunto'}
-                  </li>
-                ))}
-              </ul>
-            ) : <p className="helper">Sin recursos aún.</p>}
-          </article>
-        ))}
+        {/* TABS CONTAINER: CURSOS Y CONTENIDO | WHATSAPP QR | INSCRIPCIONES | CERTIFICADOS */}
+        <AdminDashboardTabs
+          courses={courses}
+          enrollmentsContent={enrollmentsContent}
+          certificatesContent={certificatesContent}
+          manualFormContent={manualFormContent}
+        />
 
         <AdminFloatingAssistant courses={courses} />
       </div>

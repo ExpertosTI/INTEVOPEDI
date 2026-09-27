@@ -1,196 +1,230 @@
 import Link from 'next/link';
-import { ProgressBar } from '@/components/ProgressBar';
-import { getFeaturedCourse } from '@/lib/data';
+import { getFeaturedCourse, getPublishedCourses } from '@/lib/data';
+import { CourseCard } from '@/components/CourseCard';
+import { CourseVideoPreview } from '@/components/CourseInteractiveSections';
 import {
   aboutUs,
   faqItems,
   heroMetrics,
   institutionalSections,
-  mission,
-  programHighlights,
   siteConfig,
   testimonials
 } from '@/lib/site';
-import { formatDateTime } from '@/lib/formatters';
 
 export default async function HomePage() {
   const featuredCourse = await getFeaturedCourse();
-  const enrolled = featuredCourse.enrollments?.length || 0;
+  const allCourses = await getPublishedCourses();
 
   return (
-    <>
-      <section id="inicio" className="hero">
-        <div className="shell hero-card hero-card-split">
-          <div className="panel hero-main stack">
-            <span className="eyebrow">Educación inclusiva en acción</span>
-            <h1>Formación accesible con seguimiento académico y certificación verificable.</h1>
-            <p>
-              Inscríbete, avanza por módulos y obtén tu certificado con validación pública por código y QR.
+    <div className="ea-home">
+      {/* 1. HERO SECTION (Edutin Academy Style) */}
+      <section className="ea-hero-section">
+        <div className="shell ea-hero-inner">
+          <div className="ea-hero-content">
+            <span className="ea-hero-badge">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <path d="M12 2l2.4 2.5 3.4-.6 1.3 3.2 3.3 1.3-.6 3.4 2.5 2.4-2.5 2.4.6 3.4-3.3 1.3-1.3 3.2-3.4-.6L12 22l-2.4-2.5-3.4.6-1.3-3.2-3.3-1.3.6-3.4L-0.3 12l2.5-2.4-.6-3.4 3.3-1.3 1.3-3.2 3.4.6L12 2zm-1 14.5l5.5-5.5-1.4-1.4-4.1 4.1-2.1-2.1-1.4 1.4 3.5 3.5z" />
+              </svg>
+              Educación virtual gratuita y de calidad
+            </span>
+
+            <h1 className="ea-hero-title">
+              Aprende lo que quieras con cursos gratis de alta calidad
+            </h1>
+
+            <p className="ea-hero-subtitle">
+              Desarrolla habilidades en canto, música, tecnología y competencias laborales a tu propio ritmo con proyectos prácticos y certificación oficial.
             </p>
-            <div className="hero-actions">
-              <Link href={`/cursos/${featuredCourse.slug}`} className="button button-primary">
-                Inscribirme ahora
-              </Link>
-              <Link href="/#curso" className="button button-secondary">
-                Ver curso
-              </Link>
+
+            <form action="/cursos" method="GET" className="ea-hero-search">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" className="ea-hero-search-icon">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                name="search"
+                placeholder="¿Qué quieres aprender hoy? Ej: Canto, IA, Bajo, Accesibilidad..."
+                aria-label="Buscar cursos"
+              />
+              <button type="submit" className="ea-btn-primary">
+                Buscar curso
+              </button>
+            </form>
+
+            <div className="ea-hero-chips">
+              <span className="ea-chips-label">Popular:</span>
+              <Link href="/cursos/curso-de-canto" className="ea-chip">Curso de canto</Link>
+              <Link href="/cursos/curso-de-bajo-1760" className="ea-chip">Curso de bajo</Link>
+              <Link href="/cursos/ia-accesibilidad-digital" className="ea-chip">Inteligencia Artificial</Link>
+              <Link href="/cursos?category=Empleabilidad" className="ea-chip">Empleabilidad</Link>
             </div>
-            <div className="metric-grid">
-              {heroMetrics.map((metric) => (
-                <div key={metric.label} className="metric-card">
-                  <strong>{metric.value}</strong>
-                  <span>{metric.label}</span>
+
+            <div className="ea-hero-metrics">
+              {heroMetrics.map((m) => (
+                <div key={m.label} className="ea-metric-item">
+                  <strong>{m.value}</strong>
+                  <span>{m.label}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="panel panel-contact stack">
-            <span className="eyebrow">Contáctanos</span>
-            <h2>¿Listo para empezar?</h2>
-            <p>Escríbenos por WhatsApp para inscripciones, información del curso o apoyo del instituto.</p>
-            <a href={siteConfig.contactPhoneHref} className="button button-whatsapp">
-              WhatsApp {siteConfig.contactPhone}
-            </a>
-            <p className="helper">{siteConfig.address}</p>
+          {/* FEATURED COURSE SPOTLIGHT (Curso de canto) */}
+          <div className="ea-hero-spotlight">
+            <div className="ea-spotlight-card">
+              <div className="ea-spotlight-badge">★ CURSO DESTACADO</div>
+              <CourseVideoPreview
+                videoId={featuredCourse.videoId || '6XM8rGAupSo'}
+                thumbnail={featuredCourse.thumbnail || 'https://d3puay5pkxu9s4.cloudfront.net/courses/4472/img/web/800_imagen.jpg'}
+                title={featuredCourse.title}
+              />
+              <div className="ea-spotlight-body">
+                <div className="ea-spotlight-meta">
+                  <span className="ea-spotlight-rate">★ {featuredCourse.rating || 4.9}</span>
+                  <span className="ea-spotlight-students">👥 {featuredCourse.studentsCount || '61.731'} alumnos</span>
+                  <span className="ea-spotlight-free">Gratis</span>
+                </div>
+                <h3>{featuredCourse.title}</h3>
+                <p>{featuredCourse.summary}</p>
+                <div className="ea-spotlight-action">
+                  <Link href={`/cursos/${featuredCourse.slug}`} className="ea-btn-primary" style={{ width: '100%', textAlign: 'center' }}>
+                    Inscribirme gratis al curso
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="curso" className="section">
+      {/* 2. CATÁLOGO DESTACADO DE CURSOS (Edutin ccard Grid) */}
+      <section className="ea-catalog-section" id="cursos">
         <div className="shell">
-          <div className="section-heading">
-            <span className="eyebrow">Curso destacado</span>
-            <h2>{featuredCourse.title}</h2>
-            <p>{featuredCourse.summary}</p>
+          <div className="clp-row-head">
+            <div>
+              <h2>Explora nuestros cursos gratis</h2>
+              <p className="clp-row-sub">Formación 100% online diseñada por expertos para que alcances tu máximo potencial.</p>
+            </div>
+            <Link href="/cursos" className="clp-row-link">
+              Ver todos los cursos ({allCourses.length}) →
+            </Link>
           </div>
 
-          <div className="hero-card hero-card-split">
-            <article className="panel stack">
-              <dl className="details-grid">
-                <div>
-                  <dt>Fecha</dt>
-                  <dd>{formatDateTime(featuredCourse.startDate)}</dd>
-                </div>
-                <div>
-                  <dt>Modalidad</dt>
-                  <dd>{featuredCourse.modality}</dd>
-                </div>
-                <div>
-                  <dt>Costo</dt>
-                  <dd>{featuredCourse.priceLabel}</dd>
-                </div>
-                <div>
-                  <dt>Duración</dt>
-                  <dd>{featuredCourse.duration}</dd>
-                </div>
-                <div>
-                  <dt>Facilitación</dt>
-                  <dd>{featuredCourse.instructor}</dd>
-                </div>
-                <div>
-                  <dt>Cupos</dt>
-                  <dd>{featuredCourse.seats}</dd>
-                </div>
-              </dl>
-              <ProgressBar current={enrolled} total={featuredCourse.seats} label="Inscritos actuales" />
-              <div className="inline-actions">
-                <Link href={`/cursos/${featuredCourse.slug}`} className="button button-primary">
-                  Inscribirme al curso
-                </Link>
-                <Link href="/cursos" className="button button-secondary">
-                  Ver todos los cursos
-                </Link>
-                <Link href="/verificar" className="button button-secondary">
-                  Verificar certificado
-                </Link>
-              </div>
-            </article>
-
-            <article className="panel stack">
-              <span className="eyebrow">Qué obtienes</span>
-              <h3>Todo incluido en la experiencia</h3>
-              <ul className="list">
-                {programHighlights.map((item) => (
-                  <li key={item.title}>
-                    <strong>{item.title}.</strong> {item.description}
-                  </li>
-                ))}
-              </ul>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section id="sobre-nosotros" className="section">
-        <div className="shell stack">
-          <div className="section-heading">
-            <h2>{aboutUs.title}</h2>
-            <p>{aboutUs.body}</p>
-          </div>
-          <div className="card-grid">
-            {institutionalSections.map((item) => (
-              <article key={item.title} className="panel stack">
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
-              </article>
+          <div className="ea-courses-grid">
+            {allCourses.slice(0, 6).map((course) => (
+              <CourseCard key={course.id} course={course} />
             ))}
           </div>
         </div>
       </section>
 
-      <section id="mision" className="section">
-        <div className="shell stack">
-          <article className="panel stack">
-            <span className="eyebrow">Nuestra misión</span>
-            <h2>{mission.title}</h2>
-            <p>{mission.body}</p>
-            <ul className="tag-list" aria-label="Valores institucionales">
-              {mission.values.map((value) => (
-                <li key={value}>{value}</li>
-              ))}
+      {/* 3. CERTIFICACIÓN OFICIAL BANNER */}
+      <section className="ea-cert-banner-section">
+        <div className="shell ea-cert-banner-inner">
+          <div className="ea-cert-banner-text">
+            <span className="ea-cert-pill">Certificación Oficial</span>
+            <h2>Impulsa tu carrera con certificados reconocidos</h2>
+            <p>
+              Todos nuestros cursos incluyen la posibilidad de obtener un certificado de estudios con validez internacional, código único de registro y código QR validable en línea.
+            </p>
+            <ul className="ea-cert-benefits-list">
+              <li>✓ Añádelo directamente a tu perfil de LinkedIn y CV impreso.</li>
+              <li>✓ Verifica la autenticidad al instante desde cualquier lugar del mundo.</li>
+              <li>✓ Avalado por horas académicas y proyectos prácticos verificados.</li>
             </ul>
-          </article>
-
-          <div className="card-grid">
-            {testimonials.map((item) => (
-              <article key={item.author} className="panel quote-card">
-                <blockquote>“{item.quote}”</blockquote>
-                <strong>{item.author}</strong>
-              </article>
-            ))}
+            <div className="ea-cert-banner-actions">
+              <Link href="/cursos" className="ea-btn-primary">
+                Comenzar a aprender gratis
+              </Link>
+              <Link href="/verificar" className="button button-outline" style={{ background: '#fff' }}>
+                Verificar un certificado
+              </Link>
+            </div>
           </div>
 
-          <div className="dashboard-grid">
-            <article className="panel stack">
-              <span className="eyebrow">Preguntas frecuentes</span>
-              {faqItems.map((item) => (
-                <div key={item.question} className="faq-item stack">
-                  <h3>{item.question}</h3>
-                  <p>{item.answer}</p>
+          <div className="ea-cert-banner-visual">
+            <div className="clp-cert-mockup" style={{ maxWidth: '420px', margin: '0 auto' }}>
+              <div className="clp-cert-mockup-inner" style={{ padding: '24px' }}>
+                <div className="clp-cert-mockup-header">
+                  <div className="clp-cert-mockup-logo">INTEVOPEDI ACADEMY</div>
+                  <div className="clp-cert-mockup-code">CERTIFICADO OFICIAL</div>
                 </div>
-              ))}
-            </article>
-
-            <article className="panel panel-accent stack contact-cta">
-              <span className="eyebrow">Hablemos</span>
-              <h2>Da el siguiente paso hoy</h2>
-              <p>Inscripciones abiertas. Contáctanos y te orientamos en minutos.</p>
-              <div className="inline-actions">
-                <a href={siteConfig.contactPhoneHref} className="button button-whatsapp">
-                  WhatsApp {siteConfig.contactPhone}
-                </a>
-                <Link href={`/cursos/${featuredCourse.slug}`} className="button button-secondary">
-                  Inscribirme
-                </Link>
+                <div className="clp-cert-mockup-body" style={{ margin: '18px 0' }}>
+                  <p className="clp-cert-mockup-certifies">Certifica haber completado con honores:</p>
+                  <h3 className="clp-cert-mockup-title" style={{ fontSize: '1.2rem' }}>Diplomado en Canto y Técnica Vocal</h3>
+                  <p className="clp-cert-mockup-hours">80 horas certificables con validación QR</p>
+                </div>
+                <div className="clp-cert-mockup-footer">
+                  <div className="clp-cert-mockup-seal">
+                    <div className="clp-cert-seal-icon">★</div>
+                    <span>VALIDEZ INTERNACIONAL</span>
+                  </div>
+                </div>
               </div>
-              <p className="helper">
-                <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
-              </p>
-            </article>
+            </div>
           </div>
         </div>
       </section>
-    </>
+
+      {/* 4. SOBRE NOSOTROS & ÁREAS */}
+      <section className="ea-about-section" id="sobre-nosotros">
+        <div className="shell">
+          <div className="clp-row-head text-center" style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <h2>{aboutUs.title}</h2>
+            <p className="clp-row-sub" style={{ maxWidth: '750px', margin: '0 auto' }}>{aboutUs.body}</p>
+          </div>
+
+          <div className="ea-areas-grid">
+            {institutionalSections.map((sec) => (
+              <div key={sec.title} className="ea-area-card">
+                <h3>{sec.title}</h3>
+                <p>{sec.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. TESTIMONIOS */}
+      <section className="ea-testimonials-section">
+        <div className="shell">
+          <div className="clp-row-head text-center" style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <h2>Lo que dicen nuestros estudiantes</h2>
+            <p className="clp-row-sub">Miles de personas han transformado su pasión y carrera con nuestros cursos.</p>
+          </div>
+
+          <div className="ea-testimonials-grid">
+            {testimonials.map((t, idx) => (
+              <div key={idx} className="ea-testimonial-card">
+                <div className="ea-testimonial-stars">★★★★★</div>
+                <p className="ea-testimonial-quote">"{t.quote}"</p>
+                <div className="ea-testimonial-author">
+                  <strong>{t.author}</strong>
+                  {t.course && <span>Estudiante de {t.course}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 6. PREGUNTAS FRECUENTES */}
+      <section className="clp-faq" style={{ padding: '60px 0' }}>
+        <div className="shell">
+          <div className="clp-row-head">
+            <h2>Preguntas frecuentes</h2>
+          </div>
+          <div className="clp-faq-list">
+            {faqItems.map((faq, idx) => (
+              <details key={idx} className="clp-qtab" open={idx === 0}>
+                <summary>{faq.question}</summary>
+                <div className="clp-qtab-a">{faq.answer}</div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
