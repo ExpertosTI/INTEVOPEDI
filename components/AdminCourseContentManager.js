@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export function AdminCourseContentManager({ initialCourses = [] }) {
   const [courses, setCourses] = useState(initialCourses);
-  const [selectedSlug, setSelectedSlug] = useState(initialCourses[0]?.slug || 'curso-de-canto');
+  const [selectedSlug, setSelectedSlug] = useState(initialCourses[0]?.slug || 'ia-accesibilidad-digital');
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState(null);
 
@@ -13,18 +13,18 @@ export function AdminCourseContentManager({ initialCourses = [] }) {
   const currentCourse = courses.find((c) => c.slug === selectedSlug) || courses[0] || {
     slug: 'nuevo-curso',
     title: 'Nuevo Curso',
-    category: 'Arte',
-    instructor: 'Docente INTEVOPEDI',
-    instructorTitle: 'Especialista',
-    instructorPhoto: 'https://d3puay5pkxu9s4.cloudfront.net/Users/4293908/medium_imagen-4dbBTDe9d96H.jpg',
-    instructorBio: 'Biografía del docente.',
-    duration: '60 horas certificables',
+    category: 'Tecnología',
+    instructor: 'Equipo Técnico INTEVOPEDI',
+    instructorTitle: 'Especialista en Accesibilidad',
+    instructorPhoto: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
+    instructorBio: 'Biografía del docente o equipo formador.',
+    duration: '40 horas certificables',
     modality: '100% Virtual a tu propio ritmo',
     priceLabel: 'Gratis',
-    videoId: '6XM8rGAupSo',
-    thumbnail: 'https://d3puay5pkxu9s4.cloudfront.net/courses/4472/img/web/800_imagen.jpg',
-    certificateTitle: 'Diplomado Oficial',
-    certificateHours: '60 horas certificables',
+    videoId: null,
+    thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
+    certificateTitle: 'Certificación Oficial INTEVOPEDI',
+    certificateHours: '40 horas certificables',
     summary: 'Resumen breve del curso.',
     description: 'Descripción detallada del curso.',
     modules: []
@@ -375,7 +375,7 @@ export function AdminCourseContentManager({ initialCourses = [] }) {
                 type="text"
                 value={formData.instructor || ''}
                 onChange={(e) => handleInputChange('instructor', e.target.value)}
-                placeholder="Ej. Jairo Sanabria"
+                placeholder="Ej. Equipo Técnico INTEVOPEDI"
               />
             </label>
             <label>
@@ -384,7 +384,7 @@ export function AdminCourseContentManager({ initialCourses = [] }) {
                 type="text"
                 value={formData.instructorTitle || ''}
                 onChange={(e) => handleInputChange('instructorTitle', e.target.value)}
-                placeholder="Ej. Músico, Pianista y Compositor"
+                placeholder="Ej. Especialistas en Accesibilidad & IA"
               />
             </label>
             <label>
@@ -404,7 +404,7 @@ export function AdminCourseContentManager({ initialCourses = [] }) {
               rows={2}
               value={formData.instructorBio || ''}
               onChange={(e) => handleInputChange('instructorBio', e.target.value)}
-              placeholder="Experiencia, premios y trayectoria académica..."
+              placeholder="Experiencia, certificaciones y trayectoria académica..."
             />
           </label>
 
@@ -415,7 +415,7 @@ export function AdminCourseContentManager({ initialCourses = [] }) {
                 type="text"
                 value={formData.certificateTitle || ''}
                 onChange={(e) => handleInputChange('certificateTitle', e.target.value)}
-                placeholder="Ej. Diplomado en Canto y Técnica Vocal"
+                placeholder="Ej. Certificación en IA y Accesibilidad Digital"
               />
             </label>
             <label>
@@ -424,7 +424,7 @@ export function AdminCourseContentManager({ initialCourses = [] }) {
                 type="text"
                 value={formData.certificateHours || ''}
                 onChange={(e) => handleInputChange('certificateHours', e.target.value)}
-                placeholder="Ej. 80 horas certificables"
+                placeholder="Ej. 40 horas certificables"
               />
             </label>
           </div>
@@ -484,7 +484,7 @@ export function AdminCourseContentManager({ initialCourses = [] }) {
                       type="text"
                       value={unit.title || ''}
                       onChange={(e) => handleUnitChange(uIdx, 'title', e.target.value)}
-                      placeholder="Ej. Unidad 1. Fundamentos del canto y teoría musical"
+                      placeholder="Ej. Unidad 1. Introducción a la IA y Accesibilidad"
                     />
                   </label>
                   <label style={{ flex: '1 1 0%' }}>

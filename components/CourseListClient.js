@@ -59,7 +59,7 @@ export function CourseListClient({ courses }) {
           <input
             type="text"
             className="ea-catalog-search-input"
-            placeholder="Buscar por título, docente o tema (ej. Canto, Bajo, IA)..."
+            placeholder="Buscar por título, docente o tema (ej. IA, Accesibilidad, Lectores)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -116,7 +116,7 @@ export function CourseListClient({ courses }) {
         <div className="ea-empty-state">
           <div className="ea-empty-state-icon">🔍</div>
           <h3>No encontramos cursos para tu búsqueda</h3>
-          <p>Prueba con otros términos como <b>Canto</b>, <b>Bajo</b>, <b>Música</b> o <b>Tecnología</b>.</p>
+          <p>Prueba con otros términos como <b>Accesibilidad</b>, <b>Inteligencia Artificial</b> o <b>Empleabilidad</b>.</p>
           <button
             type="button"
             className="ea-btn-primary"

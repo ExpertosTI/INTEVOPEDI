@@ -25,15 +25,15 @@ export default async function HomePage() {
               <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                 <path d="M12 2l2.4 2.5 3.4-.6 1.3 3.2 3.3 1.3-.6 3.4 2.5 2.4-2.5 2.4.6 3.4-3.3 1.3-1.3 3.2-3.4-.6L12 22l-2.4-2.5-3.4.6-1.3-3.2-3.3-1.3.6-3.4L-0.3 12l2.5-2.4-.6-3.4 3.3-1.3 1.3-3.2 3.4.6L12 2zm-1 14.5l5.5-5.5-1.4-1.4-4.1 4.1-2.1-2.1-1.4 1.4 3.5 3.5z" />
               </svg>
-              Educación virtual gratuita y de calidad
+              Educación virtual gratuita, inclusiva y accesible
             </span>
 
             <h1 className="ea-hero-title">
-              Aprende lo que quieras con cursos gratis de alta calidad
+              Aprende tecnología y competencias laborales con cursos gratis
             </h1>
 
             <p className="ea-hero-subtitle">
-              Desarrolla habilidades en canto, música, tecnología y competencias laborales a tu propio ritmo con proyectos prácticos y certificación oficial.
+              Desarrolla habilidades en accesibilidad digital, inteligencia artificial, herramientas ofimáticas y competencias para el empleo a tu propio ritmo con proyectos prácticos y certificación oficial.
             </p>
 
             <form action="/cursos" method="GET" className="ea-hero-search">
@@ -44,7 +44,7 @@ export default async function HomePage() {
               <input
                 type="text"
                 name="search"
-                placeholder="¿Qué quieres aprender hoy? Ej: Canto, IA, Bajo, Accesibilidad..."
+                placeholder="¿Qué quieres aprender hoy? Ej: Inteligencia Artificial, Accesibilidad, Lectores de pantalla..."
                 aria-label="Buscar cursos"
               />
               <button type="submit" className="ea-btn-primary">
@@ -54,9 +54,10 @@ export default async function HomePage() {
 
             <div className="ea-hero-chips">
               <span className="ea-chips-label">Popular:</span>
-              <Link href="/cursos/curso-de-canto" className="ea-chip">Curso de canto</Link>
-              <Link href="/cursos/curso-de-bajo-1760" className="ea-chip">Curso de bajo</Link>
               <Link href="/cursos/ia-accesibilidad-digital" className="ea-chip">Inteligencia Artificial</Link>
+              <Link href="/cursos/servicio-al-cliente-lectores" className="ea-chip">Lectores de pantalla</Link>
+              <Link href="/cursos/qa-tester-accesibilidad" className="ea-chip">Accesibilidad Web</Link>
+              <Link href="/cursos/ofimatica-profesional-ia" className="ea-chip">Ofimática con IA</Link>
               <Link href="/cursos?category=Empleabilidad" className="ea-chip">Empleabilidad</Link>
             </div>
 
@@ -70,19 +71,19 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* FEATURED COURSE SPOTLIGHT (Curso de canto) */}
+          {/* FEATURED COURSE SPOTLIGHT (IA y Accesibilidad Digital) */}
           <div className="ea-hero-spotlight">
             <div className="ea-spotlight-card">
               <div className="ea-spotlight-badge">★ CURSO DESTACADO</div>
               <CourseVideoPreview
-                videoId={featuredCourse.videoId || '6XM8rGAupSo'}
-                thumbnail={featuredCourse.thumbnail || 'https://d3puay5pkxu9s4.cloudfront.net/courses/4472/img/web/800_imagen.jpg'}
+                videoId={featuredCourse.videoId}
+                thumbnail={featuredCourse.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80'}
                 title={featuredCourse.title}
               />
               <div className="ea-spotlight-body">
                 <div className="ea-spotlight-meta">
                   <span className="ea-spotlight-rate">★ {featuredCourse.rating || 4.9}</span>
-                  <span className="ea-spotlight-students">👥 {featuredCourse.studentsCount || '61.731'} alumnos</span>
+                  <span className="ea-spotlight-students">👥 {featuredCourse.studentsCount || '2.450'} alumnos</span>
                   <span className="ea-spotlight-free">Gratis</span>
                 </div>
                 <h3>{featuredCourse.title}</h3>
@@ -152,13 +153,13 @@ export default async function HomePage() {
                 </div>
                 <div className="clp-cert-mockup-body" style={{ margin: '18px 0' }}>
                   <p className="clp-cert-mockup-certifies">Certifica haber completado con honores:</p>
-                  <h3 className="clp-cert-mockup-title" style={{ fontSize: '1.2rem' }}>Diplomado en Canto y Técnica Vocal</h3>
-                  <p className="clp-cert-mockup-hours">80 horas certificables con validación QR</p>
+                  <h3 className="clp-cert-mockup-title" style={{ fontSize: '1.2rem' }}>Certificación en IA y Accesibilidad Digital</h3>
+                  <p className="clp-cert-mockup-hours">40 horas certificables con validación QR</p>
                 </div>
                 <div className="clp-cert-mockup-footer">
                   <div className="clp-cert-mockup-seal">
                     <div className="clp-cert-seal-icon">★</div>
-                    <span>VALIDEZ INTERNACIONAL</span>
+                    <span>VALIDEZ OFICIAL</span>
                   </div>
                 </div>
               </div>

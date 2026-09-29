@@ -36,31 +36,31 @@ export default async function CourseDetailPage({ params, searchParams }) {
   }
 
   const error = searchParams?.error;
-  const experience = courseExperienceBySlug[course.slug] || courseExperienceBySlug['curso-de-canto'];
+  const experience = courseExperienceBySlug[course.slug] || courseExperienceBySlug['ia-accesibilidad-digital'];
   const resourceLibrary = getCourseResourceLibrary(course.slug);
   const resourceStats = getCourseResourceStats(course.slug);
   const attachedResources = course.resources || [];
   const enrolledCount = course.studentsCount || `${(course.enrollments?.length || 0) + 1240}`;
   const ratingScore = course.rating || 4.9;
   const reviewsCount = course.reviewsCount || 563;
-  const videoId = course.videoId || '6XM8rGAupSo';
-  const thumbnail = course.thumbnail || 'https://d3puay5pkxu9s4.cloudfront.net/courses/4472/img/web/800_imagen.jpg';
+  const videoId = course.videoId || null;
+  const thumbnail = course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80';
 
-  const instructorName = course.instructor || 'Jairo Sanabria';
-  const instructorTitle = course.instructorTitle || 'Músico, Pianista y Compositor';
-  const instructorPhoto = course.instructorPhoto || 'https://d3puay5pkxu9s4.cloudfront.net/Users/4293908/medium_imagen-4dbBTDe9d96H.jpg';
-  const instructorBio = course.instructorBio || 'Especialista en técnica vocal y pedagogía musical con más de 15 años formando cantantes e intérpretes a nivel internacional.';
+  const instructorName = course.instructor || 'Equipo Académico INTEVOPEDI';
+  const instructorTitle = course.instructorTitle || 'Especialista en Inclusión y Tecnologías Digitales';
+  const instructorPhoto = course.instructorPhoto || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80';
+  const instructorBio = course.instructorBio || 'Docente y facilitador con amplia experiencia en accesibilidad web, metodologías de aprendizaje adaptativo e inserción laboral inclusiva.';
 
-  const certTitle = course.certificateTitle || `Diplomado en ${course.title}`;
-  const certHours = course.certificateHours || course.duration || '80 horas certificables';
+  const certTitle = course.certificateTitle || `Certificación en ${course.title}`;
+  const certHours = course.certificateHours || course.duration || '40 horas certificables';
 
   const reviewsSummary = experience?.reviewsSummary || {
     score: ratingScore,
     total: reviewsCount,
     distribution: [
-      { stars: 5, pct: 88 },
-      { stars: 4, pct: 11 },
-      { stars: 3, pct: 1 },
+      { stars: 5, pct: 90 },
+      { stars: 4, pct: 8 },
+      { stars: 3, pct: 2 },
       { stars: 2, pct: 0 },
       { stars: 1, pct: 0 }
     ]
@@ -68,25 +68,25 @@ export default async function CourseDetailPage({ params, searchParams }) {
 
   const studentReviews = experience?.reviews || [
     {
-      name: 'Castelli Florencia Melisa',
+      name: 'Lic. Mariana Soto',
       time: 'hace 2 semanas',
       stars: 5,
-      avatar: 'https://d3puay5pkxu9s4.cloudfront.net/Users/6688168/small_imagen-OaboU4qsbh6R.jpg',
-      comment: 'Excelente. Las explicaciones del docente son sumamente didácticas y los ejercicios se sienten inmediatamente en la colocación de la voz.'
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80',
+      comment: 'Excelente formación. El contenido es accesible, didáctico y orientado a resolver necesidades reales en entornos profesionales y educativos.'
     },
     {
       name: 'Daniel Méndez',
       time: 'hace 3 semanas',
       stars: 5,
-      avatar: 'https://d3puay5pkxu9s4.cloudfront.net/Users/default/small_imagen.jpg',
-      comment: 'Excelente hasta estos momentos. Pude identificar claramente mi tesitura y entender cómo practicar sin fatigarme.'
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80',
+      comment: 'Muy buena experiencia de aprendizaje. La interfaz es intuitiva y las explicaciones paso a paso facilitan enormemente el estudio.'
     },
     {
       name: 'Claudia Rodríguez',
       time: 'hace 1 mes',
       stars: 5,
-      avatar: 'https://d3puay5pkxu9s4.cloudfront.net/Users/default/small_imagen.jpg',
-      comment: 'Muy completo y directo al punto. El proyecto práctico te da un marco real para avanzar de forma estructurada.'
+      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=120&q=80',
+      comment: 'Los materiales y recursos descargables son de gran ayuda para aplicar lo aprendido directamente en el trabajo.'
     }
   ];
 

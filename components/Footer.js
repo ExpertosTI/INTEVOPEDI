@@ -28,12 +28,12 @@ export function Footer() {
         <div className="ea-footer-col">
           <h4>Cursos populares</h4>
           <ul>
-            <li><Link href="/cursos/curso-de-canto">Curso de canto</Link></li>
-            <li><Link href="/cursos/curso-de-bajo-1760">Curso de bajo</Link></li>
-            <li><Link href="/cursos/curso-de-musica">Curso de música</Link></li>
-            <li><Link href="/cursos/ia-accesibilidad-digital">IA y Accesibilidad</Link></li>
-            <li><Link href="/cursos/qa-tester-accesibilidad">QA Tester Especialista</Link></li>
-            <li><Link href="/cursos">Ver catálogo completo (+50)</Link></li>
+            <li><Link href="/cursos/ia-accesibilidad-digital">IA y Accesibilidad Digital</Link></li>
+            <li><Link href="/cursos/servicio-al-cliente-lectores">Soporte con Lectores de Pantalla</Link></li>
+            <li><Link href="/cursos/qa-tester-accesibilidad">QA Tester en Accesibilidad</Link></li>
+            <li><Link href="/cursos/ofimatica-profesional-ia">Ofimática Profesional con IA</Link></li>
+            <li><Link href="/cursos/braille-digital-productividad">Braille Digital y Productividad</Link></li>
+            <li><Link href="/cursos">Ver catálogo completo</Link></li>
           </ul>
         </div>
 

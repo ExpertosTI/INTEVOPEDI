@@ -1,10 +1,10 @@
 import Link from 'next/link';
 
 const defaultThumbnails = {
-  Arte: 'https://d3puay5pkxu9s4.cloudfront.net/courses/4472/img/web/800_imagen.jpg',
-  Música: 'https://d3puay5pkxu9s4.cloudfront.net/curso/1760/card_imagen.jpg',
-  Tecnología: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80',
-  Empleabilidad: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80'
+  Tecnología: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
+  Inclusión: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80',
+  Empleabilidad: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
+  Comunidad: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80'
 };
 
 export function CourseCard({ course }) {

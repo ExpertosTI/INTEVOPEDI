@@ -4,24 +4,6 @@ const prisma = new PrismaClient();
 
 const courses = [
   {
-    slug: 'curso-de-canto',
-    title: 'Curso de canto',
-    summary: 'Aprende técnica vocal, respiración, afinación y preparación de canciones a tu ritmo.',
-    description: 'Este curso de Canto está dirigido a personas que deseen iniciar o avanzar en su camino como cantante, desarrollarás habilidades para interpretar canciones sin depender de medios electrónicos, reconociendo tu voz como una extensión de ti mismo. Incluye un proyecto práctico donde prepararás una canción de acuerdo a las etapas del canto.',
-    modality: '100% Virtual a tu propio ritmo',
-    priceCents: 0,
-    priceLabel: 'Gratis',
-    seats: 5000,
-    startDate: new Date('2026-01-01T00:00:00.000Z'),
-    endDate: new Date('2026-12-31T23:59:59.000Z'),
-    duration: '80 horas certificables',
-    location: 'Campus Virtual Edutin Academy',
-    instructor: 'Jairo Sanabria (Músico, Pianista y Compositor)',
-    category: 'Arte',
-    level: 'BEGINNER',
-    status: 'PUBLISHED'
-  },
-  {
     slug: 'ia-accesibilidad-digital',
     title: 'IA y Accesibilidad Digital Aplicada',
     summary: 'Domina el uso de inteligencia artificial para la inclusión digital.',
@@ -210,13 +192,6 @@ const modulesMap = {
     { order: 1, title: 'Documentos accesibles', description: 'Estilos, tablas y lectura fluida.', durationMinutes: 90 },
     { order: 2, title: 'Hojas de cálculo claras', description: 'Orden, fórmulas y navegación.', durationMinutes: 90 },
     { order: 3, title: 'Presentaciones inclusivas', description: 'Contraste, texto alternativo y guías.', durationMinutes: 90 }
-  ],
-  'curso-de-canto': [
-    { order: 1, title: 'Unidad 1. Fundamentos del canto y teoría musical', description: 'Bases teóricas de la voz humana y conceptos sobre técnica vocal.', durationMinutes: 90 },
-    { order: 2, title: 'Unidad 2. Clasificación y sonoridad de la voz humana', description: 'Rango vocal, registros vocales, tesitura y selección de repertorio.', durationMinutes: 140 },
-    { order: 3, title: 'Unidad 3. Preparación técnica de una canción', description: 'Estructura de una canción y preparación técnica para interpretación.', durationMinutes: 95 },
-    { order: 4, title: 'Unidad 4. La respiración en el canto', description: 'Postura corporal y respiración costo-diafragmática en el canto.', durationMinutes: 110 },
-    { order: 5, title: 'Unidad 5. La afinación', description: 'Fundamentos de afinación vocal y ejercicios auditivos.', durationMinutes: 85 }
   ],
   'seguridad-digital-basica': [
     { order: 1, title: 'Riesgos comunes', description: 'Phishing y señales de alerta.', durationMinutes: 60 },
